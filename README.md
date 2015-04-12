@@ -28,13 +28,14 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-With optional `path` parameter can authenticate only given part of your website.
+With optional `path` parameter can authenticate only given part of your website. It is also possible to pass PSR-3 compatible logger to help debugging.
 
 ``` php
 $app = new \Slim\Slim();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "path" => "/api",
+    "logger" => $logger,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```

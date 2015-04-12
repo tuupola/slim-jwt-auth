@@ -15,11 +15,15 @@
 
 namespace Slim\Middleware;
 
- use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
- use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
+use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 class JwtAuthentication extends \Slim\Middleware
 {
+    protected $logger;
+
     private $options = array(
         "path" => null,
         "environment" => "HTTP_AUTHORIZATION",
@@ -119,6 +123,9 @@ class JwtAuthentication extends \Slim\Middleware
         if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
             return $matches[1];
         }
+
+        /* If everything fails log and return false. */
+        $this->log(LogLevel::WARNING, "Token not found");
         return false;
     }
 
@@ -131,6 +138,7 @@ class JwtAuthentication extends \Slim\Middleware
                 array("HS256", "HS512", "HS384", "RS256")
             );
         } catch (\Exception $exception) {
+            $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
             return false;
         }
     }
@@ -274,5 +282,45 @@ class JwtAuthentication extends \Slim\Middleware
     {
         $this->rules->push($callable);
         return $this;
+    }
+
+    /* Cannot use traits since PHP 5.3 should be supported */
+
+    /**
+     * Get the logger
+     *
+     * @return Psr\Log\LoggerInterface $logger
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
+
+    /**
+     * Set the logger
+     *
+     * @param Psr\Log\LoggerInterface $logger
+     * @return self
+     */
+    public function setLogger(LoggerInterface $logger = null)
+    {
+        $this->logger = $logger;
+        return $this;
+    }
+
+    /**
+     * Logs with an arbitrary level.
+     *
+     * @param mixed  $level
+     * @param string $message
+     * @param array  $context
+     *
+     * @return null
+     */
+    public function log($level, $message, array $context = array())
+    {
+        if ($this->logger) {
+            return $this->logger->log($level, $message, $context);
+        }
     }
 }
