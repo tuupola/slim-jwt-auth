@@ -315,14 +315,14 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public function testShouldGetAndSetRules()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
-        $auth->setRules([
+        $auth->setRules(array(
             function ($app) {
                 return true;
             },
             function ($app) {
                 return false;
             }
-        ]);
+        ));
         $this->assertEquals(2, count($auth->getRules()));
     }
 }
