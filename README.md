@@ -29,6 +29,17 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
+With optional `path` parameter can authenticate only given part of your website.
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "path" => "/api",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
 When request is made middleware tries to validate and decode the token. If token is not found server will response with `401 Unauthorized`. If token exists but there is an error when validating and decoding it server will response with `400 Bad Request`.
 
 Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
