@@ -15,7 +15,8 @@
 
 namespace Slim\Middleware;
 
-use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
+ use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
+ use \Slim\Middleware\JwtAuthentication\RequestPathRule;
 
 class JwtAuthentication extends \Slim\Middleware
 {
@@ -40,6 +41,13 @@ class JwtAuthentication extends \Slim\Middleware
         if (!isset($options["rules"])) {
             $this->addRule(new RequestMethodRule(array(
                 "passthrough" => array("OPTIONS")
+            )));
+        }
+
+        /* If path was given in easy mode add rule for it. */
+        if (null !== ($this->options["path"])) {
+            $this->addRule(new RequestPathRule(array(
+                "path" => $this->options["path"]
             )));
         }
     }
@@ -151,6 +159,28 @@ class JwtAuthentication extends \Slim\Middleware
                 call_user_func(array($this, $method), $value);
             }
         }
+        return $this;
+    }
+
+
+    /**
+     * Get path where middleware is be binded to
+     *
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->options["path"];
+    }
+
+    /**
+     * Set path where middleware should be binded to
+     *
+     * @return self
+     */
+    public function setPath($path)
+    {
+        $this->options["path"] = $path;
         return $this;
     }
 

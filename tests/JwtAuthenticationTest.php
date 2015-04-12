@@ -15,6 +15,8 @@
 
 namespace Slim\Middleware\Test;
 
+use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+
 class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
     public static $token =
@@ -143,6 +145,33 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(400, $app->response()->status());
         $this->assertEquals("", $app->response()->body());
+    }
+
+    public function testShouldReturn200WithoutTokenWithPath()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/public/foo",
+        ));
+        $app = new \Slim\Slim();
+        $app->get("/public/foo", function () {
+            echo "Success";
+        });
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "path" => "/api",
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Success", $app->response()->body());
     }
 
     public function testShouldCallCallback()
