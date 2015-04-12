@@ -19,12 +19,9 @@ use \Slim\Middleware\JwtAuthentication\RequestPathRule;
 
 class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
-    public static $token =
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocG" .
-        "ljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkI" .
-        "joid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIs" .
-        "InNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE" .
-        "6DzBonGUyqLlddxIisxSFk2Gk7Y";
+    /* @codingStandardsIgnoreStart */
+    public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
+    /* @codingStandardsIgnoreEnd */
 
     public static $token_as_array = array(
         "iss" => "Acme Toothpics Ltd",
