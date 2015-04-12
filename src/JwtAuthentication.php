@@ -19,7 +19,8 @@ class JwtAuthentication extends \Slim\Middleware
 {
     private $options = array(
         "path" => null,
-        "environment" => "HTTP_AUTHORIZATION"
+        "environment" => "HTTP_AUTHORIZATION",
+        "callback" => null
     );
 
     /**
@@ -57,7 +58,13 @@ class JwtAuthentication extends \Slim\Middleware
             return;
         }
 
-        /* Here do something with the decoded data. */
+        /* If callback returns false return with 401 Unauthorized. */
+        if (is_callable($this->options["callback"])) {
+            if (false === $this->options["callback"]($decoded, $this->app)) {
+                $this->app->response->status(401);
+                return;
+            }
+        }
 
         /* Everything ok, call next middleware. */
         $this->next->call();
@@ -177,6 +184,27 @@ class JwtAuthentication extends \Slim\Middleware
     public function setSecret($secret)
     {
         $this->options["secret"] = $secret;
+        return $this;
+    }
+
+    /**
+     * Get the callback
+     *
+     * @return string
+     */
+    public function getCallback()
+    {
+        return $this->options["callback"];
+    }
+
+    /**
+     * Set the callback
+     *
+     * @return self
+     */
+    public function setCallback($callback)
+    {
+        $this->options["callback"] = $callback;
         return $this;
     }
 

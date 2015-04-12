@@ -19,14 +19,50 @@ $ composer require tuupola/slim-jwt-auth
 
 ## Usage
 
+Configuration options are passed as an array. Only mandatory parameter is `secret` which is used for verifying then token signature. For simplicitys sake examples show `secret` hardcoded in code. In real life you should use [dotenv](https://github.com/vlucas/phpdotenv) or something similar instead.
+
 ``` php
 $app = new \Slim\Slim();
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
+```
 
-$app->get("/hello", function () use ($app) {
-    print_r($app->jwt->data());
+When request is made middleware tries to validate and decode the token. If token is not found server will response with `401 Unauthorized`. If token exists but there is an error when validating and decoding it server will response with `400 Bad Request`.
+
+Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
+
+By default middleware only authenticates. This is not very interesting. Beauty of JWT is you can pass extra data in the token. This data can include for example scope which can be used for authorization. It is up to you to implement how token data is stored or possible authorization implemented.
+
+Let assume you have token which includes data for scope. In middleware callback you store the decoded token data to `$app->jwt` and later use it for authorization.
+
+``` php
+"iss" => "Acme Toothpics Ltd",
+"iat" => "1428819941",
+"exp" => "1744352741",
+"aud" => "www.example.com",
+"sub" => "someone@example.com",
+"scope" => ["read", "write", "delete"]
+```
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "callback" => function ($decoded, $app) {
+        $app->jwt = $decoded;
+    }
+]));
+
+$app->delete("/item/:id", function () use ($app) {
+    if (in_array("delete", $app->jwt->scope)) {
+        /* Code for deleting item */
+    } else {
+        /* No scope so respond with 401 Unauthorized */
+        $this->app->response->status(401);
+    }
 });
 ```
 
