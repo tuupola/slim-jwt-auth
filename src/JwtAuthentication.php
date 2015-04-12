@@ -15,6 +15,8 @@
 
 namespace Slim\Middleware;
 
+use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
+
 class JwtAuthentication extends \Slim\Middleware
 {
     private $options = array(
@@ -33,6 +35,13 @@ class JwtAuthentication extends \Slim\Middleware
 
         /* Store passed in options overwriting any defaults. */
         $this->hydrate($options);
+
+        /* If nothing was passed in options add default rules. */
+        if (!isset($options["rules"])) {
+            $this->addRule(new RequestMethodRule(array(
+                "passthrough" => array("OPTIONS")
+            )));
+        }
     }
 
     /**

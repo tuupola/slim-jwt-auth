@@ -64,7 +64,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $app->response()->body());
     }
 
-    public function testShouldReturn200WithoutToken()
+    public function testShouldReturn200WithToken()
     {
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
@@ -76,6 +76,33 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
             echo "Success";
         });
         $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Foo", $app->response()->body());
+    }
+
+    public function testShouldReturn200WithOptions()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/api/foo",
+            "REQUEST_METHOD" => "OPTIONS"
+        ));
+        $app = new \Slim\Slim();
+        $app->get("/foo/bar", function () {
+            echo "Success";
+        });
+        $app->options("/api/foo", function () {
             echo "Foo";
         });
 
