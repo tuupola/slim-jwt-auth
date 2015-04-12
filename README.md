@@ -80,7 +80,8 @@ $app->delete("/item/:id", function () use ($app) {
 ## Testing
 
 ``` bash
-$ phpunit
+$ vendor/bin/phpunit
+$ vendor/bin/phpcs --standard=PSR2 src/* -p
 ```
 
 ## Contributing
