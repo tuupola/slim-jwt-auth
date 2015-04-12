@@ -14,7 +14,7 @@ module.exports = function(grunt) {
                 dir: "tests"
             },
             options: {
-                bin: "vendor/bin/phpunit --bootstrap=vendor/autoload.php --coverage-text --coverage-html ./report",
+                bin: "vendor/bin/phpunit --coverage-text --coverage-html ./report",
                 colors: true,
                 testdox: false
             }
