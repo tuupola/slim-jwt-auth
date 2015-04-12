@@ -43,17 +43,20 @@ When request is made middleware tries to validate and decode the token. If token
 
 Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
 
-By default middleware only authenticates. This is not very interesting. Beauty of JWT is you can pass extra data in the token. This data can include for example scope which can be used for authorization. **It is up to you to implement how token data is stored or possible authorization implemented.**
+## Authorization
+
+By default middleware only authenticates. This is not very interesting. Beauty of JWT is you can pass extra data in the token. This data can include for example scope which can be used for authorization.
+
+**It is up to you to implement how token data is stored or possible authorization implemented.**
 
 Let assume you have token which includes data for scope. In middleware callback you store the decoded token data to `$app->jwt` and later use it for authorization.
 
 ``` php
-"iss" => "Acme Toothpics Ltd",
-"iat" => "1428819941",
-"exp" => "1744352741",
-"aud" => "www.example.com",
-"sub" => "someone@example.com",
-"scope" => ["read", "write", "delete"]
+[
+    "iat" => "1428819941",
+    "exp" => "1744352741",
+    "scope" => ["read", "write", "delete"]
+]
 ```
 
 ``` php
@@ -74,6 +77,36 @@ $app->delete("/item/:id", function () use ($app) {
         $this->app->response->status(401);
     }
 });
+```
+
+## Blacklisting (not implemented yet)
+
+Tokens are like passwords and should be treated like one. Sometimes bad things happen. Maybe you accidentally leak internal token with full admin rights scope and expiration set to 10 years. Since there is no need to store tokens in database how can you revoke one? Changing the secret key would revoke all tokens in the wild.
+
+**Again it is up to you to implement how token blacklisting is done. This middleware intentionally only provides interface for blacklisting.**
+
+You can blacklist tokens by passing a callable `blacklist` parameter. This callable receives the decoded token and instance of Slim application as parameters. If callable returns boolean `true` the token is assumed to be blacklisted and server will response with `401 Unauthorized`.
+
+One way of support blacklisting is to include `jti` ([JWT ID](http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html#jtiDef)) claim in the token. This claim is unique identifier for the token and can be used for blacklisting.
+
+``` php
+[
+    "iat" => "1428819941",
+    "exp" => "1744352741",
+    "jti" => "24d4e5c5-5727-4b7f-bd1d-a8f0733f160b",
+    "scope" => ["read", "write", "delete"]
+]
+```
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "blacklist" => function ($decoded, $app) {
+        return "24d4e5c5-5727-4b7f-bd1d-a8f0733f160b" === $decoded["jti"];
+    }
+]));
 ```
 
 ## Testing
