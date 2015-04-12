@@ -92,11 +92,6 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 If you discover any security related issues, please email tuupola@appelsiini.net instead of using the issue tracker.
 
-## Credits
-
-- [Mika Tuupola](https://github.com/tuupola)
-- [All Contributors](../../contributors)
-
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
