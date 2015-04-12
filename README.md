@@ -44,7 +44,7 @@ When request is made middleware tries to validate and decode the token. If token
 
 Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
 
-By default middleware only authenticates. This is not very interesting. Beauty of JWT is you can pass extra data in the token. This data can include for example scope which can be used for authorization. It is up to you to implement how token data is stored or possible authorization implemented.
+By default middleware only authenticates. This is not very interesting. Beauty of JWT is you can pass extra data in the token. This data can include for example scope which can be used for authorization. **It is up to you to implement how token data is stored or possible authorization implemented.**
 
 Let assume you have token which includes data for scope. In middleware callback you store the decoded token data to `$app->jwt` and later use it for authorization.
 
