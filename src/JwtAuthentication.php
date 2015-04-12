@@ -104,16 +104,6 @@ class JwtAuthentication extends \Slim\Middleware
     }
 
     /**
-     * Check if middleware should not authenticate
-     *
-     * @return boolean True if middleware should not authenticate.
-     */
-    public function shouldNotAuthenticate()
-    {
-        return ! $this->shouldAuthenticate();
-    }
-
-    /**
      * Fetch the access token
      *
      * @return string|null Base64 encoded JSON Web Token or null if not found.
