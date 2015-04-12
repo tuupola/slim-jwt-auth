@@ -138,7 +138,7 @@ class JwtAuthentication extends \Slim\Middleware
                 array("HS256", "HS512", "HS384", "RS256")
             );
         } catch (\Exception $exception) {
-            $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
+            $this->log(LogLevel::WARNING, $exception->getMessage(), array($token));
             return false;
         }
     }
