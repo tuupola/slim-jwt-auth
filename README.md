@@ -120,7 +120,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ``` bash
 $ vendor/bin/phpunit
-$ vendor/bin/phpcs --standard=PSR2 src/* -p
+$ vendor/bin/phpcs --standard=PSR2 src/ -p
 ```
 
 ## Contributing
