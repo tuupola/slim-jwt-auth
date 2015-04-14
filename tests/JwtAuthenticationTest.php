@@ -325,4 +325,21 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ));
         $this->assertEquals(2, count($auth->getRules()));
     }
+
+    public function testShouldSetAndGetLogger()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $logger = new \Psr\Log\NullLogger;
+        $auth->setLogger($logger);
+
+        $this->assertInstanceOf("\Psr\Log\NullLogger", $auth->getLogger());
+    }
+
+    public function testShouldSLog()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $logger = new \Psr\Log\NullLogger;
+        $auth->setLogger($logger);
+        $this->assertNull($auth->log(\Psr\Log\LogLevel::WARNING, "Token not found"));
+    }
 }
