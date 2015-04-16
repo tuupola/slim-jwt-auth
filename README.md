@@ -71,8 +71,8 @@ $app = new \Slim\Slim();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($decoded, $app) {
-        $app->jwt = $decoded;
+    "callback" => function ($options) use ($app) {
+        $app->jwt = $options["decoded"];
     }
 ]));
 

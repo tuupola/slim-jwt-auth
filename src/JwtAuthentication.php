@@ -81,7 +81,8 @@ class JwtAuthentication extends \Slim\Middleware
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
-            if (false === $this->options["callback"]($decoded, $this->app)) {
+            $params = array("decoded" => $decoded, "app" => $this->app);
+            if (false === $this->options["callback"]($params)) {
                 $this->app->response->status(401);
                 return;
             }

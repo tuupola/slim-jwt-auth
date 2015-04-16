@@ -107,7 +107,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new \Slim\Middleware\JwtAuthentication(array(
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($decoded, $app) {
+            "callback" => function ($params) {
                 return false;
             }
         ));
@@ -235,8 +235,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new \Slim\Middleware\JwtAuthentication(array(
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($decoded, $app) {
-                $app->jwt = $decoded;
+            "callback" => function ($params) {
+                $params["app"]->jwt = $params["decoded"];
             }
         ));
 
@@ -267,8 +267,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new \Slim\Middleware\JwtAuthentication(array(
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($decoded, $app) {
-                $app->jwt = $decoded;
+            "callback" => function ($params) {
+                $params["app"]->jwt = $params["decoded"];
             }
         ));
 
