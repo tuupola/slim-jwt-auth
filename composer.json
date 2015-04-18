@@ -21,7 +21,7 @@
     "require": {
         "php" : ">=5.3.0",
         "firebase/php-jwt": "~2.0",
-        "slim/slim": "~2.3",
+        "slim/slim": "~3.0@dev",
         "psr/log": "~1.0"
     },
     "require-dev": {
