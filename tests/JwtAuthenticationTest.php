@@ -42,6 +42,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
@@ -68,7 +69,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token
+            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
@@ -95,7 +97,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token
+            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
@@ -125,7 +128,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "REQUEST_METHOD" => "OPTIONS"
+            "REQUEST_METHOD" => "OPTIONS",
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
@@ -152,8 +156,10 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer broken" . self::$token
+            "HTTP_AUTHORIZATION" => "Bearer broken" . self::$token,
+            "slim.url_scheme" => "https"
         ));
+
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
             echo "Success";
@@ -179,6 +185,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/public/foo",
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/public/foo", function () {
@@ -201,11 +208,72 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Success", $app->response()->body());
     }
 
+    public function testShouldNotAllowUnsecure()
+    {
+
+        $this->setExpectedException("RuntimeException");
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/public/foo",
+            "SERVER_NAME" => "dev.example.com",
+            "slim.url_scheme" => "http"
+        ));
+
+        $app = new \Slim\Slim();
+        $app->get("/public/foo", function () {
+            echo "Success";
+        });
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "path" => "/api",
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+    }
+
+    public function testShouldRelaxUnsecureInLocalhost()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/public/foo",
+            "SERVER_NAME" => "localhost",
+            "slim.url_scheme" => "http"
+        ));
+        $app = new \Slim\Slim();
+        $app->get("/public/foo", function () {
+            echo "Success";
+        });
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "path" => "/api",
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Success", $app->response()->body());
+    }
+
+
     public function testShouldFetchTokenFromEnvironment()
     {
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo"
+            "PATH_INFO" => "/public/foo",
+            "slim.url_scheme" => "https"
         ));
 
         $_SERVER["HTTP_BRAWNDO"] = "Bearer " . self::$token;
@@ -223,8 +291,10 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token
+            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
+            "slim.url_scheme" => "https"
         ));
+
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
             echo "Success";
@@ -255,7 +325,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token
+            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
+            "slim.url_scheme" => "https"
         ));
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
@@ -282,6 +353,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(in_array("delete", $app->jwt->scope));
     }
 
+
+
     public function testShouldGetAndSetPath()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
@@ -294,6 +367,22 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setSecret("supersecretkeyyoushouldnotcommittogithub");
         $this->assertEquals("supersecretkeyyoushouldnotcommittogithub", $auth->getSecret());
+    }
+
+    public function testShouldGetAndSetSecure()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $this->assertTrue($auth->getSecure());
+        $auth->setSecure(false);
+        $this->assertFalse($auth->getSecure());
+    }
+
+    public function testShouldGetAndSetRelaxed()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $relaxed = array("localhost", "dev.example.com");
+        $auth->setRelaxed($relaxed);
+        $this->assertEquals($relaxed, $auth->getRelaxed());
     }
 
     public function testShouldGetAndSetEnvironment()

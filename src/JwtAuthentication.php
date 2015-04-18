@@ -25,8 +25,10 @@ class JwtAuthentication extends \Slim\Middleware
     protected $logger;
 
     private $options = array(
-        "path" => null,
+        "secure" => true,
+        "relaxed" => array("localhost", "127.0.0.1"),
         "environment" => "HTTP_AUTHORIZATION",
+        "path" => null,
         "callback" => null
     );
 
@@ -61,6 +63,19 @@ class JwtAuthentication extends \Slim\Middleware
      */
     public function call()
     {
+        $environment = $this->app->environment;
+        $scheme = $environment["slim.url_scheme"];
+        /* HTTP allowed only if secure is false or server is in relaxed array. */
+        if ("https" !== $scheme && true === $this->options["secure"]) {
+            if (!in_array($environment["SERVER_NAME"], $this->options["relaxed"])) {
+                $message = sprintf(
+                    "Unsecure use of middleware over %s denied by configuration.",
+                    strtoupper($scheme)
+                );
+                throw new \RuntimeException($message);
+            }
+        }
+
         /* If rules say we should not authenticate call next and return. */
         if (false === $this->shouldAuthenticate()) {
             $this->next->call();
@@ -201,6 +216,49 @@ class JwtAuthentication extends \Slim\Middleware
     public function setEnvironment($environment)
     {
         $this->options["environment"] = $environment;
+        return $this;
+    }
+
+    /**
+     * Get the secure flag
+     *
+     * @return string
+     */
+    public function getSecure()
+    {
+        return $this->options["secure"];
+    }
+
+    /**
+     * Set the secure flag
+     *
+     * @return self
+     */
+    public function setSecure($secure)
+    {
+        $this->options["secure"] = !!$secure;
+        return $this;
+    }
+
+
+    /**
+     * Get hosts where secure rule is relaxed
+     *
+     * @return string
+     */
+    public function getRelaxed()
+    {
+        return $this->options["relaxed"];
+    }
+
+    /**
+     * Set hosts where secure rule is relaxed
+     *
+     * @return self
+     */
+    public function setRelaxed(array $relaxed)
+    {
+        $this->options["relaxed"] = $relaxed;
         return $this;
     }
 
