@@ -110,7 +110,8 @@ $app = new \Slim\Slim();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "blacklist" => function ($decoded, $app) {
+    "blacklist" => function ($options) use ($app) {
+        $decoded = $options["decoded"];
         return "24d4e5c5-5727-4b7f-bd1d-a8f0733f160b" === $decoded["jti"];
     }
 ]));
