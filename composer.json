@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "php" : ">=5.3.0",
+        "php" : ">=5.4.0",
         "firebase/php-jwt": "~2.0",
         "slim/slim": "~3.0@dev",
         "psr/log": "~1.0"
