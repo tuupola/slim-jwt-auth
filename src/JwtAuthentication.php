@@ -331,7 +331,7 @@ class JwtAuthentication
      */
     public function setCallback($callback)
     {
-        $this->options["callback"] = $callback;
+        $this->options["callback"] = $callback->bindTo($this);
         return $this;
     }
 
