@@ -28,6 +28,7 @@ class JwtAuthentication extends \Slim\Middleware
         "secure" => true,
         "relaxed" => array("localhost", "127.0.0.1"),
         "environment" => "HTTP_AUTHORIZATION",
+        "cookie" => "token",
         "path" => null,
         "callback" => null
     );
@@ -132,13 +133,22 @@ class JwtAuthentication extends \Slim\Middleware
     {
         /* If using PHP in CGI mode and non standard environment */
         if (isset($_SERVER[$this->options["environment"]])) {
+            $message = "Using token from environent";
             $header = $_SERVER[$this->options["environment"]];
         } else {
+            $message = "Using token from request header";
             $header = $this->app->request->headers("Authorization");
         }
         if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
+            $this->log(LogLevel::DEBUG, $message);
             return $matches[1];
         }
+
+        /* Bearer not found, try a cookie. */
+        if (isset($_COOKIE[$this->options["cookie"]])) {
+            $this->log(LogLevel::DEBUG, "Using token from cookie");
+            return $_COOKIE[$this->options["cookie"]];
+        };
 
         /* If everything fails log and return false. */
         $this->log(LogLevel::WARNING, "Token not found");
@@ -216,6 +226,27 @@ class JwtAuthentication extends \Slim\Middleware
     public function setEnvironment($environment)
     {
         $this->options["environment"] = $environment;
+        return $this;
+    }
+
+    /**
+     * Get the cookie name where to search the token from
+     *
+     * @return string
+     */
+    public function getCookie()
+    {
+        return $this->options["cookie"];
+    }
+
+    /**
+     * Set the cookie name where to search the token from
+     *
+     * @return self
+     */
+    public function setCookie($cookie)
+    {
+        $this->options["cookie"] = $cookie;
         return $this;
     }
 
