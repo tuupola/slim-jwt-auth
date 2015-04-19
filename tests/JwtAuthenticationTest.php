@@ -64,7 +64,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $app->response()->body());
     }
 
-    public function testShouldReturn200WithToken()
+    public function testShouldReturn200WithTokenFromEnvironment()
     {
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
@@ -72,6 +72,36 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
             "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
             "slim.url_scheme" => "https"
         ));
+        $app = new \Slim\Slim();
+        $app->get("/foo/bar", function () {
+            echo "Success";
+        });
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Foo", $app->response()->body());
+    }
+
+    public function testShouldReturn200WithTokenFromCookie()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/api/foo",
+            "slim.url_scheme" => "https"
+        ));
+
+        $_COOKIE["token"] =  self::$token;
+
         $app = new \Slim\Slim();
         $app->get("/foo/bar", function () {
             echo "Success";
@@ -390,6 +420,13 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setEnvironment("HTTP_SOMETHING");
         $this->assertEquals("HTTP_SOMETHING", $auth->getEnvironment());
+    }
+
+    public function testShouldGetAndSetCookieName()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setCookie("nekot");
+        $this->assertEquals("nekot", $auth->getCookie());
     }
 
     public function testShouldGetAndSetCallback()
