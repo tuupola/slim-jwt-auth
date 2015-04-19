@@ -65,6 +65,7 @@ Alternatively you can list your development host to have relaxed security.
 
 ``` php
 $app->add(new \Slim\Middleware\JwtAuthentication([
+    "secure" => true,
     "relaxed" => ["localhost", "dev.example.com"],
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
@@ -101,7 +102,7 @@ $app->delete("/item/:id", function () use ($app) {
         /* Code for deleting item */
     } else {
         /* No scope so respond with 401 Unauthorized */
-        $this->app->response->status(401);
+        $app->response->status(401);
     }
 });
 ```
