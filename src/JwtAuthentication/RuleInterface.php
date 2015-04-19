@@ -15,7 +15,9 @@
 
 namespace Slim\Middleware\JwtAuthentication;
 
+use \Psr\Http\Message\RequestInterface;
+
 interface RuleInterface
 {
-    public function __invoke(\Slim\Slim $app);
+    public function __invoke(RequestInterface $request);
 }

@@ -15,6 +15,8 @@
 
 namespace Slim\Middleware\JwtAuthentication;
 
+use \Psr\Http\Message\RequestInterface;
+
 class RequestMethodRule implements RuleInterface
 {
     protected $options = array(
@@ -26,9 +28,8 @@ class RequestMethodRule implements RuleInterface
         $this->options = array_merge($this->options, $options);
     }
 
-    public function __invoke(\Slim\Slim $app)
+    public function __invoke(RequestInterface $request)
     {
-        $environment = $app->environment;
-        return !in_array($environment["REQUEST_METHOD"], $this->options["passthrough"]);
+        return !in_array($request->getMethod(), $this->options["passthrough"]);
     }
 }

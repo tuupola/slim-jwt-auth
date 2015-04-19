@@ -17,10 +17,12 @@ namespace Slim\Middleware;
 
 use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
 use \Slim\Middleware\JwtAuthentication\RequestPathRule;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
+use \Psr\Log\LoggerInterface;
+use \Psr\Log\LogLevel;
+use \Psr\Http\Message\RequestInterface;
+use \Psr\Http\Message\ResponseInterface;
 
-class JwtAuthentication extends \Slim\Middleware
+class JwtAuthentication
 {
     protected $logger;
 
@@ -61,13 +63,14 @@ class JwtAuthentication extends \Slim\Middleware
     /**
      * Call the middleware
      */
-    public function call()
+    public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
     {
-        $environment = $this->app->environment;
-        $scheme = $environment["slim.url_scheme"];
+        $scheme = $request->getUri()->getScheme();
+        $host = $request->getUri()->getHost();
+
         /* HTTP allowed only if secure is false or server is in relaxed array. */
         if ("https" !== $scheme && true === $this->options["secure"]) {
-            if (!in_array($environment["SERVER_NAME"], $this->options["relaxed"])) {
+            if (!in_array($host, $this->options["relaxed"])) {
                 $message = sprintf(
                     "Unsecure use of middleware over %s denied by configuration.",
                     strtoupper($scheme)
@@ -77,34 +80,30 @@ class JwtAuthentication extends \Slim\Middleware
         }
 
         /* If rules say we should not authenticate call next and return. */
-        if (false === $this->shouldAuthenticate()) {
-            $this->next->call();
-            return;
+        if (false === $this->shouldAuthenticate($request)) {
+            return $next($request, $response);
         }
 
         /* If token cannot be found return with 401 Unauthorized. */
-        if (false === $token = $this->fetchToken()) {
-            $this->app->response->status(401);
-            return;
+        if (false === $token = $this->fetchToken($request)) {
+            return $response->withStatus(401);
         }
 
         /* If token cannot be decoded return with 400 Bad Request. */
         if (false === $decoded = $this->decodeToken($token)) {
-            $this->app->response->status(400);
-            return;
+            return $response->withStatus(400);
         }
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
             $params = array("decoded" => $decoded, "app" => $this->app);
             if (false === $this->options["callback"]($params)) {
-                $this->app->response->status(401);
-                return;
+                return $response->withStatus(401);
             }
         }
 
-        /* Everything ok, call next middleware. */
-        $this->next->call();
+        /* Everything ok, call next middleware and return. */
+        return $next($request, $response);
     }
 
     /**
@@ -112,11 +111,11 @@ class JwtAuthentication extends \Slim\Middleware
      *
      * @return boolean True if middleware should authenticate.
      */
-    public function shouldAuthenticate()
+    public function shouldAuthenticate(RequestInterface $request)
     {
         /* If any of the rules in stack return false will not authenticate */
         foreach ($this->rules as $callable) {
-            if (false === $callable($this->app)) {
+            if (false === $callable($request)) {
                 return false;
             }
         }
@@ -128,13 +127,13 @@ class JwtAuthentication extends \Slim\Middleware
      *
      * @return string|null Base64 encoded JSON Web Token or null if not found.
      */
-    public function fetchToken()
+    public function fetchToken(RequestInterface $request)
     {
         /* If using PHP in CGI mode and non standard environment */
         if (isset($_SERVER[$this->options["environment"]])) {
             $header = $_SERVER[$this->options["environment"]];
         } else {
-            $header = $this->app->request->headers("Authorization");
+            $header = $request->getHeader("Authorization");
         }
         if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
             return $matches[1];
