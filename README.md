@@ -6,7 +6,7 @@
 [![HHVM Status](https://img.shields.io/hhvm/tuupola/slim-jwt-auth.svg?style=flat-square)](http://hhvm.h4cc.de/package/tuupola/slim-jwt-auth)
 [![Coverage](http://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth)
 
-This middleware implements JSON Web Token Authentication for Slim Framework. It does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header, cookie or querystring (not implemented). This is useful when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
+This middleware implements JSON Web Token Authentication for Slim Framework. It does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful for example when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
 
 ## Install
 
@@ -49,6 +49,26 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 When request is made middleware tries to validate and decode the token. If token is not found server will response with `401 Unauthorized`. If token exists but there is an error when validating and decoding it server will response with `400 Bad Request`.
 
 Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
+
+## Security
+
+JSON Web Tokens are essentially passwords. You should treat them as such. You should always use HTTPS. If the middleware detects unsecure usage over HTTP it will throw `RuntimeException`. This rule is relaxed for localhost. To allow unsecure usage you must enable it manually by setting `secure` to `false`.
+
+``` php
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secure" => false,
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+Alternatively you can list your development host to have relaxed security.
+
+``` php
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "relaxed" => ["localhost", "dev.example.com"],
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
 
 ## Authorization
 
