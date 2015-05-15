@@ -88,32 +88,26 @@ class JwtAuthentication
         }
 
         /* If token cannot be found return with 401 Unauthorized. */
-        if (false === $token = $this->fetchToken()) {
-            $this->app->response->status(401);
-            $this->error([
+        if (false === $token = $this->fetchToken($request)) {
+            return $this->error($request, $response, [
                 "message" => $this->message
-            ]);
-            return;
+            ])->withStatus(401);
         }
 
         /* If token cannot be decoded return with 400 Bad Request. */
         if (false === $decoded = $this->decodeToken($token)) {
-            $this->app->response->status(400);
-            $this->error([
+            return $this->error($request, $response, [
                 "message" => $this->message
-            ]);
-            return;
+            ])->withStatus(400);
         }
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
             $params = array("decoded" => $decoded);
-            if (false === $this->options["callback"]($params)) {
-                $this->app->response->status(401);
-                $this->error([
+            if (false === $this->options["callback"]($request, $response, $params)) {
+                return $this->error($request, $response, [
                     "message" => "Callback returned false"
-                ]);
-                return;
+                ])->withStatus(401);
             }
         }
 
@@ -142,11 +136,12 @@ class JwtAuthentication
      *
      * @return void
      */
-    public function error($params)
+    public function error(RequestInterface $request, ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
-            $this->options["error"]($params);
+            return $this->options["error"]($request, $response, $arguments);
         }
+        return $request;
     }
 
     /**
@@ -173,6 +168,7 @@ class JwtAuthentication
         /* Bearer not found, try a cookie. */
         if (isset($_COOKIE[$this->options["cookie"]])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
+            $this->log(LogLevel::DEBUG, $_COOKIE[$this->options["cookie"]]);
             return $_COOKIE[$this->options["cookie"]];
         };
 
