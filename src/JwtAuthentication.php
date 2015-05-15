@@ -23,6 +23,7 @@ use Psr\Log\LogLevel;
 class JwtAuthentication extends \Slim\Middleware
 {
     protected $logger;
+    protected $message; /* Last error message. */
 
     private $options = array(
         "secure" => true,
@@ -30,7 +31,8 @@ class JwtAuthentication extends \Slim\Middleware
         "environment" => "HTTP_AUTHORIZATION",
         "cookie" => "token",
         "path" => null,
-        "callback" => null
+        "callback" => null,
+        "error" => null
     );
 
     /**
@@ -86,12 +88,18 @@ class JwtAuthentication extends \Slim\Middleware
         /* If token cannot be found return with 401 Unauthorized. */
         if (false === $token = $this->fetchToken()) {
             $this->app->response->status(401);
+            $this->error(array(
+                "message" => $this->message
+            ));
             return;
         }
 
         /* If token cannot be decoded return with 400 Bad Request. */
         if (false === $decoded = $this->decodeToken($token)) {
             $this->app->response->status(400);
+            $this->error(array(
+                "message" => $this->message
+            ));
             return;
         }
 
@@ -100,6 +108,9 @@ class JwtAuthentication extends \Slim\Middleware
             $params = array("decoded" => $decoded, "app" => $this->app);
             if (false === $this->options["callback"]($params)) {
                 $this->app->response->status(401);
+                $this->error(array(
+                    "message" => "Callback returned false"
+                ));
                 return;
             }
         }
@@ -122,6 +133,17 @@ class JwtAuthentication extends \Slim\Middleware
             }
         }
         return true;
+    }
+
+    /**
+     * Call the error handler if it exists
+     *
+     * @return void
+     */
+    public function error($params) {
+        if (is_callable($this->options["error"])) {
+            $this->options["error"]($params);
+        }
     }
 
     /**
@@ -151,7 +173,8 @@ class JwtAuthentication extends \Slim\Middleware
         };
 
         /* If everything fails log and return false. */
-        $this->log(LogLevel::WARNING, "Token not found");
+        $this->message = "Token not found";
+        $this->log(LogLevel::WARNING, $this->message);
         return false;
     }
 
@@ -164,6 +187,7 @@ class JwtAuthentication extends \Slim\Middleware
                 array("HS256", "HS512", "HS384", "RS256")
             );
         } catch (\Exception $exception) {
+            $this->message = $exception->getMessage();
             $this->log(LogLevel::WARNING, $exception->getMessage(), array($token));
             return false;
         }
@@ -332,6 +356,27 @@ class JwtAuthentication extends \Slim\Middleware
     public function setCallback($callback)
     {
         $this->options["callback"] = $callback;
+        return $this;
+    }
+
+    /**
+     * Get the error handler
+     *
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->options["error"];
+    }
+
+    /**
+     * Set the error handler
+     *
+     * @return self
+     */
+    public function setError($error)
+    {
+        $this->options["error"] = $error;
         return $this;
     }
 
