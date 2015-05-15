@@ -70,7 +70,7 @@ class JwtAuthentication extends \Slim\Middleware
         if ("https" !== $scheme && true === $this->options["secure"]) {
             if (!in_array($environment["SERVER_NAME"], $this->options["relaxed"])) {
                 $message = sprintf(
-                    "Unsecure use of middleware over %s denied by configuration.",
+                    "Insecure use of middleware over %s denied by configuration.",
                     strtoupper($scheme)
                 );
                 throw new \RuntimeException($message);
