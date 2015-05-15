@@ -238,7 +238,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Success", $app->response()->body());
     }
 
-    public function testShouldNotAllowUnsecure()
+    public function testShouldNotAllowInsecure()
     {
 
         $this->setExpectedException("RuntimeException");
@@ -268,7 +268,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth->call();
     }
 
-    public function testShouldRelaxUnsecureInLocalhost()
+    public function testShouldRelaxInsecureInLocalhost()
     {
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",

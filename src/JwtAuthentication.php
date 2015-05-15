@@ -25,6 +25,7 @@ use \Psr\Http\Message\ResponseInterface;
 class JwtAuthentication
 {
     protected $logger;
+    protected $message; /* Last error message. */
 
     private $options = array(
         "secure" => true,
@@ -32,7 +33,8 @@ class JwtAuthentication
         "environment" => "HTTP_AUTHORIZATION",
         "cookie" => "token",
         "path" => null,
-        "callback" => null
+        "callback" => null,
+        "error" => null
     );
 
     /**
@@ -73,7 +75,7 @@ class JwtAuthentication
         if ("https" !== $scheme && true === $this->options["secure"]) {
             if (!in_array($host, $this->options["relaxed"])) {
                 $message = sprintf(
-                    "Unsecure use of middleware over %s denied by configuration.",
+                    "Insecure use of middleware over %s denied by configuration.",
                     strtoupper($scheme)
                 );
                 throw new \RuntimeException($message);
@@ -86,20 +88,32 @@ class JwtAuthentication
         }
 
         /* If token cannot be found return with 401 Unauthorized. */
-        if (false === $token = $this->fetchToken($request)) {
-            return $response->withStatus(401);
+        if (false === $token = $this->fetchToken()) {
+            $this->app->response->status(401);
+            $this->error([
+                "message" => $this->message
+            ]);
+            return;
         }
 
         /* If token cannot be decoded return with 400 Bad Request. */
         if (false === $decoded = $this->decodeToken($token)) {
-            return $response->withStatus(400);
+            $this->app->response->status(400);
+            $this->error([
+                "message" => $this->message
+            ]);
+            return;
         }
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
             $params = array("decoded" => $decoded);
             if (false === $this->options["callback"]($params)) {
-                return $response->withStatus(401);
+                $this->app->response->status(401);
+                $this->error([
+                    "message" => "Callback returned false"
+                ]);
+                return;
             }
         }
 
@@ -121,6 +135,18 @@ class JwtAuthentication
             }
         }
         return true;
+    }
+
+    /**
+     * Call the error handler if it exists
+     *
+     * @return void
+     */
+    public function error($params)
+    {
+        if (is_callable($this->options["error"])) {
+            $this->options["error"]($params);
+        }
     }
 
     /**
@@ -151,7 +177,8 @@ class JwtAuthentication
         };
 
         /* If everything fails log and return false. */
-        $this->log(LogLevel::WARNING, "Token not found");
+        $this->message = "Token not found";
+        $this->log(LogLevel::WARNING, $this->message);
         return false;
     }
 
@@ -164,6 +191,7 @@ class JwtAuthentication
                 array("HS256", "HS512", "HS384", "RS256")
             );
         } catch (\Exception $exception) {
+            $this->message = $exception->getMessage();
             $this->log(LogLevel::WARNING, $exception->getMessage(), array($token));
             return false;
         }
@@ -332,6 +360,27 @@ class JwtAuthentication
     public function setCallback($callback)
     {
         $this->options["callback"] = $callback->bindTo($this);
+        return $this;
+    }
+
+    /**
+     * Get the error handler
+     *
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->options["error"];
+    }
+
+    /**
+     * Set the error handler
+     *
+     * @return self
+     */
+    public function setError($error)
+    {
+        $this->options["error"] = $error;
         return $this;
     }
 

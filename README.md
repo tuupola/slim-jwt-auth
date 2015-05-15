@@ -53,7 +53,7 @@ Validation error is triggered for example when token has been tampered or token 
 
 ## Security
 
-JSON Web Tokens are essentially passwords. You should treat them as such. You should always use HTTPS. If the middleware detects unsecure usage over HTTP it will throw `RuntimeException`. This rule is relaxed for localhost. To allow unsecure usage you must enable it manually by setting `secure` to `false`.
+JSON Web Tokens are essentially passwords. You should treat them as such. You should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw `RuntimeException`. This rule is relaxed for localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
 
 ``` php
 $app->add(new \Slim\Middleware\JwtAuthentication([
