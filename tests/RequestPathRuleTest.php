@@ -13,65 +13,75 @@
  *
  */
 
+
 namespace Test;
 
-use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Slim\Middleware\JwtAuthentication\RequestPathRule;
 
-class MatchPathTest extends \PHPUnit_Framework_TestCase
+use Slim\Http\Request;
+use Slim\Http\Response;
+use Slim\Http\Uri;
+use Slim\Http\Headers;
+use Slim\Http\Body;
+use Slim\Http\Collection;
+
+class RequestPathTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testShouldAuthenticateEverything()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/"
-        ));
+        $uri = Uri::createFromString("https://example.com/");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $rule = new RequestPathRule(array("path" => "/"));
-        $this->assertTrue($rule(new \Slim\Slim));
+        $rule = new RequestPathRule(["path" => "/"]);
+        $this->assertTrue($rule($request));
 
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/admin/"
-        ));
-        $this->assertTrue($rule(new \Slim\Slim));
+        $uri = Uri::createFromString("https://example.com/api");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $this->assertTrue($rule($request));
     }
 
-
-    public function testShouldAuthenticateOnlyAdmin()
+    public function testShouldAuthenticateOnlyApi()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/"
-        ));
+        $uri = Uri::createFromString("https://example.com/");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $rule = new RequestPathRule(array("path" => "/admin"));
-        $this->assertFalse($rule(new \Slim\Slim));
+        $rule = new RequestPathRule(["path" => "/api"]);
+        $this->assertFalse($rule($request));
 
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/admin/"
-        ));
-        $this->assertTrue($rule(new \Slim\Slim));
+        $uri = Uri::createFromString("https://example.com/api");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $this->assertTrue($rule($request));
     }
 
     public function testShouldPassthroughLogin()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/admin/protected"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $rule = new RequestPathRule(array(
-            "path" => "/admin",
-            "passthrough" => array("/admin/login")
-        ));
-        $this->assertTrue($rule(new \Slim\Slim));
+        $rule = new RequestPathRule([
+            "path" => "/api",
+            "passthrough" => ["/api/login"]
+        ]);
+        $this->assertTrue($rule($request));
 
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/admin/login"
-        ));
-        $this->assertFalse($rule(new \Slim\Slim));
+        $uri = Uri::createFromString("https://example.com/api/login");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $this->assertFalse($rule($request));
     }
 }

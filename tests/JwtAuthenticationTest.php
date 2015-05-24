@@ -13,9 +13,20 @@
  *
  */
 
-namespace Slim\Middleware\Test;
+namespace Slim\JwtAuthentication\Test;
 
-use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+#use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+use Slim\Http\Request;
+use Slim\Http\Response;
+use Slim\Http\Uri;
+use Slim\Http\Headers;
+use Slim\Http\Body;
+use Slim\Http\Collection;
+
+use Slim\Middleware\JwtAuthentication;
 
 class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
@@ -39,351 +50,342 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithoutToken()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(401, $app->response()->status());
-        $this->assertEquals("", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
     }
 
     public function testShouldReturn200WithTokenFromEnvironment()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Foo", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
 
     public function testShouldReturn200WithTokenFromCookie()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "slim.url_scheme" => "https"
-        ));
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = ["token" => self::$token];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $_COOKIE["token"] =  self::$token;
+        $response = new Response();
 
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
-
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Foo", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
 
     public function testShouldReturn401WithFalseFromCallback()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
             "callback" => function ($params) {
                 return false;
             }
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(401, $app->response()->status());
-        $this->assertEquals("", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
     }
 
     public function testShouldReturn200WithOptions()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "REQUEST_METHOD" => "OPTIONS",
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->options("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("OPTIONS", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Foo", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
 
     public function testShouldReturn400WithBrokenToken()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer broken" . self::$token,
-            "slim.url_scheme" => "https"
-        ));
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer broken" . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $response = new Response();
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(400, $app->response()->status());
-        $this->assertEquals("", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
     }
 
     public function testShouldReturn200WithoutTokenWithPath()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo",
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/public/foo", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/public");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
             "path" => "/api",
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-        ));
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Success", $app->response()->body());
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
 
     public function testShouldNotAllowInsecure()
     {
-
         $this->setExpectedException("RuntimeException");
 
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo",
-            "SERVER_NAME" => "dev.example.com",
-            "slim.url_scheme" => "http"
-        ));
+        $uri = Uri::createFromString("http://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $app = new \Slim\Slim();
-        $app->get("/public/foo", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $response = new Response();
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
-            "path" => "/api",
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-        ));
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
     }
 
     public function testShouldRelaxInsecureInLocalhost()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo",
-            "SERVER_NAME" => "localhost",
-            "slim.url_scheme" => "http"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/public/foo", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("http://localhost/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
-            "path" => "/api",
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-        ));
+        $response = new Response();
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Success", $app->response()->body());
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
-
 
     public function testShouldFetchTokenFromEnvironment()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo",
-            "slim.url_scheme" => "https"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_BRAWNDO" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $_SERVER["HTTP_BRAWNDO"] = "Bearer " . self::$token;
+        $response = new Response();
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $auth = new JwtAuthentication([
             "environment" => "HTTP_BRAWNDO",
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ));
+        ]);
 
-        $this->assertEquals(self::$token, $auth->fetchToken());
+        $this->assertEquals(self::$token, $auth->fetchToken($request));
     }
 
     public function testShouldCallCallback()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
-            "slim.url_scheme" => "https"
-        ));
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $response = new Response();
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $dummy = null;
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($params) {
-                $params["app"]->jwt = $params["decoded"];
+            "callback" => function ($request, $response, $arguments) use (&$dummy) {
+                $dummy = $arguments["decoded"];
             }
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Foo", $app->response()->body());
-        $this->assertTrue(is_object($app->jwt));
-        $this->assertEquals(self::$token_as_array, (array)$app->jwt);
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+        $this->assertTrue(is_object($dummy));
+        $this->assertEquals(self::$token_as_array, (array)$dummy);
     }
 
-    public function testShouldTestForScope()
+    public function testShouldCallError()
     {
-        \Slim\Environment::mock(array(
-            "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer " . self::$token,
-            "slim.url_scheme" => "https"
-        ));
-        $app = new \Slim\Slim();
-        $app->get("/foo/bar", function () {
-            echo "Success";
-        });
-        $app->get("/api/foo", function () {
-            echo "Foo";
-        });
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $auth = new \Slim\Middleware\JwtAuthentication(array(
+        $response = new Response();
+
+        $dummy = null;
+        $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($params) {
-                $params["app"]->jwt = $params["decoded"];
+            "error" => function ($request, $response, $arguments) use (&$dummy) {
+                $dummy = true;
             }
-        ));
+        ]);
 
-        $auth->setApplication($app);
-        $auth->setNextMiddleware($app);
-        $auth->call();
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
 
-        $this->assertEquals(200, $app->response()->status());
-        $this->assertEquals("Foo", $app->response()->body());
-        $this->assertTrue(is_object($app->jwt));
-        $this->assertTrue(in_array("delete", $app->jwt->scope));
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+        $this->assertTrue($dummy);
     }
 
+    public function testShouldCallErrorAndModifyBody()
+    {
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
+        $response = new Response();
+
+        $dummy = null;
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "error" => function ($request, $response, $arguments) use (&$dummy) {
+                $dummy = true;
+                return $response->write("Error");
+            }
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("Error", $response->getBody());
+        $this->assertTrue($dummy);
+    }
 
     public function testShouldGetAndSetPath()
     {
@@ -432,10 +434,19 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public function testShouldGetAndSetCallback()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
-        $auth->setCallback(function ($decoded, $app) {
+        $auth->setCallback(function ($request, $response, $params) {
             return true;
         });
         $this->assertTrue(is_callable($auth->getCallback()));
+    }
+
+    public function testShouldGetAndSetError()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setError(function ($request, $response, $params) {
+            return true;
+        });
+        $this->assertTrue(is_callable($auth->getError()));
     }
 
     public function testShouldGetAndSetRules()

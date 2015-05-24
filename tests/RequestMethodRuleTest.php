@@ -15,54 +15,73 @@
 
 namespace Test;
 
-use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
+use Slim\Middleware\JwtAuthentication\RequestMethodRule;
 
-class RequestMethodPassthroughTest extends \PHPUnit_Framework_TestCase
+use Slim\Http\Request;
+use Slim\Http\Response;
+use Slim\Http\Uri;
+use Slim\Http\Headers;
+use Slim\Http\Body;
+use Slim\Http\Collection;
+
+class RequestMethodTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testShouldNotAuthenticateOptions()
     {
-        \Slim\Environment::mock(array(
-            "REQUEST_METHOD" => "OPTIONS"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("OPTIONS", $uri, $headers, $cookies, $server, $body);
 
         $rule = new RequestMethodRule();
 
-        $this->assertFalse($rule(new \Slim\Slim));
+        $this->assertFalse($rule($request));
     }
 
     public function testShouldAuthenticatePost()
     {
-        \Slim\Environment::mock(array(
-            "REQUEST_METHOD" => "POST"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("POST", $uri, $headers, $cookies, $server, $body);
 
         $rule = new RequestMethodRule();
 
-        $this->assertTrue($rule(new \Slim\Slim));
+        $this->assertTrue($rule($request));
     }
 
     public function testShouldAuthenticateGet()
     {
-        \Slim\Environment::mock(array(
-            "REQUEST_METHOD" => "GET"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
         $rule = new RequestMethodRule();
 
-        $this->assertTrue($rule(new \Slim\Slim));
+        $this->assertTrue($rule($request));
     }
 
     public function testShouldConfigurePassThrough()
     {
-        \Slim\Environment::mock(array(
-            "REQUEST_METHOD" => "GET"
-        ));
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
-        $rule = new RequestMethodRule(array(
-            "passthrough" => array("GET")
-        ));
+        $rule = new RequestMethodRule([
+            "passthrough" => ["GET"]
+        ]);
 
-        $this->assertFalse($rule(new \Slim\Slim));
+        $this->assertFalse($rule($request));
     }
 }
