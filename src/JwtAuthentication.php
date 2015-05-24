@@ -15,32 +15,32 @@
 
 namespace Slim\Middleware;
 
-use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
-use \Slim\Middleware\JwtAuthentication\RequestPathRule;
-use \Psr\Log\LoggerInterface;
-use \Psr\Log\LogLevel;
-use \Psr\Http\Message\RequestInterface;
-use \Psr\Http\Message\ResponseInterface;
+use Slim\Middleware\JwtAuthentication\RequestMethodRule;
+use Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class JwtAuthentication
 {
     protected $logger;
     protected $message; /* Last error message. */
 
-    private $options = array(
+    private $options = [
         "secure" => true,
-        "relaxed" => array("localhost", "127.0.0.1"),
+        "relaxed" => ["localhost", "127.0.0.1"],
         "environment" => "HTTP_AUTHORIZATION",
         "cookie" => "token",
         "path" => null,
         "callback" => null,
         "error" => null
-    );
+    ];
 
     /**
      * Create a new JwtAuthentication Instance
      */
-    public function __construct($options = array())
+    public function __construct(array $options = [])
     {
         /* Setup stack for rules */
         $this->rules = new \SplStack;
@@ -50,16 +50,16 @@ class JwtAuthentication
 
         /* If nothing was passed in options add default rules. */
         if (!isset($options["rules"])) {
-            $this->addRule(new RequestMethodRule(array(
-                "passthrough" => array("OPTIONS")
-            )));
+            $this->addRule(new RequestMethodRule([
+                "passthrough" => ["OPTIONS"]
+            ]));
         }
 
         /* If path was given in easy mode add rule for it. */
         if (null !== ($this->options["path"])) {
-            $this->addRule(new RequestPathRule(array(
+            $this->addRule(new RequestPathRule([
                 "path" => $this->options["path"]
-            )));
+            ]));
         }
     }
 
@@ -103,7 +103,7 @@ class JwtAuthentication
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
-            $params = array("decoded" => $decoded);
+            $params = ["decoded" => $decoded];
             if (false === $this->options["callback"]($request, $response, $params)) {
                 return $this->error($request, $response, [
                     "message" => "Callback returned false"
@@ -190,11 +190,11 @@ class JwtAuthentication
             return \JWT::decode(
                 $token,
                 $this->options["secret"],
-                array("HS256", "HS512", "HS384", "RS256")
+                ["HS256", "HS512", "HS384", "RS256"]
             );
         } catch (\Exception $exception) {
             $this->message = $exception->getMessage();
-            $this->log(LogLevel::WARNING, $exception->getMessage(), array($token));
+            $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
             return false;
         }
     }
@@ -205,7 +205,7 @@ class JwtAuthentication
      * @param array $data Array of options.
      * @return self
      */
-    private function hydrate($data = array())
+    private function hydrate(array $data = [])
     {
         foreach ($data as $key => $value) {
             $method = "set" . ucfirst($key);
@@ -458,7 +458,7 @@ class JwtAuthentication
      *
      * @return null
      */
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = [])
     {
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);

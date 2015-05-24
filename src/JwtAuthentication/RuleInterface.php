@@ -15,7 +15,7 @@
 
 namespace Slim\Middleware\JwtAuthentication;
 
-use \Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\RequestInterface;
 
 interface RuleInterface
 {

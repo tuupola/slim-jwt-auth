@@ -15,16 +15,16 @@
 
 namespace Slim\Middleware\JwtAuthentication;
 
-use \Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\RequestInterface;
 
 class RequestPathRule implements RuleInterface
 {
-    protected $options = array(
+    protected $options = [
         "path" => "/",
-        "passthrough" => array()
-    );
+        "passthrough" => []
+    ];
 
-    public function __construct($options = array())
+    public function __construct($options = [])
     {
         $this->options = array_merge($this->options, $options);
     }

@@ -19,11 +19,11 @@ use \Psr\Http\Message\RequestInterface;
 
 class RequestMethodRule implements RuleInterface
 {
-    protected $options = array(
-        "passthrough" => array("OPTIONS")
-    );
+    protected $options = [
+        "passthrough" => ["OPTIONS"]
+    ];
 
-    public function __construct($options = array())
+    public function __construct(array $options = [])
     {
         $this->options = array_merge($this->options, $options);
     }

@@ -34,14 +34,14 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
     /* @codingStandardsIgnoreEnd */
 
-    public static $token_as_array = array(
+    public static $token_as_array = [
         "iss" => "Acme Toothpics Ltd",
         "iat" => "1428819941",
         "exp" => "1744352741",
         "aud" => "www.example.com",
         "sub" => "someone@example.com",
-        "scope" => array("read", "write", "delete")
-    );
+        "scope" => ["read", "write", "delete"]
+    ];
 
     public function testShouldBeTrue()
     {
