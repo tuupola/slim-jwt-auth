@@ -139,7 +139,10 @@ class JwtAuthentication
     public function error(RequestInterface $request, ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
-            return $this->options["error"]($request, $response, $arguments);
+            $handler_response = $this->options["error"]($request, $response, $arguments);
+            if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
+                return $handler_response;
+            }
         }
         return $response;
     }
