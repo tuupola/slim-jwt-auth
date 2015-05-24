@@ -167,10 +167,12 @@ class JwtAuthentication
         }
 
         /* Bearer not found, try a cookie. */
-        if (isset($_COOKIE[$this->options["cookie"]])) {
+        $cookie_params = $request->getCookieParams();
+
+        if (isset($cookie_params[$this->options["cookie"]])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
-            $this->log(LogLevel::DEBUG, $_COOKIE[$this->options["cookie"]]);
-            return $_COOKIE[$this->options["cookie"]];
+            $this->log(LogLevel::DEBUG, $cookie_params[$this->options["cookie"]]);
+            return $cookie_params[$this->options["cookie"]];
         };
 
         /* If everything fails log and return false. */
