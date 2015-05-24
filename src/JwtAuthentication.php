@@ -141,7 +141,7 @@ class JwtAuthentication
         if (is_callable($this->options["error"])) {
             return $this->options["error"]($request, $response, $arguments);
         }
-        return $request;
+        return $response;
     }
 
     /**
@@ -152,9 +152,10 @@ class JwtAuthentication
     public function fetchToken(RequestInterface $request)
     {
         /* If using PHP in CGI mode and non standard environment */
-        if (isset($_SERVER[$this->options["environment"]])) {
+        $server_params = $request->getServerParams();
+        if (isset($server_params[$this->options["environment"]])) {
             $message = "Using token from environent";
-            $header = $_SERVER[$this->options["environment"]];
+            $header = $server_params[$this->options["environment"]];
         } else {
             $message = "Using token from request header";
             $header = $request->getHeader("Authorization");
