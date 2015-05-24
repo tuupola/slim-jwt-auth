@@ -34,13 +34,13 @@ class RequestPathRule implements RuleInterface
         /* If request path is matches passthrough should not authenticate. */
         foreach ($this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
-            if (!!preg_match("@^{$passthrough}(/.*)?$@", $app->request->getResourceUri())) {
+            if (!!preg_match("@^{$passthrough}(/.*)?$@", $request->getUri()->getPath())) {
                 return false;
             }
         }
 
         /* Otherwise check if path matches and we should authenticate. */
         $path = rtrim($this->options["path"], "/");
-        return !!preg_match("@^{$path}(/.*)?$@", $app->request->getResourceUri());
+        return !!preg_match("@^{$path}(/.*)?$@", $request->getUri()->getPath());
     }
 }
