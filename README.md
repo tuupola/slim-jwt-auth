@@ -10,7 +10,7 @@ This middleware implements JSON Web Token Authentication for Slim Framework. It 
 
 ## Install
 
-Install develelopment version for Slim 3 using [composer](https://getcomposer.org/).
+Install develelopment version for Slim 3 using [composer](https://getcomposer.org/). If you have Slim 3 installed composer will automatically choose correct version.
 
 ``` bash
 $ composer require slim/slim:~3.0@dev
@@ -28,7 +28,7 @@ RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 Configuration options are passed as an array. Only mandatory parameter is `secret` which is used for verifying then token signature. For simplicitys sake examples show `secret` hardcoded in code. In real life you should use [dotenv](https://github.com/vlucas/phpdotenv) or something similar instead.
 
 ``` php
-$app = new \Slim\Slim();
+$app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
@@ -38,7 +38,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 With optional `path` parameter can authenticate only given part of your website. It is also possible to pass PSR-3 compatible logger to help debugging.
 
 ``` php
-$app = new \Slim\Slim();
+$app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "path" => "/api",
@@ -56,6 +56,8 @@ Validation error is triggered for example when token has been tampered or token 
 JSON Web Tokens are essentially passwords. You should treat them as such. You should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw `RuntimeException`. This rule is relaxed for localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
 
 ``` php
+$app = new \Slim\App();
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secure" => false,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
@@ -65,6 +67,8 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 Alternatively you can list your development host to have relaxed security.
 
 ``` php
+$app = new \Slim\App();
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secure" => true,
     "relaxed" => ["localhost", "dev.example.com"],
@@ -89,21 +93,21 @@ Let assume you have token which includes data for scope. In middleware callback 
 ```
 
 ``` php
-$app = new \Slim\Slim();
+$app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($options) use ($app) {
-        $app->jwt = $options["decoded"];
+    "callback" => function ($request, $response, $arguments) use ($app) {
+        $app->jwt = $arguments["decoded"];
     }
 ]));
 
-$app->delete("/item/:id", function () use ($app) {
+$app->delete("/item/{id}", function ($request, $response, $arguments) use ($app) {
     if (in_array("delete", $app->jwt->scope)) {
         /* Code for deleting item */
     } else {
         /* No scope so respond with 401 Unauthorized */
-        $app->response->status(401);
+        return $response->withStatus(401);
     }
 });
 ```
@@ -128,11 +132,11 @@ One way of support blacklisting is to include `jti` ([JWT ID](http://self-issued
 ```
 
 ``` php
-$app = new \Slim\Slim();
+$app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "blacklist" => function ($options) use ($app) {
+    "blacklist" => function ($request, $response, $arguments) use ($app) {
         $decoded = $options["decoded"];
         return "24d4e5c5-5727-4b7f-bd1d-a8f0733f160b" === $decoded["jti"];
     }
