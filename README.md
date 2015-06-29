@@ -6,11 +6,11 @@
 [![HHVM Status](https://img.shields.io/hhvm/tuupola/slim-jwt-auth.svg?style=flat-square)](http://hhvm.h4cc.de/package/tuupola/slim-jwt-auth)
 [![Coverage](http://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth)
 
-This middleware implements JSON Web Token Authentication for Slim Framework. It does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful for example when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
+This middleware implements a JSON Web Token Authentication Middleware for Slim Framework. It does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful, for example, when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
 
 ## Install
 
-Install latest version using [composer](https://getcomposer.org/).
+Install the latest version using [composer](https://getcomposer.org/).
 
 ``` bash
 $ composer require tuupola/slim-jwt-auth
@@ -24,7 +24,7 @@ RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 ## Usage
 
-Configuration options are passed as an array. Only mandatory parameter is `secret` which is used for verifying then token signature. For simplicitys sake examples show `secret` hardcoded in code. In real life you should use [dotenv](https://github.com/vlucas/phpdotenv) or something similar instead.
+Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. For simplicity's sake examples show `secret` hardcoded in code. In real life you should use [dotenv](https://github.com/vlucas/phpdotenv) or something similar instead.
 
 ``` php
 $app = new \Slim\Slim();
@@ -34,7 +34,29 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-With optional `path` parameter can authenticate only given part of your website. It is also possible to pass PSR-3 compatible logger to help debugging.
+An example where your secret is stored as an environment variable:
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => getenv("JWT_SECRET")
+]));
+```
+### path (optional)
+The optional `path` parameter allows you to specify the "protected" part of your website.
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "path" => "/api",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+### logger (optional)
+The optional `logger` parameter allows you to pass in a PSR-3 compatible logger to help with debugging or other application logging needs.
 
 ``` php
 $app = new \Slim\Slim();
@@ -46,13 +68,30 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-When request is made middleware tries to validate and decode the token. If token is not found server will response with `401 Unauthorized`. If token exists but there is an error when validating and decoding it server will response with `400 Bad Request`.
+### rules (optional)
+The optional `rules` parameter allows you to pass in an object of type RequestPathRule that contains both a `path` parameter (array of protected paths/routes) and a `passthrough` parameter that bypasses the JWT middleware. Think of `passthrough` as a whitelist.
 
-Validation error is triggered for example when token has been tampered or token has expired. For all possible reasons see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "logger" => $logger,
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "rules" => [
+        new RequestPathRule([
+            "path" => "/api",
+            "passthrough" => ["/token", "/hello"]
+        ])
+]));
+```
+
+When a request is made, the middleware tries to validate and decode the token. If a token is not found, the server will respond with `401 Unauthorized`. If a token exists but there is an error when validating and decoding it, the server will respond with `400 Bad Request`.
+
+Validation errors are triggered when the token has been tampered with or the token has expired. For all possible validation errors, see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
 
 ## Security
 
-JSON Web Tokens are essentially passwords. You should treat them as such. You should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw `RuntimeException`. This rule is relaxed for localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
+JSON Web Tokens are essentially passwords. You should treat them as such and you should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw a `RuntimeException`. This rule is relaxed for requests on localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
 
 ``` php
 $app->add(new \Slim\Middleware\JwtAuthentication([
