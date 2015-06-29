@@ -43,7 +43,15 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => getenv("JWT_SECRET")
 ]));
 ```
-### Path (optional)
+
+When a request is made, the middleware tries to validate and decode the token. If a token is not found, the server will respond with `401 Unauthorized`. If a token exists but there is an error when validating and decoding it, the server will respond with `400 Bad Request`.
+
+Validation errors are triggered when the token has been tampered with or the token has expired. For all possible validation errors, see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
+
+
+## Optional parameters
+### Path
+
 The optional `path` parameter allows you to specify the "protected" part of your website.
 
 ``` php
@@ -55,7 +63,8 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-### Logger (optional)
+### Logger
+
 The optional `logger` parameter allows you to pass in a PSR-3 compatible logger to help with debugging or other application logging needs.
 
 ``` php
@@ -63,13 +72,35 @@ $app = new \Slim\Slim();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "path" => "/api",
-    "logger" => $logger,
+    "logger" => $monolog,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
 
-### Rules (optional)
-The optional `rules` parameter allows you to pass in an object of type RequestPathRule that contains both a `path` parameter (array of protected paths/routes) and a `passthrough` parameter that bypasses the JWT middleware. Think of `passthrough` as a whitelist.
+### Rules
+
+The optional `rules` parameter allows you to pass in rules which define whether the request should be authenticated or not. Rule is a callable which receives the Slim app as parameter. If the callable returns boolean `false` request will not be authenticated.
+
+By default middleware configuration looks like this. All paths are authenticated with all request methods except `OPTIONS`.
+
+``` php
+$app = new \Slim\Slim();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "rules" => [
+        new \Slim\Middleware\JwtAuthentication\RequestPathRule([
+            "path" => "/",
+            "passthrough" => []
+        ]),
+        new \Slim\Middleware\JwtAuthentication\RequestMethodRule([
+            "passthrough" => ["OPTIONS"]
+        ])
+]));
+```
+
+RequestPathRule contains both a `path` parameter and a `passthrough` parameter of paths which should not be authenticated. RequestMethodRule contains `passthrough` parameter of request methods which also should not be authenticated. Think of `passthrough` as a whitelist.
+
+Example use case for this is an API. Token can be retrieved via [HTTP Basic Auth](https://github.com/tuupola/slim-basic-auth) protected address. There also is an unprotected url for pinging. Rest of the API is protected by the JWT middleware.
 
 ``` php
 $app = new \Slim\Slim();
@@ -80,14 +111,24 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "rules" => [
         new RequestPathRule([
             "path" => "/api",
-            "passthrough" => ["/token", "/hello"]
+            "passthrough" => ["/api/token", "/api/ping"]
+        ]),
+        new \Slim\Middleware\JwtAuthentication\RequestMethodRule([
+            "passthrough" => ["OPTIONS"]
         ])
 ]));
+
+$app->add(new \Slim\Middleware\HttpBasicAuthentication([
+    "path" => "/api/token",
+    "users" => [
+        "user" => "password"
+    ]
+]));
+
+$app->post("/token", function () use ($app) { 
+  /* Here generate and return JWT to the client. */
+});
 ```
-
-When a request is made, the middleware tries to validate and decode the token. If a token is not found, the server will respond with `401 Unauthorized`. If a token exists but there is an error when validating and decoding it, the server will respond with `400 Bad Request`.
-
-Validation errors are triggered when the token has been tampered with or the token has expired. For all possible validation errors, see [JWT library ](https://github.com/firebase/php-jwt/blob/master/Authentication/JWT.php#L44) source.
 
 ## Security
 
