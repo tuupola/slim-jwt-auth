@@ -43,7 +43,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => getenv("JWT_SECRET")
 ]));
 ```
-### path (optional)
+### Path (optional)
 The optional `path` parameter allows you to specify the "protected" part of your website.
 
 ``` php
@@ -55,7 +55,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-### logger (optional)
+### Logger (optional)
 The optional `logger` parameter allows you to pass in a PSR-3 compatible logger to help with debugging or other application logging needs.
 
 ``` php
@@ -68,7 +68,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-### rules (optional)
+### Rules (optional)
 The optional `rules` parameter allows you to pass in an object of type RequestPathRule that contains both a `path` parameter (array of protected paths/routes) and a `passthrough` parameter that bypasses the JWT middleware. Think of `passthrough` as a whitelist.
 
 ``` php
