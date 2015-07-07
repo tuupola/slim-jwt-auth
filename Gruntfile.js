@@ -5,7 +5,7 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON("package.json"),
         watch: {
             php: {
-                files: ["src/**/*.php", "tests/**/*.php"],
+                files: ["src/**/*.php", "tests/*.php"],
                 tasks: ["testphp"]
             }
         },
