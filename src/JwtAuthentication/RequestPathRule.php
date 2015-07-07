@@ -18,7 +18,7 @@ namespace Slim\Middleware\JwtAuthentication;
 class RequestPathRule implements RuleInterface
 {
     protected $options = array(
-        "path" => "/",
+        "path" => array("/"),
         "passthrough" => array()
     );
 
@@ -29,16 +29,23 @@ class RequestPathRule implements RuleInterface
 
     public function __invoke(\Slim\Slim $app)
     {
+        $uri = $app->request->getResourceUri();
+
         /* If request path is matches passthrough should not authenticate. */
-        foreach ($this->options["passthrough"] as $passthrough) {
+        foreach ((array)$this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
-            if (!!preg_match("@^{$passthrough}(/.*)?$@", $app->request->getResourceUri())) {
+            if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
                 return false;
             }
         }
 
         /* Otherwise check if path matches and we should authenticate. */
-        $path = rtrim($this->options["path"], "/");
-        return !!preg_match("@^{$path}(/.*)?$@", $app->request->getResourceUri());
+        foreach ((array)$this->options["path"] as $path) {
+            $path = rtrim($path, "/");
+            if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
