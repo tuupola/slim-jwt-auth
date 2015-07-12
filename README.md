@@ -52,13 +52,13 @@ Validation errors are triggered when the token has been tampered with or the tok
 ## Optional parameters
 ### Path
 
-The optional `path` parameter allows you to specify the "protected" part of your website.
+The optional `path` parameter allows you to specify the "protected" part of your website. It can be either a string or an array.
 
 ``` php
 $app = new \Slim\Slim();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
-    "path" => "/api",
+    "path" => "/api", /* or ["/api", "/admin"] */
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -125,7 +125,7 @@ $app->add(new \Slim\Middleware\HttpBasicAuthentication([
     ]
 ]));
 
-$app->post("/token", function () use ($app) { 
+$app->post("/token", function () use ($app) {
   /* Here generate and return JWT to the client. */
 });
 ```
