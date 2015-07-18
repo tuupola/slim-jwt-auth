@@ -10,7 +10,7 @@ This middleware implements JSON Web Token Authentication for Slim Framework. It 
 
 ## Install
 
-Install develelopment version for Slim 3 using [composer](https://getcomposer.org/). If you have Slim 3 installed composer will automatically choose correct version.
+Install develelopment version for Slim 3 using [composer](https://getcomposer.org/). If you have Slim 3 installed composer will automatically choose correct version of the middleware.
 
 ``` bash
 $ composer require slim/slim:~3.0@dev
@@ -53,7 +53,7 @@ Validation errors are triggered when the token has been tampered with or the tok
 ## Optional parameters
 ### Path
 
-The optional `path` parameter allows you to specify the "protected" part of your website. It can be either a string or an array.
+The optional `path` parameter allows you to specify the protected part of your website. It can be either a string or an array.
 
 ``` php
 $app = new \Slim\App();
@@ -71,9 +71,13 @@ The optional `logger` parameter allows you to pass in a PSR-3 compatible logger 
 ``` php
 $app = new \Slim\App();
 
+$logger = \Monolog\Logger("slim");
+$rotating = new RotatingFileHandler(__DIR__ . "/logs/slim.log", 0, Logger::DEBUG);
+$logger->pushHandler($rotating);
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "path" => "/api",
-    "logger" => $monolog,
+    "logger" => $logger,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -99,7 +103,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
-RequestPathRule contains both a `path` parameter and a `passthrough` parameter of paths which should not be authenticated. RequestMethodRule contains `passthrough` parameter of request methods which also should not be authenticated. Think of `passthrough` as a whitelist.
+RequestPathRule contains both a `path` parameter and a `passthrough` parameter. Latter contains paths which should not be authenticated. RequestMethodRule contains `passthrough` parameter of request methods which also should not be authenticated. Think of `passthrough` as a whitelist.
 
 Example use case for this is an API. Token can be retrieved via [HTTP Basic Auth](https://github.com/tuupola/slim-basic-auth) protected address. There also is an unprotected url for pinging. Rest of the API is protected by the JWT middleware.
 
