@@ -213,7 +213,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $response = new Response();
 
         $auth = new JwtAuthentication([
-            "path" => "/api",
+            "path" => ["/api", "/foo"],
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 

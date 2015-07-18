@@ -27,6 +27,23 @@ use Slim\Http\Collection;
 
 class RequestPathTest extends \PHPUnit_Framework_TestCase
 {
+    public function testShouldAcceptArrayAndStringAsPath()
+    {
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $rule = new RequestPathRule(["path" => "/api"]);
+        $this->assertTrue($rule($request));
+
+        $this->assertTrue($rule($request));
+
+        $rule = new RequestPathRule(["path" => ["/api", "/foo"]]);
+        $this->assertTrue($rule($request));
+    }
 
     public function testShouldAuthenticateEverything()
     {
@@ -82,6 +99,35 @@ class RequestPathTest extends \PHPUnit_Framework_TestCase
         $uri = Uri::createFromString("https://example.com/api/login");
         $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
+        $this->assertFalse($rule($request));
+    }
+
+    public function testShouldAuthenticateCreateAndList()
+    {
+        $uri = Uri::createFromString("https://example.com/api");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        /* Should not authenticate */
+        $rule = new RequestPathRule(["path" => ["/api/create", "/api/list"]]);
+        $this->assertFalse($rule($request));
+
+        /* Should authenticate */
+        $uri = Uri::createFromString("https://example.com/api/create");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $this->assertTrue($rule($request));
+
+        /* Should authenticate */
+        $uri = Uri::createFromString("https://example.com/api/list");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $this->assertTrue($rule($request));
+
+        /* Should not authenticate */
+        $uri = Uri::createFromString("https://example.com/api/ping");
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
         $this->assertFalse($rule($request));
     }
 }

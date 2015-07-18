@@ -20,7 +20,7 @@ use Psr\Http\Message\RequestInterface;
 class RequestPathRule implements RuleInterface
 {
     protected $options = [
-        "path" => "/",
+        "path" => ["/"],
         "passthrough" => []
     ];
 
@@ -31,16 +31,23 @@ class RequestPathRule implements RuleInterface
 
     public function __invoke(RequestInterface $request)
     {
+        $uri = $request->getUri()->getPath();
+
         /* If request path is matches passthrough should not authenticate. */
-        foreach ($this->options["passthrough"] as $passthrough) {
+        foreach ((array)$this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
-            if (!!preg_match("@^{$passthrough}(/.*)?$@", $request->getUri()->getPath())) {
+            if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
                 return false;
             }
         }
 
         /* Otherwise check if path matches and we should authenticate. */
-        $path = rtrim($this->options["path"], "/");
-        return !!preg_match("@^{$path}(/.*)?$@", $request->getUri()->getPath());
+        foreach ((array)$this->options["path"] as $path) {
+            $path = rtrim($path, "/");
+            if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
