@@ -95,7 +95,8 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
         new \Slim\Middleware\JwtAuthentication\RequestMethodRule([
             "passthrough" => ["OPTIONS"]
         ])
-]));
+    ]
+]))
 ```
 
 RequestPathRule contains both a `path` parameter and a `passthrough` parameter of paths which should not be authenticated. RequestMethodRule contains `passthrough` parameter of request methods which also should not be authenticated. Think of `passthrough` as a whitelist.
@@ -109,7 +110,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "logger" => $logger,
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
     "rules" => [
-        new RequestPathRule([
+        new \Slim\Middleware\JwtAuthentication\RequestPathRule([
             "path" => "/api",
             "passthrough" => ["/api/token", "/api/ping"]
         ]),
