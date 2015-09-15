@@ -15,8 +15,8 @@
 
 namespace Slim\Middleware;
 
-use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
-use \Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Slim\Middleware\JwtAuthentication\RequestMethodRule;
+use Slim\Middleware\JwtAuthentication\RequestPathRule;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Firebase\JWT\JWT;
