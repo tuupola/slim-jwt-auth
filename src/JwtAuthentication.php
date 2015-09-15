@@ -19,6 +19,7 @@ use \Slim\Middleware\JwtAuthentication\RequestMethodRule;
 use \Slim\Middleware\JwtAuthentication\RequestPathRule;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Firebase\JWT\JWT;
 
 class JwtAuthentication extends \Slim\Middleware
 {
@@ -182,7 +183,7 @@ class JwtAuthentication extends \Slim\Middleware
     public function decodeToken($token)
     {
         try {
-            return \JWT::decode(
+            return JWT::decode(
                 $token,
                 $this->options["secret"],
                 array("HS256", "HS512", "HS384", "RS256")
