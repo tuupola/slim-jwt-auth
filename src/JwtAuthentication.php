@@ -69,6 +69,13 @@ class JwtAuthentication extends \Slim\Middleware
     {
         $environment = $this->app->environment;
         $scheme = $environment["slim.url_scheme"];
+
+        /* If rules say we should not authenticate call next and return. */
+        if (false === $this->shouldAuthenticate()) {
+            $this->next->call();
+            return;
+        }
+
         /* HTTP allowed only if secure is false or server is in relaxed array. */
         if ("https" !== $scheme && true === $this->options["secure"]) {
             if (!in_array($environment["SERVER_NAME"], $this->options["relaxed"])) {
@@ -78,12 +85,6 @@ class JwtAuthentication extends \Slim\Middleware
                 );
                 throw new \RuntimeException($message);
             }
-        }
-
-        /* If rules say we should not authenticate call next and return. */
-        if (false === $this->shouldAuthenticate()) {
-            $this->next->call();
-            return;
         }
 
         /* If token cannot be found return with 401 Unauthorized. */

@@ -245,7 +245,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
-            "PATH_INFO" => "/public/foo",
+            "PATH_INFO" => "/api/foo",
             "SERVER_NAME" => "dev.example.com",
             "slim.url_scheme" => "http"
         ));
@@ -467,5 +467,36 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $logger = new \Psr\Log\NullLogger;
         $auth->setLogger($logger);
         $this->assertNull($auth->log(\Psr\Log\LogLevel::WARNING, "Token not found"));
+    }
+
+    public function testBug9ShouldAllowUnauthenticatedHttp()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/public/foo",
+            "SERVER_NAME" => "dev.example.com",
+            "slim.url_scheme" => "http"
+        ));
+        $app = new \Slim\Slim();
+
+        $app->get("/public/foo", function () {
+            echo "Success";
+        });
+
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "path" => array("/api", "/bar"),
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Success", $app->response()->body());
     }
 }
