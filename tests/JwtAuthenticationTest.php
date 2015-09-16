@@ -481,4 +481,29 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth->setLogger($logger);
         $this->assertNull($auth->log(\Psr\Log\LogLevel::WARNING, "Token not found"));
     }
+
+    public function testShouldAllowUnauthenticatedHttp()
+    {
+        $uri = Uri::createFromString("http://example.com/public/foo");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $response = new Response();
+
+        $auth = new \Slim\Middleware\JwtAuthentication([
+            "path" => ["/api", "/bar"],
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Success");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
 }
