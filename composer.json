@@ -37,10 +37,5 @@
         "psr-4": {
             "Slim\\Middleware\\Test\\": "tests"
         }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-slim-3": "2.0.x-dev"
-        }
     }
 }
