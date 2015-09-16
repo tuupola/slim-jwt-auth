@@ -106,7 +106,7 @@ class JwtAuthentication
             $params = ["decoded" => $decoded];
             if (false === $this->options["callback"]($request, $response, $params)) {
                 return $this->error($request, $response, [
-                    "message" => "Callback returned false"
+                    "message" => $this->message || "Callback returned false"
                 ])->withStatus(401);
             }
         }
@@ -463,5 +463,27 @@ class JwtAuthentication
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);
         }
+    }
+
+    /**
+     * Get last error message
+     *
+     * @return String
+     */
+    public function getMessage()
+    {
+        return $this->message;
+    }
+
+    /**
+     * Set the last error message
+     *
+     * @param String
+     * @return self
+     */
+    public function setMessage($message)
+    {
+        $this->message = $message;
+        return $this;
     }
 }

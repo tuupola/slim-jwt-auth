@@ -310,6 +310,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
             "callback" => function ($request, $response, $arguments) use (&$dummy) {
+                $this->setMessage("Callback was called");
                 $dummy = $arguments["decoded"];
             }
         ]);
@@ -324,6 +325,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
         $this->assertTrue(is_object($dummy));
         $this->assertEquals(self::$token_as_array, (array)$dummy);
+        $this->assertEquals("Callback was called", $auth->getMessage());
     }
 
     public function testShouldCallError()
