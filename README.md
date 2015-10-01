@@ -10,11 +10,11 @@ This middleware implements JSON Web Token Authentication for Slim Framework. It 
 
 ## Install
 
-Install develelopment version for Slim 3 using [composer](https://getcomposer.org/). If you have Slim 3 installed composer will automatically choose correct version of the middleware.
+Install Slim 3 version using [composer](https://getcomposer.org/).
 
 ``` bash
-$ composer require slim/slim:~3.0@dev
-$ composer require tuupola/slim-jwt-auth:@dev
+$ composer require slim/slim:~3.0@rc
+$ composer require tuupola/slim-jwt-auth
 ```
 
 Also add the following to the `.htaccess` file. Otherwise PHP wont have access to `Authorization: Bearer` header.
