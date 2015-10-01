@@ -473,6 +473,24 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(is_callable($auth->getCallback()));
     }
 
+    public function testShouldGetAndSetError()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setError(function ($arguments) {
+            return true;
+        });
+        $this->assertTrue(is_callable($auth->getError()));
+    }
+
+    public function testShoulCallError()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setError(function ($arguments) {
+            return "Xevious";
+        });
+        $this->assertEquals("Xevious", $auth->error([]));
+    }
+
     public function testShouldGetAndSetRules()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
