@@ -1,3 +1,5 @@
+sudo: false
+
 language: php
 
 php:
@@ -8,7 +10,7 @@ php:
     - hhvm
 
 before_install:
-    - sudo pip install codecov
+    - pip install --user codecov
 
 before_script:
     - travis_retry composer self-update
