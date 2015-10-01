@@ -14,7 +14,7 @@ before_install:
 
 before_script:
     - travis_retry composer self-update
-    - travis_retry composer install --no-interaction --dev
+    - travis_retry composer install --no-interaction
 
 script:
     - vendor/bin/phpcs --standard=psr2 ./src
