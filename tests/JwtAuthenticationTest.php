@@ -488,7 +488,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth->setError(function ($arguments) {
             return "Xevious";
         });
-        $this->assertEquals("Xevious", $auth->error([]));
+        $this->assertEquals("Xevious", $auth->error(array()));
     }
 
     public function testShouldGetAndSetRules()
