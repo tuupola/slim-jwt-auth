@@ -145,7 +145,7 @@ class JwtAuthentication extends \Slim\Middleware
     public function error($params)
     {
         if (is_callable($this->options["error"])) {
-            $this->options["error"]($params);
+            return $this->options["error"]($params);
         }
     }
 
