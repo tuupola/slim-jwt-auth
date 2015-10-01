@@ -1,21 +1,27 @@
+sudo: false
+
 language: php
 
 php:
-    - 5.4
     - 5.5
     - 5.6
+    - 7.0
     - hhvm
 
 before_install:
-    - sudo pip install codecov
+    - pip install --user codecov
 
 before_script:
     - travis_retry composer self-update
-    - travis_retry composer install --no-interaction --dev
+    - travis_retry composer install --no-interaction
 
 script:
     - vendor/bin/phpcs --standard=psr2 ./src
-    - vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+    - vendor/bin/phpunit --coverage-text --bootstrap vendor/autoload.php --coverage-clover=coverage.xml
 
 after_success:
     - if [[ $TRAVIS_PHP_VERSION != "hhvm" ]]; then codecov; fi
+
+cache:
+    directories:
+        - $HOME/.composer/cache
