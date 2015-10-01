@@ -21,6 +21,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
     /* @codingStandardsIgnoreStart */
     public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
+    public static $encrypted_token = "1759312687%7CidjRp0QQZL5WDQHfXsMKw%2F%2B3apXiwNkIdR1on6ysAnEzeHmPNemh5uAGnk0DoXOYymvr%2FRpr8spBbaS2oO0Cvs%2BTqA2nuxGauRFA9%2FVUD%2BVX8Wj5d5YzzDCuaDs0RlHT0%2F9avFHBVMrOGgnso2Hyo6oVNB%2BrqSrH4QT8PzFHDZbhKuXQ2h5Dr5ADpYmKYvSqidH0%2FooP1lh2uuej2aUoaNf7KT2TEjm36ahy7svhnJL0G%2B2dgrXeoJN%2BHxtfdLU8lkc4iJmVvls%2B7ruu%2BRkMtE8dkRI2P7uCOAV7Eoz1Nym8ipIwnP2C5Z9wVdvj%2FRGa%2Bf7PVWmqJNsoyqgBTcqrTLbiKa4twe5HFzfiY4svg933dLgRzyXFzx4aAx0s%2B0Js%7Cf3adb3d4093ebcab9f8b16759ebfc0800f6ddf9f";
     /* @codingStandardsIgnoreEnd */
 
     public static $token_as_array = array(
@@ -95,14 +96,48 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public function testShouldReturn200WithTokenFromCookie()
     {
         \Slim\Environment::mock(array(
+            "HTTP_COOKIE" => "token=" . self::$token,
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
             "slim.url_scheme" => "https"
         ));
 
-        $_COOKIE["token"] =  self::$token;
-
         $app = new \Slim\Slim();
+        $app->get("/foo/bar", function () {
+            echo "Success";
+        });
+        $app->get("/api/foo", function () {
+            echo "Foo";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Foo", $app->response()->body());
+    }
+
+    public function testShouldReturn200WithTokenFromEncryptedCookie()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/api/foo",
+            "HTTP_COOKIE" => "token=" . self::$encrypted_token,
+            "slim.url_scheme" => "https"
+        ));
+
+        $app = new \Slim\Slim(array(
+            "cookies.encrypt" => true,
+            "cookies.secret_key" => "cookiekey",
+            "cookies.cipher" => MCRYPT_RIJNDAEL_256,
+            "cookies.cipher_mode" => MCRYPT_MODE_CBC
+        ));
+
         $app->get("/foo/bar", function () {
             echo "Success";
         });

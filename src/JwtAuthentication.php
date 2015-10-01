@@ -170,9 +170,9 @@ class JwtAuthentication extends \Slim\Middleware
         }
 
         /* Bearer not found, try a cookie. */
-        if (isset($_COOKIE[$this->options["cookie"]])) {
+        if ($this->app->getCookie($this->options["cookie"])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
-            return $_COOKIE[$this->options["cookie"]];
+            return $this->app->getCookie($this->options["cookie"]);
         };
 
         /* If everything fails log and return false. */
