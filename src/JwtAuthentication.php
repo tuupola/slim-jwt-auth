@@ -94,11 +94,11 @@ class JwtAuthentication
             ])->withStatus(401);
         }
 
-        /* If token cannot be decoded return with 400 Bad Request. */
+        /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
             return $this->error($request, $response, [
                 "message" => $this->message
-            ])->withStatus(400);
+            ])->withStatus(401);
         }
 
         /* If callback returns false return with 401 Unauthorized. */

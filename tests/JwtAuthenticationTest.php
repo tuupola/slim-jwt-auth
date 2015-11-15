@@ -176,12 +176,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    public function testShouldReturn400WithBrokenToken()
+    public function testShouldReturn400WithInvalidToken()
     {
         $uri = Uri::createFromString("https://example.com/api?abc=123");
         $headers = new Headers();
         $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer broken" . self::$token];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer invalid" . self::$token];
         $body = new Body(fopen("php://temp", "r+"));
         $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
 
@@ -197,7 +197,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $response = $auth($request, $response, $next);
 
-        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
     }
 
