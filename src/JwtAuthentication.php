@@ -96,9 +96,9 @@ class JwtAuthentication extends \Slim\Middleware
             return;
         }
 
-        /* If token cannot be decoded return with 400 Bad Request. */
+        /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
-            $this->app->response->status(400);
+            $this->app->response->status(401);
             $this->error(array(
                 "message" => $this->message
             ));

@@ -216,12 +216,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $app->response()->body());
     }
 
-    public function testShouldReturn400WithBrokenToken()
+    public function testShouldReturn401WithInvalidToken()
     {
         \Slim\Environment::mock(array(
             "SCRIPT_NAME" => "/index.php",
             "PATH_INFO" => "/api/foo",
-            "HTTP_AUTHORIZATION" => "Bearer broken" . self::$token,
+            "HTTP_AUTHORIZATION" => "Bearer invalid" . self::$token,
             "slim.url_scheme" => "https"
         ));
 
@@ -241,7 +241,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth->setNextMiddleware($app);
         $auth->call();
 
-        $this->assertEquals(400, $app->response()->status());
+        $this->assertEquals(401, $app->response()->status());
         $this->assertEquals("", $app->response()->body());
     }
 
