@@ -21,6 +21,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Firebase\JWT\JWT;
 
 class JwtAuthentication
 {
@@ -187,7 +188,7 @@ class JwtAuthentication
     public function decodeToken($token)
     {
         try {
-            return \JWT::decode(
+            return JWT::decode(
                 $token,
                 $this->options["secret"],
                 ["HS256", "HS512", "HS384", "RS256"]
