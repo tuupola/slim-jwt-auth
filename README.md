@@ -13,7 +13,6 @@ This middleware implements JSON Web Token Authentication for Slim Framework. It 
 Install Slim 3 version using [composer](https://getcomposer.org/).
 
 ``` bash
-$ composer require slim/slim:~3.0@rc
 $ composer require tuupola/slim-jwt-auth
 ```
 
