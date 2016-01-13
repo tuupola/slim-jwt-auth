@@ -158,7 +158,7 @@ class JwtAuthentication
         /* If using PHP in CGI mode and non standard environment */
         $server_params = $request->getServerParams();
         if (isset($server_params[$this->options["environment"]])) {
-            $message = "Using token from environent";
+            $message = "Using token from environment";
             $header = $server_params[$this->options["environment"]];
         } else {
             $message = "Using token from request header";
