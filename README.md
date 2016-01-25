@@ -129,6 +129,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
         new \Slim\Middleware\JwtAuthentication\RequestMethodRule([
             "passthrough" => ["OPTIONS"]
         ])
+    ]
 ]));
 ```
 
@@ -150,6 +151,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
         new \Slim\Middleware\JwtAuthentication\RequestMethodRule([
             "passthrough" => ["OPTIONS"]
         ])
+    ]
 ]));
 
 $app->add(new \Slim\Middleware\HttpBasicAuthentication([
