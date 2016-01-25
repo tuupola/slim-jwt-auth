@@ -81,6 +81,36 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
+### Callback
+
+Callback is called only when authentication succeeds. It receives decoded token in arguments. If callback returns boolean `false` authentication is forced to be failed.
+
+```
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "callback" => function ($request, $response, $arguments) use ($app) {
+        print_r($arguments["decoded"]);
+    }
+]));
+```
+
+### Error
+
+Error is called when authentication fails. It receives last error message in arguments.
+
+```
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "error" => function ($request, $response, $arguments) use ($app) {
+        return $response->write("Error");
+    }
+]));
+```
+
 ### Rules
 
 The optional `rules` parameter allows you to pass in rules which define whether the request should be authenticated or not. Rule is a callable which receives the Slim app as parameter. If the callable returns boolean `false` request will not be authenticated.
