@@ -85,7 +85,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 Callback is called only when authentication succeeds. It receives decoded token in arguments. If callback returns boolean `false` authentication is forced to be failed.
 
-```
+```php
 $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
@@ -100,7 +100,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 Error is called when authentication fails. It receives last error message in arguments.
 
-```
+```php
 $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
