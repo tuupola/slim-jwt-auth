@@ -214,15 +214,21 @@ Let assume you have token which includes data for scope. In middleware callback 
 ``` php
 $app = new \Slim\App();
 
+$container = $app->getContainer();
+
+$container["jwt"] = function ($container) {
+    return new StdClass;
+};
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($request, $response, $arguments) use ($app) {
-        $app->jwt = $arguments["decoded"];
+    "callback" => function ($request, $response, $arguments) use ($container) {
+        $container["jwt"] = $arguments["decoded"];
     }
 ]));
 
-$app->delete("/item/{id}", function ($request, $response, $arguments) use ($app) {
-    if (in_array("delete", $app->jwt->scope)) {
+$app->delete("/item/{id}", function ($request, $response, $arguments) {
+    if (in_array("delete", $this->jwt->scope)) {
         /* Code for deleting item */
     } else {
         /* No scope so respond with 401 Unauthorized */
