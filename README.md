@@ -85,13 +85,21 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 Callback is called only when authentication succeeds. It receives decoded token in arguments. If callback returns boolean `false` authentication is forced to be failed.
 
+You can also use callback for storing the value of decoded token for later use.
+
 ```php
 $app = new \Slim\App();
 
+$container = $app->getContainer();
+
+$container["jwt"] = function ($container) {
+    return new StdClass;
+};
+
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($request, $response, $arguments) use ($app) {
-        print_r($arguments["decoded"]);
+    "callback" => function ($request, $response, $arguments) use ($container) {
+        $container["jwt"] = $arguments["decoded"];
     }
 ]));
 ```
