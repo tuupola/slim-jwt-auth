@@ -506,4 +506,40 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Success", $response->getBody());
     }
+
+    public function testShouldAttachDecodedTokenToRequest()
+    {
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $response = new Response();
+
+        $dummy = null;
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
+
+        $next = function (Request $request, Response $response) use (&$dummy) {
+            $dummy = $request->getAttribute("token");
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+        $this->assertTrue(is_object($dummy));
+        $this->assertEquals(self::$token_as_array, (array)$dummy);
+    }
+
+    public function testShouldGetAndSetAttributeName()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setAttribute("nekot");
+        $this->assertEquals("nekot", $auth->getAttribute());
+    }
 }

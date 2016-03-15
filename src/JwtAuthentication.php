@@ -33,6 +33,7 @@ class JwtAuthentication
         "relaxed" => ["localhost", "127.0.0.1"],
         "environment" => "HTTP_AUTHORIZATION",
         "cookie" => "token",
+        "attribute" => "token",
         "path" => null,
         "callback" => null,
         "error" => null
@@ -110,6 +111,11 @@ class JwtAuthentication
                     "message" => $this->message || "Callback returned false"
                 ])->withStatus(401);
             }
+        }
+
+        /* Add decoded token to request as attribute when requested. */
+        if ($this->options["attribute"]) {
+            $request = $request->withAttribute($this->options["attribute"], $decoded);
         }
 
         /* Everything ok, call next middleware and return. */
@@ -485,6 +491,28 @@ class JwtAuthentication
     public function setMessage($message)
     {
         $this->message = $message;
+        return $this;
+    }
+
+    /**
+     * Get the attribute name used to attach decoded token to request
+     *
+     * @return String
+     */
+    public function getAttribute()
+    {
+        return $this->options["attribute"];
+    }
+
+    /**
+     * Set the attribute name used to attach decoded token to request
+     *
+     * @param String
+     * @return self
+     */
+    public function setAttribute($attribute)
+    {
+        $this->options["attribute"] = $attribute;
         return $this;
     }
 }
