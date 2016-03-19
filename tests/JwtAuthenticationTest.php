@@ -227,6 +227,33 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
+    public function testShouldReturn200WithoutTokenWithPassthrough()
+    {
+        $uri = Uri::createFromString("https://example.com/api/ping");
+        $headers = new Headers();
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
+            "path" => ["/api", "/foo"],
+            "passthrough" => ["/api/ping"],
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
     public function testShouldNotAllowInsecure()
     {
         $this->setExpectedException("RuntimeException");
@@ -401,6 +428,13 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setPath("/admin");
         $this->assertEquals("/admin", $auth->getPath());
+    }
+
+    public function testShouldGetAndSetPassthrough()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setPassthrough("/admin/ping");
+        $this->assertEquals("/admin/ping", $auth->getPassthrough());
     }
 
     public function testShouldGetAndSetSecret()

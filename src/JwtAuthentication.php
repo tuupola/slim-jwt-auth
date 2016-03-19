@@ -35,6 +35,7 @@ class JwtAuthentication
         "cookie" => "token",
         "attribute" => "token",
         "path" => null,
+        "passthrough" => null,
         "callback" => null,
         "error" => null
     ];
@@ -60,7 +61,8 @@ class JwtAuthentication
         /* If path was given in easy mode add rule for it. */
         if (null !== ($this->options["path"])) {
             $this->addRule(new RequestPathRule([
-                "path" => $this->options["path"]
+                "path" => $this->options["path"],
+                "passthrough" => $this->options["passthrough"]
             ]));
         }
     }
@@ -258,6 +260,27 @@ class JwtAuthentication
     public function setPath($path)
     {
         $this->options["path"] = $path;
+        return $this;
+    }
+
+    /**
+     * Get path which middleware ignores
+     *
+     * @return string
+     */
+    public function getPassthrough()
+    {
+        return $this->options["passthrough"];
+    }
+
+    /**
+     * Set path which middleware ignores
+     *
+     * @return self
+     */
+    public function setPassthrough($passthrough)
+    {
+        $this->options["passthrough"] = $passthrough;
         return $this;
     }
 
