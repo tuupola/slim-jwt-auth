@@ -31,7 +31,7 @@ class JwtAuthentication
     private $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
-        "environment" => "HTTP_AUTHORIZATION",
+        "environment" => ["HTTP_AUTHORIZATION", "REDIRECT_HTTP_AUTHORIZATION"],
         "cookie" => "token",
         "attribute" => "token",
         "path" => null,
@@ -164,10 +164,18 @@ class JwtAuthentication
     {
         /* If using PHP in CGI mode and non standard environment */
         $server_params = $request->getServerParams();
-        if (isset($server_params[$this->options["environment"]])) {
-            $message = "Using token from environment";
-            $header = $server_params[$this->options["environment"]];
-        } else {
+        $header = "";
+
+        /* Check for each given environment */
+        foreach ($this->options["environment"] as $environment) {
+            if (isset($server_params[$environment])) {
+                $message = "Using token from environment";
+                $header = $server_params[$environment];
+            }
+        }
+
+        /* Nothing in environment, try header instead */
+        if ("" === $header) {
             $message = "Using token from request header";
             $header = $request->getHeader("Authorization");
             $header = isset($header[0]) ? $header[0] : "";
@@ -263,7 +271,7 @@ class JwtAuthentication
      */
     public function setEnvironment($environment)
     {
-        $this->options["environment"] = $environment;
+        $this->options["environment"] = (array) $environment;
         return $this;
     }
 

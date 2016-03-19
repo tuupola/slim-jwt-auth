@@ -288,7 +288,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $response = new Response();
 
         $auth = new JwtAuthentication([
-            "environment" => "HTTP_BRAWNDO",
+            "environment" => ["HTTP_AUTHORIZATION", "HTTP_BRAWNDO"],
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
@@ -422,8 +422,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public function testShouldGetAndSetEnvironment()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
-        $auth->setEnvironment("HTTP_SOMETHING");
-        $this->assertEquals("HTTP_SOMETHING", $auth->getEnvironment());
+        $auth->setEnvironment(["HTTP_SOMETHING", "HTTP_OTHER"]);
+        $this->assertEquals(["HTTP_SOMETHING", "HTTP_OTHER"], $auth->getEnvironment());
     }
 
     public function testShouldGetAndSetCookieName()
