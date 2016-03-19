@@ -78,6 +78,49 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
+### Environment
+
+By default middleware tries to find the token from HTTP_AUTHORIZATION and REDIRECT_HTTP_AUTHORIZATION environments. You can change this using `environment` parameter.
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "environment" => ["HTTP_BRAWNDO", "HTTP_ELECTROLYTE"],
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+### Cookie
+
+If token is not found from environment middleware tries to find it from cookie name `token`. You can change cookie name using `cookie` parameter.
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "cookie" => "nekot",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+### Attribute
+
+When the token is decoded successfully and authentication succees the contents of decoded token as saved as `token` attribute to the `$request` object. You can change this with. `attribute` parameter. Set to `null` or `false` to disable this behavour
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "attribute" => "jwt",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+
+/* ... */
+
+$decoded = $request->getAttribute("jwt");
+```
+
 ### Logger
 
 The optional `logger` parameter allows you to pass in a PSR-3 compatible logger to help with debugging or other application logging needs.
