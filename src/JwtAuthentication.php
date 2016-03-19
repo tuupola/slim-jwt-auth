@@ -167,7 +167,7 @@ class JwtAuthentication
         $header = "";
 
         /* Check for each given environment */
-        foreach ($this->options["environment"] as $environment) {
+        foreach ((array) $this->options["environment"] as $environment) {
             if (isset($server_params[$environment])) {
                 $message = "Using token from environment";
                 $header = $server_params[$environment];
@@ -278,7 +278,7 @@ class JwtAuthentication
      */
     public function setEnvironment($environment)
     {
-        $this->options["environment"] = (array) $environment;
+        $this->options["environment"] = $environment;
         return $this;
     }
 

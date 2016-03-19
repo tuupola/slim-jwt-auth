@@ -293,6 +293,13 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $this->assertEquals(self::$token, $auth->fetchToken($request));
+
+        $auth = new JwtAuthentication([
+            "environment" => "HTTP_BRAWNDO",
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
+
+        $this->assertEquals(self::$token, $auth->fetchToken($request));
     }
 
     public function testShouldCallCallback()
@@ -422,6 +429,9 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     public function testShouldGetAndSetEnvironment()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setEnvironment("HTTP_SOMETHING");
+        $this->assertEquals("HTTP_SOMETHING", $auth->getEnvironment());
+
         $auth->setEnvironment(["HTTP_SOMETHING", "HTTP_OTHER"]);
         $this->assertEquals(["HTTP_SOMETHING", "HTTP_OTHER"], $auth->getEnvironment());
     }
