@@ -175,11 +175,18 @@ class JwtAuthentication
         }
 
         /* Nothing in environment, try header instead */
-        if ("" === $header) {
+        if (empty($header)) {
             $message = "Using token from request header";
-            $header = $request->getHeader("Authorization");
-            $header = isset($header[0]) ? $header[0] : "";
+            $headers = $request->getHeader("Authorization");
+            $header = isset($headers[0]) ? $headers[0] : "";
         }
+
+        /* Try apache_request_headers() as last resort */
+        if (empty($header) && function_exists("apache_request_headers")) {
+            $headers = apache_request_headers();
+            $header = isset($headers["Authorization"]) ? $headers["Authorization"] : "";
+        }
+
         if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
             $this->log(LogLevel::DEBUG, $message);
             return $matches[1];
