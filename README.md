@@ -80,7 +80,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ### Environment
 
-By default middleware tries to find the token from HTTP_AUTHORIZATION and REDIRECT_HTTP_AUTHORIZATION environments. You can change this using `environment` parameter.
+By default middleware tries to find the token from `HTTP_AUTHORIZATION` and `REDIRECT_HTTP_AUTHORIZATION` environments. You can change this using `environment` parameter.
 
 ``` php
 $app = new \Slim\App();
@@ -171,7 +171,7 @@ $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "error" => function ($request, $response, $arguments) use ($app) {
+    "error" => function ($request, $response, $arguments) {
         return $response->write("Error");
     }
 ]));
@@ -227,7 +227,7 @@ $app->add(new \Slim\Middleware\HttpBasicAuthentication([
     ]
 ]));
 
-$app->post("/token", function () use ($app) {
+$app->post("/token", function () {
   /* Here generate and return JWT to the client. */
 });
 ```
