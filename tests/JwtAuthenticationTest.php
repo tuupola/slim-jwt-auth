@@ -273,6 +273,37 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Success", $app->response()->body());
     }
 
+    public function testShouldReturn200WithoutTokenWithPassthrough()
+    {
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/api/ping",
+            "slim.url_scheme" => "https"
+        ));
+        $app = new \Slim\Slim();
+        $app->get("/public/foo", function () {
+            echo "Success";
+        });
+        $app->get("/api/ping", function () {
+            echo "Pong";
+        });
+
+        $auth = new \Slim\Middleware\JwtAuthentication(array(
+            "path" => "/api",
+            "passthrough" => ["/api/ping"],
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+        ));
+
+        $auth->setApplication($app);
+        $auth->setNextMiddleware($app);
+        $auth->call();
+
+        $this->assertEquals(200, $app->response()->status());
+        $this->assertEquals("Pong", $app->response()->body());
+
+    }
+
     public function testShouldNotAllowInsecure()
     {
 
@@ -421,6 +452,13 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
 
     public function testShouldGetAndSetPath()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setPassthrough("/admin/ping");
+        $this->assertEquals("/admin/ping", $auth->getPassthrough());
+    }
+
+    public function testShouldGetAndSetPassthrough()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setPath("/admin");

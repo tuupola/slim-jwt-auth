@@ -32,6 +32,7 @@ class JwtAuthentication extends \Slim\Middleware
         "environment" => "HTTP_AUTHORIZATION",
         "cookie" => "token",
         "path" => null,
+        "passthrough" => null,
         "callback" => null,
         "error" => null
     );
@@ -57,7 +58,8 @@ class JwtAuthentication extends \Slim\Middleware
         /* If path was given in easy mode add rule for it. */
         if (null !== ($this->options["path"])) {
             $this->addRule(new RequestPathRule(array(
-                "path" => $this->options["path"]
+                "path" => $this->options["path"],
+                "passthrough" => $this->options["passthrough"]
             )));
         }
     }
@@ -232,6 +234,27 @@ class JwtAuthentication extends \Slim\Middleware
     public function setPath($path)
     {
         $this->options["path"] = $path;
+        return $this;
+    }
+
+    /**
+      * Get path which middleware ignores
+      *
+      * @return string
+      */
+    public function getPassthrough()
+    {
+        return $this->options["passthrough"];
+    }
+
+    /**
+      * Set path which middleware ignores
+      *
+      * @return self
+      */
+    public function setPassthrough($passthrough)
+    {
+        $this->options["passthrough"] = $passthrough;
         return $this;
     }
 

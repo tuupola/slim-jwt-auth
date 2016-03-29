@@ -54,7 +54,7 @@ Validation errors are triggered when the token has been tampered with or the tok
 ## Optional parameters
 ### Path
 
-The optional `path` parameter allows you to specify the "protected" part of your website. It can be either a string or an array.
+The optional `path` parameter allows you to specify the "protected" part of your website. It can be either a string or an array. You do not need to specify each URL. Instead think of `path` setting as a folder. In the example below everything starting with `/api` will be authenticated.
 
 ``` php
 $app = new \Slim\Slim();
@@ -64,6 +64,20 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
+
+### Passthrough
+
+ With optional `passthrough` parameter you can make exceptions to `path` parameter. In the example below everything starting with `/api` and `/admin`  will be authenticated with the exception of `/api/token` and `/admin/ping` which will not be authenticated.
+
+ ``` php
+ $app = new \Slim\App();
+
+ $app->add(new \Slim\Middleware\JwtAuthentication([
+     "path" => ["/api", "/admin"],
+     "passthrough" => ["/api/token", "/admin/ping"],
+     "secret" => "supersecretkeyyoushouldnotcommittogithub"
+ ]));
+ ```
 
 ### Logger
 
