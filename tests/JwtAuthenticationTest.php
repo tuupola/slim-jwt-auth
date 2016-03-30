@@ -291,7 +291,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new \Slim\Middleware\JwtAuthentication(array(
             "path" => "/api",
-            "passthrough" => ["/api/ping"],
+            "passthrough" => array("/api/ping"),
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
         ));
 
