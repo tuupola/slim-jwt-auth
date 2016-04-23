@@ -34,6 +34,7 @@ class JwtAuthentication
         "environment" => ["HTTP_AUTHORIZATION", "REDIRECT_HTTP_AUTHORIZATION"],
         "cookie" => "token",
         "attribute" => "token",
+        "header" => "Authorization",
         "path" => null,
         "passthrough" => null,
         "callback" => null,
@@ -167,6 +168,7 @@ class JwtAuthentication
         /* If using PHP in CGI mode and non standard environment */
         $server_params = $request->getServerParams();
         $header = "";
+        $message = "";
 
         /* Check for each given environment */
         foreach ((array) $this->options["environment"] as $environment) {
@@ -179,19 +181,22 @@ class JwtAuthentication
         /* Nothing in environment, try header instead */
         if (empty($header)) {
             $message = "Using token from request header";
-            $headers = $request->getHeader("Authorization");
+            $headers = $request->getHeader($this->options["header"]);
             $header = isset($headers[0]) ? $headers[0] : "";
         }
 
         /* Try apache_request_headers() as last resort */
         if (empty($header) && function_exists("apache_request_headers")) {
             $headers = apache_request_headers();
-            $header = isset($headers["Authorization"]) ? $headers["Authorization"] : "";
+            $header = isset($headers[$this->options["header"]]) ? $headers[$this->options["header"]] : "";
         }
 
         if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
             $this->log(LogLevel::DEBUG, $message);
             return $matches[1];
+        } elseif ($header !== '') {
+            $this->log(LogLevel::DEBUG, "Using token from " . $this->options["header"] . " request header");
+            return $header;
         }
 
         /* Bearer not found, try a cookie. */
