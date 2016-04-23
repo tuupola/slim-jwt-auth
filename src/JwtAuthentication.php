@@ -559,4 +559,26 @@ class JwtAuthentication
         $this->options["attribute"] = $attribute;
         return $this;
     }
+
+    /**
+     * Get the header where token is searched from
+     *
+     * @return String
+     */
+    public function getHeader()
+    {
+        return $this->options["header"];
+    }
+
+    /**
+     * Set the header where token is searched from
+     *
+     * @param String
+     * @return self
+     */
+    public function setHeader($header)
+    {
+        $this->options["header"] = $header;
+        return $this;
+    }
 }
