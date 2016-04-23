@@ -32,9 +32,10 @@ class JwtAuthentication
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
         "environment" => ["HTTP_AUTHORIZATION", "REDIRECT_HTTP_AUTHORIZATION"],
+        "header" => "Authorization",
+        "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
         "attribute" => "token",
-        "header" => "Authorization",
         "path" => null,
         "passthrough" => null,
         "callback" => null,
@@ -187,16 +188,14 @@ class JwtAuthentication
 
         /* Try apache_request_headers() as last resort */
         if (empty($header) && function_exists("apache_request_headers")) {
+            $message = "Using token from apache_request_headers()";
             $headers = apache_request_headers();
             $header = isset($headers[$this->options["header"]]) ? $headers[$this->options["header"]] : "";
         }
 
-        if (preg_match("/Bearer\s+(.*)$/i", $header, $matches)) {
+        if (preg_match($this->options["regexp"], $header, $matches)) {
             $this->log(LogLevel::DEBUG, $message);
             return $matches[1];
-        } elseif ($header !== '') {
-            $this->log(LogLevel::DEBUG, "Using token from " . $this->options["header"] . " request header");
-            return $header;
         }
 
         /* Bearer not found, try a cookie. */
@@ -579,6 +578,28 @@ class JwtAuthentication
     public function setHeader($header)
     {
         $this->options["header"] = $header;
+        return $this;
+    }
+
+    /**
+     * Get the regexp used to extract token from header or environment
+     *
+     * @return String
+     */
+    public function getRegexp()
+    {
+        return $this->options["regexp"];
+    }
+
+    /**
+     * Set the regexp used to extract token from header or environment
+     *
+     * @param String
+     * @return self
+     */
+    public function setRegexp($regexp)
+    {
+        $this->options["regexp"] = $regexp;
         return $this;
     }
 }

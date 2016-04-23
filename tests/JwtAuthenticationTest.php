@@ -124,6 +124,33 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
+    public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
+    {
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers(["X-Token" => self::$token]);
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "header" => "X-Token",
+            "regexp" => "/(.*)/i"
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
     public function testShouldReturn200WithTokenFromCookie()
     {
         $uri = Uri::createFromString("https://example.com/api?abc=123");
@@ -611,5 +638,19 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setAttribute("nekot");
         $this->assertEquals("nekot", $auth->getAttribute());
+    }
+
+    public function testShouldGetAndSetHeader()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setHeader("X-Token");
+        $this->assertEquals("X-Token", $auth->getHeader());
+    }
+
+    public function testShouldGetAndSetRegexp()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setRegexp("/Token\s+(.*)$/i");
+        $this->assertEquals("/Token\s+(.*)$/i", $auth->getRegexp());
     }
 }
