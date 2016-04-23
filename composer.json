@@ -20,11 +20,11 @@
     ],
     "require": {
         "php" : ">=5.4.0",
-        "slim/slim": "^3.0",
         "psr/log": "~1.0",
         "firebase/php-jwt": "^3.0"
     },
     "require-dev": {
+        "slim/slim": "^3.0",
         "phpunit/phpunit" : "~4.6",
         "squizlabs/php_codesniffer": "~2.3"
     },
