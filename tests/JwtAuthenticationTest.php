@@ -98,6 +98,32 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
+    public function testShouldReturn200WithTokenFromHeader()
+    {
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers(["X-Token" => "Bearer " . self::$token]);
+        $cookies = [];
+        $server = [];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "header" => "X-Token"
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
     public function testShouldReturn200WithTokenFromCookie()
     {
         $uri = Uri::createFromString("https://example.com/api?abc=123");
