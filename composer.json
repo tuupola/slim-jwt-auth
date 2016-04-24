@@ -3,6 +3,7 @@
     "description": "JSON Web Token Authorization Middleware for Slim Framework",
     "keywords": [
         "slim",
+        "psr-7",
         "middleware",
         "jwt",
         "json",
