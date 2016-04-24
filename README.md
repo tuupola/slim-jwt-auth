@@ -1,4 +1,4 @@
-# JWT Authentication Middleware for Slim
+# PSR-7 JWT Authentication Middleware
 
 [![Latest Version](https://img.shields.io/packagist/v/tuupola/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/tuupola/slim-jwt-auth)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
@@ -6,17 +6,21 @@
 [![HHVM Status](https://img.shields.io/hhvm/tuupola/slim-jwt-auth.svg?style=flat-square)](http://hhvm.h4cc.de/package/tuupola/slim-jwt-auth)
 [![Coverage](http://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth)
 
-This middleware implements JSON Web Token Authentication for Slim Framework. It does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful for example when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
+This middleware implements JSON Web Token Authentication. It was originally developed for Slim but can be with frameworks using PSR-7 style middlewares. However it has currently been tested only with [Slim Framework](http://www.slimframework.com/) and [Zend Expressive](https://zendframework.github.io/zend-expressive/).
+
+Middleware does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful for example when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
+
+For example implementation see [Slim API Skeleton](https://github.com/tuupola/slim-api-skeleton).
 
 ## Install
 
-Install Slim 3 version using [composer](https://getcomposer.org/).
+Install latest version using [composer](https://getcomposer.org/).
 
 ``` bash
 $ composer require tuupola/slim-jwt-auth
 ```
 
-Also add the following to the `.htaccess` file. Otherwise PHP wont have access to `Authorization: Bearer` header.
+If using Apache add the following to the `.htaccess` file. Otherwise PHP wont have access to `Authorization: Bearer` header.
 
 ``` bash
 RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -24,7 +28,7 @@ RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 ## Usage
 
-Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. For simplicity's sake examples show `secret` hardcoded in code. In real life you should store it somewhere else. Good option is environment variable. You can use [dotenv](https://github.com/vlucas/phpdotenv) or something similar for development.
+Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. For simplicity's sake examples show `secret` hardcoded in code. In real life you should store it somewhere else. Good option is environment variable. You can use [dotenv](https://github.com/vlucas/phpdotenv) or something similar for development. Examples assume you are using Slim Framework.
 
 ``` php
 $app = new \Slim\App();
