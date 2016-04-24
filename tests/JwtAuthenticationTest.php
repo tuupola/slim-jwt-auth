@@ -138,7 +138,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
             "header" => "X-Token",
-            "regexp" => "/(.*)/i"
+            "regexp" => "/(.*)/"
         ]);
 
         $next = function (Request $request, Response $response) {
