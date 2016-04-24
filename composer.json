@@ -1,6 +1,6 @@
 {
     "name": "tuupola/slim-jwt-auth",
-    "description": "JSON Web Token Authorization Middleware for Slim Framework",
+    "description": "PSR-7 JWT Authentication Middleware",
     "keywords": [
         "slim",
         "psr-7",
