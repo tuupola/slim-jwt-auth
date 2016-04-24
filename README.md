@@ -91,15 +91,42 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
+### Header
+
+If token is not found from environment the middleware tries to find it from `Authorization` header. You can change cookie name using `header` parameter. Note that usually, but not always there also is an `HTTP_` environment which matches the header name.
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "header" => "X-Token",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
 ### Cookie
 
-If token is not found from environment middleware tries to find it from cookie name `token`. You can change cookie name using `cookie` parameter.
+If token is not found from neither environment or header, the middleware tries to find it from cookie named `token`. You can change cookie name using `cookie` parameter.
 
 ``` php
 $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
     "cookie" => "nekot",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+### Regexp
+
+By default the middleware assumes the value of the header is in `Bearer <token>` format. You can change this behaviour with `regexp` parameter. For example if you have custom header such as `X-Token: <token>` you should pass both header and regexp parameters.
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "header" => "X-Token",
+    "regexp" => "/(.*)/",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
