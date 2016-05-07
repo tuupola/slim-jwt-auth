@@ -32,6 +32,7 @@ class JwtAuthentication
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
         "environment" => ["HTTP_AUTHORIZATION", "REDIRECT_HTTP_AUTHORIZATION"],
+        "algorithm" => ["HS256", "HS512", "HS384"],
         "header" => "Authorization",
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
@@ -219,7 +220,7 @@ class JwtAuthentication
             return JWT::decode(
                 $token,
                 $this->options["secret"],
-                ["HS256", "HS512", "HS384", "RS256"]
+                (array) $this->options["algorithm"]
             );
         } catch (\Exception $exception) {
             $this->message = $exception->getMessage();
@@ -600,6 +601,28 @@ class JwtAuthentication
     public function setRegexp($regexp)
     {
         $this->options["regexp"] = $regexp;
+        return $this;
+    }
+
+    /**
+     * Get the allowed algorithms
+     *
+     * @return string|string[]
+     */
+    public function getAlgorithm()
+    {
+        return $this->options["algorithm"];
+    }
+
+    /**
+     * Set the allowed algorithms
+     *
+     * @param string|string[] $algorithm
+     * @return self
+     */
+    public function setAlgorithm($algorithm)
+    {
+        $this->options["algorithm"] = $algorithm;
         return $this;
     }
 }

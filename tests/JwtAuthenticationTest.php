@@ -204,6 +204,32 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $response->getBody());
     }
 
+    public function testShouldReturn401WithInvalidAlgorithm()
+    {
+        $uri = Uri::createFromString("https://example.com/api?abc=123");
+        $headers = new Headers();
+        $cookies = [];
+        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
+        $body = new Body(fopen("php://temp", "r+"));
+        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+
+        $response = new Response();
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "algorithm" => "nosuch"
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            return $response->write("Foo");
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
+
     public function testShouldReturn200WithOptions()
     {
         $uri = Uri::createFromString("https://example.com/api");
@@ -652,5 +678,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new \Slim\Middleware\JwtAuthentication;
         $auth->setRegexp("/Token\s+(.*)$/i");
         $this->assertEquals("/Token\s+(.*)$/i", $auth->getRegexp());
+    }
+
+    public function testShouldGetAndSetAlgorithm()
+    {
+        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth->setAlgorithm("HS256");
+        $this->assertEquals("HS256", $auth->getAlgorithm());
     }
 }
