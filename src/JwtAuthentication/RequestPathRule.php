@@ -17,18 +17,35 @@ namespace Slim\Middleware\JwtAuthentication;
 
 use Psr\Http\Message\RequestInterface;
 
+/**
+ * Rule to decide by request path whether the request should be authenticated or not.
+ */
+
 class RequestPathRule implements RuleInterface
 {
+    /**
+     * Stores all the options passed to the rule
+     */
     protected $options = [
         "path" => ["/"],
         "passthrough" => []
     ];
 
+    /**
+     * Create a new rule instance
+     *
+     * @param string[] $options
+     * @return void
+     */
     public function __construct($options = [])
     {
         $this->options = array_merge($this->options, $options);
     }
 
+    /**
+     * @param \Psr\Http\Message\RequestInterface $request
+     * @return boolean
+     */
     public function __invoke(RequestInterface $request)
     {
         $uri = "/" . $request->getUri()->getPath();

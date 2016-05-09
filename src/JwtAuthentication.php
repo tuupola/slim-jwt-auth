@@ -25,9 +25,19 @@ use Firebase\JWT\JWT;
 
 class JwtAuthentication
 {
+    /**
+     * PSR-3 compliant logger
+     */
     protected $logger;
-    protected $message; /* Last error message. */
 
+    /**
+     * Last error message
+     */
+    protected $message;
+
+    /**
+     * Stores all the options passed to the rule
+     */
     private $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
@@ -44,7 +54,9 @@ class JwtAuthentication
     ];
 
     /**
-     * Create a new JwtAuthentication Instance
+     * Create a new middleware instance
+     *
+     * @param string[] $options
      */
     public function __construct(array $options = [])
     {
@@ -72,6 +84,11 @@ class JwtAuthentication
 
     /**
      * Call the middleware
+     *
+     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param callable $next
+     * @return \Psr\Http\Message\ResponseInterface
      */
     public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
     {
@@ -131,6 +148,7 @@ class JwtAuthentication
     /**
      * Check if middleware should authenticate
      *
+     * @param \Psr\Http\Message\RequestInterface $request
      * @return boolean True if middleware should authenticate.
      */
     public function shouldAuthenticate(RequestInterface $request)
@@ -147,7 +165,11 @@ class JwtAuthentication
     /**
      * Call the error handler if it exists
      *
-     * @return void
+     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param mixed[] $arguments
+
+     * @return \Psr\Http\Message\ResponseInterface
      */
     public function error(RequestInterface $request, ResponseInterface $response, $arguments)
     {
@@ -163,6 +185,7 @@ class JwtAuthentication
     /**
      * Fetch the access token
      *
+     * @param \Psr\Http\Message\RequestInterface $request
      * @return string|null Base64 encoded JSON Web Token or null if not found.
      */
     public function fetchToken(RequestInterface $request)
@@ -214,6 +237,12 @@ class JwtAuthentication
         return false;
     }
 
+    /**
+     * Decode the token
+     *
+     * @param string $$token
+     * @return object|boolean The JWT's payload as a PHP object or false in case of error
+     */
     public function decodeToken($token)
     {
         try {
@@ -260,6 +289,7 @@ class JwtAuthentication
     /**
      * Set path where middleware should be binded to
      *
+     * @param string|string[] $$path
      * @return self
      */
     public function setPath($path)
@@ -271,7 +301,7 @@ class JwtAuthentication
     /**
      * Get path which middleware ignores
      *
-     * @return string
+     * @return string|array
      */
     public function getPassthrough()
     {
@@ -281,6 +311,7 @@ class JwtAuthentication
     /**
      * Set path which middleware ignores
      *
+     * @param string|string[] $passthrough
      * @return self
      */
     public function setPassthrough($passthrough)
@@ -302,6 +333,7 @@ class JwtAuthentication
     /**
      * Set the environment name where to search the token from
      *
+     * @param string $environment
      * @return self
      */
     public function setEnvironment($environment)
@@ -323,6 +355,7 @@ class JwtAuthentication
     /**
      * Set the cookie name where to search the token from
      *
+     * @param string $cookie
      * @return self
      */
     public function setCookie($cookie)
@@ -334,7 +367,7 @@ class JwtAuthentication
     /**
      * Get the secure flag
      *
-     * @return string
+     * @return boolean
      */
     public function getSecure()
     {
@@ -344,6 +377,7 @@ class JwtAuthentication
     /**
      * Set the secure flag
      *
+     * @param boolean $secure
      * @return self
      */
     public function setSecure($secure)
@@ -356,7 +390,7 @@ class JwtAuthentication
     /**
      * Get hosts where secure rule is relaxed
      *
-     * @return string
+     * @return array
      */
     public function getRelaxed()
     {
@@ -366,6 +400,7 @@ class JwtAuthentication
     /**
      * Set hosts where secure rule is relaxed
      *
+     * @param string[] $relaxed
      * @return self
      */
     public function setRelaxed(array $relaxed)
@@ -387,6 +422,7 @@ class JwtAuthentication
     /**
      * Set the secret key
      *
+     * @param string $secret
      * @return self
      */
     public function setSecret($secret)
@@ -398,7 +434,7 @@ class JwtAuthentication
     /**
      * Get the callback
      *
-     * @return string
+     * @return callable
      */
     public function getCallback()
     {
@@ -408,6 +444,7 @@ class JwtAuthentication
     /**
      * Set the callback
      *
+     * @param callable $callback
      * @return self
      */
     public function setCallback($callback)
@@ -419,7 +456,7 @@ class JwtAuthentication
     /**
      * Get the error handler
      *
-     * @return string
+     * @return callable
      */
     public function getError()
     {
@@ -429,6 +466,7 @@ class JwtAuthentication
     /**
      * Set the error handler
      *
+     * @param callable $error
      * @return self
      */
     public function setError($error)
@@ -450,6 +488,7 @@ class JwtAuthentication
     /**
      * Set all rules in the stack
      *
+     * @param array $rules
      * @return self
      */
     public function setRules(array $rules)
@@ -481,7 +520,7 @@ class JwtAuthentication
     /**
      * Get the logger
      *
-     * @return Psr\Log\LoggerInterface $logger
+     * @return \Psr\Log\LoggerInterface $logger
      */
     public function getLogger()
     {
@@ -491,7 +530,7 @@ class JwtAuthentication
     /**
      * Set the logger
      *
-     * @param Psr\Log\LoggerInterface $logger
+     * @param \Psr\Log\LoggerInterface $logger
      * @return self
      */
     public function setLogger(LoggerInterface $logger = null)
@@ -503,9 +542,9 @@ class JwtAuthentication
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed  $level
+     * @param mixed $level
      * @param string $message
-     * @param array  $context
+     * @param array $context
      *
      * @return null
      */
@@ -519,7 +558,7 @@ class JwtAuthentication
     /**
      * Get last error message
      *
-     * @return String
+     * @return string
      */
     public function getMessage()
     {
@@ -529,7 +568,7 @@ class JwtAuthentication
     /**
      * Set the last error message
      *
-     * @param String
+     * @param string
      * @return self
      */
     public function setMessage($message)
@@ -541,7 +580,7 @@ class JwtAuthentication
     /**
      * Get the attribute name used to attach decoded token to request
      *
-     * @return String
+     * @return string
      */
     public function getAttribute()
     {
@@ -551,7 +590,7 @@ class JwtAuthentication
     /**
      * Set the attribute name used to attach decoded token to request
      *
-     * @param String
+     * @param string
      * @return self
      */
     public function setAttribute($attribute)
@@ -563,7 +602,7 @@ class JwtAuthentication
     /**
      * Get the header where token is searched from
      *
-     * @return String
+     * @return string
      */
     public function getHeader()
     {
@@ -573,7 +612,7 @@ class JwtAuthentication
     /**
      * Set the header where token is searched from
      *
-     * @param String
+     * @param string
      * @return self
      */
     public function setHeader($header)
@@ -585,7 +624,7 @@ class JwtAuthentication
     /**
      * Get the regexp used to extract token from header or environment
      *
-     * @return String
+     * @return string
      */
     public function getRegexp()
     {
@@ -595,7 +634,7 @@ class JwtAuthentication
     /**
      * Set the regexp used to extract token from header or environment
      *
-     * @param String
+     * @param string
      * @return self
      */
     public function setRegexp($regexp)
