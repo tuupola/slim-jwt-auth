@@ -15,16 +15,13 @@
 
 namespace Slim\JwtAuthentication\Test;
 
-#use \Slim\Middleware\JwtAuthentication\RequestPathRule;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Slim\Http\Uri;
-use Slim\Http\Headers;
-use Slim\Http\Body;
-use Slim\Http\Collection;
+use Zend\Diactoros\ServerRequest as Request;
+use Zend\Diactoros\ServerRequestFactory;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Uri;
 
 use Slim\Middleware\JwtAuthentication;
 
@@ -50,21 +47,18 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithoutToken()
     {
-        $uri = Uri::createFromString("https://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
-
-        $response = new Response();
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -75,21 +69,22 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromEnvironment()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = ServerRequestFactory::fromGlobals(
+            ["HTTP_AUTHORIZATION" => "Bearer " . self::$token]
+        );
+        $request = $request
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -100,14 +95,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromHeader()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers(["X-Token" => "Bearer " . self::$token]);
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("X-Token", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -115,7 +108,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -126,14 +120,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers(["X-Token" => self::$token]);
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("X-Token", self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -142,7 +134,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -153,21 +146,26 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromCookie()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = ["token" => self::$token];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = ServerRequestFactory::fromGlobals(
+            null,
+            null,
+            null,
+            ["token" => self::$token],
+            null
+        );
+        $request = $request
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -178,14 +176,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithFalseFromCallback()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -195,7 +191,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -206,14 +203,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithInvalidAlgorithm()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -221,7 +216,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -232,21 +228,19 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithOptions()
     {
-        $uri = Uri::createFromString("https://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("OPTIONS", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("OPTIONS");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -257,21 +251,20 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn400WithInvalidToken()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer invalid" . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer invalid" . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -282,14 +275,11 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithoutTokenWithPath()
     {
-        $uri = Uri::createFromString("https://example.com/public");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/public"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "path" => ["/api", "/foo"],
@@ -297,7 +287,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -308,14 +299,11 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithoutTokenWithPassthrough()
     {
-        $uri = Uri::createFromString("https://example.com/api/ping");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api/ping"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "path" => ["/api", "/foo"],
@@ -324,7 +312,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -337,21 +326,20 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException("RuntimeException");
 
-        $uri = Uri::createFromString("http://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("http://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -359,21 +347,20 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldRelaxInsecureInLocalhost()
     {
-        $uri = Uri::createFromString("http://localhost/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("http://localhost/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -384,14 +371,14 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldFetchTokenFromEnvironment()
     {
-        $uri = Uri::createFromString("https://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_BRAWNDO" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = ServerRequestFactory::fromGlobals(
+            ["HTTP_BRAWNDO" => "Bearer " . self::$token]
+        );
+        $request = $request
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $auth = new JwtAuthentication([
             "environment" => ["HTTP_AUTHORIZATION", "HTTP_BRAWNDO"],
@@ -410,14 +397,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallCallback()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $dummy = null;
         $auth = new JwtAuthentication([
@@ -429,7 +414,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -443,14 +429,11 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallError()
     {
-        $uri = Uri::createFromString("https://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $dummy = null;
         $auth = new JwtAuthentication([
@@ -461,7 +444,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -473,26 +457,25 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallErrorAndModifyBody()
     {
-        $uri = Uri::createFromString("https://example.com/api");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
 
-        $response = new Response();
+        $response = new Response;
 
         $dummy = null;
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
             "error" => function ($request, $response, $arguments) use (&$dummy) {
                 $dummy = true;
-                return $response->write("Error");
+                $response->getBody()->write("Error");
+                return $response;
             }
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -607,13 +590,11 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAllowUnauthenticatedHttp()
     {
-        $uri = Uri::createFromString("http://example.com/public/foo");
-        $headers = new Headers();
-        $cookies = [];
-        $server = [];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
-        $response = new Response();
+        $request = (new Request)
+            ->withUri(new Uri("http://example.com/public/foo"))
+            ->withMethod("GET");
+
+        $response = new Response;
 
         $auth = new \Slim\Middleware\JwtAuthentication([
             "path" => ["/api", "/bar"],
@@ -621,7 +602,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $next = function (Request $request, Response $response) {
-            return $response->write("Success");
+            $response->getBody()->write("Success");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
@@ -632,14 +614,12 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAttachDecodedTokenToRequest()
     {
-        $uri = Uri::createFromString("https://example.com/api?abc=123");
-        $headers = new Headers();
-        $cookies = [];
-        $server = ["HTTP_AUTHORIZATION" => "Bearer " . self::$token];
-        $body = new Body(fopen("php://temp", "r+"));
-        $request = new Request("GET", $uri, $headers, $cookies, $server, $body);
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
 
-        $response = new Response();
+        $response = new Response;
 
         $dummy = null;
         $auth = new JwtAuthentication([
@@ -648,7 +628,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $next = function (Request $request, Response $response) use (&$dummy) {
             $dummy = $request->getAttribute("token");
-            return $response->write("Foo");
+            $response->getBody()->write("Foo");
+            return $response;
         };
 
         $response = $auth($request, $response, $next);
