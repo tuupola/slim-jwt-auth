@@ -13,7 +13,7 @@
  *
  */
 
-namespace Slim\JwtAuthentication\Test;
+namespace Slim\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -22,8 +22,6 @@ use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
-
-use Slim\Middleware\JwtAuthentication;
 
 class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 {

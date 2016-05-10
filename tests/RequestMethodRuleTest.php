@@ -13,9 +13,7 @@
  *
  */
 
-namespace Test;
-
-use Slim\Middleware\JwtAuthentication\RequestMethodRule;
+namespace Slim\Middleware\JwtAuthentication;
 
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\ServerRequestFactory;
