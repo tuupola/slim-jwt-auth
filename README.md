@@ -135,6 +135,21 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 ]));
 ```
 
+### Algorithm
+
+You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "algorithm" => ["HS256", "HS384"]
+]));
+```
+
+
+
 ### Attribute
 
 When the token is decoded successfully and authentication succees the contents of decoded token as saved as `token` attribute to the `$request` object. You can change this with. `attribute` parameter. Set to `null` or `false` to disable this behavour
