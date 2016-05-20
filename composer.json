@@ -2,7 +2,6 @@
     "name": "tuupola/slim-jwt-auth",
     "description": "PSR-7 JWT Authentication Middleware",
     "keywords": [
-        "slim",
         "psr-7",
         "middleware",
         "jwt",
