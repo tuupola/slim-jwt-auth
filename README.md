@@ -174,7 +174,7 @@ The optional `logger` parameter allows you to pass in a PSR-3 compatible logger 
 ``` php
 $app = new \Slim\App();
 
-$logger = \Monolog\Logger("slim");
+$logger = new \Monolog\Logger("slim");
 $rotating = new RotatingFileHandler(__DIR__ . "/logs/slim.log", 0, Logger::DEBUG);
 $logger->pushHandler($rotating);
 
