@@ -86,25 +86,27 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ### Environment
 
-By default middleware tries to find the token from `HTTP_AUTHORIZATION` and `REDIRECT_HTTP_AUTHORIZATION` environments. You can change this using `environment` parameter.
+By default middleware tries to find the token from `HTTP_AUTHORIZATION` and `REDIRECT_HTTP_AUTHORIZATION` environments. You can change this using `environment` parameter. Note that usually you should also use matching `header` parameter.
 
 ``` php
 $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
-    "environment" => ["HTTP_BRAWNDO", "HTTP_ELECTROLYTE"],
+    "environment" => ["HTTP_BRAWNDO", "REDIRECT_HTTP_BRAWNDO"],
+    "header" => "Brawndo",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
 
 ### Header
 
-If token is not found from environment the middleware tries to find it from `Authorization` header. You can change cookie name using `header` parameter. Note that usually, but not always there also is an `HTTP_` environment which matches the header name.
+If token is not found from environment the middleware tries to find it from `Authorization` header. You can change cookie name using `header` parameter. Note that usually you should also use matching `environment` parameter.
 
 ``` php
 $app = new \Slim\App();
 
 $app->add(new \Slim\Middleware\JwtAuthentication([
+    "environment" => "HTTP_X_TOKEN",
     "header" => "X-Token",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
