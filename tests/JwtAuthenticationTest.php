@@ -199,6 +199,37 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $response->getBody());
     }
 
+    public function testShouldReturnDefaultMessageWithFalseFromCallback()
+    {
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "callback" => function ($params) {
+                return false;
+            },
+            "error" => function (Request $request, Response $response, $arguments) {
+                $response->getBody()->write($arguments["message"]);
+                return $response;
+            }
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("Callback returned false", $response->getBody());
+    }
+
     public function testShouldReturn401WithInvalidAlgorithm()
     {
         $request = (new Request)
