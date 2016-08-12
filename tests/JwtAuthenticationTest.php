@@ -301,7 +301,6 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $app->response()->status());
         $this->assertEquals("Pong", $app->response()->body());
-
     }
 
     public function testShouldNotAllowInsecure()
