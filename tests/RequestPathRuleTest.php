@@ -116,4 +116,21 @@ class RequestPathTest extends \PHPUnit_Framework_TestCase
             ->withMethod("GET");
         $this->assertFalse($rule($request));
     }
+
+    public function testShouldAuthenticateRegexp()
+    {
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api/products/123/tickets/anything"))
+            ->withMethod("GET");
+
+        /* Should authenticate */
+        $rule = new RequestPathRule(["path" => ["/api/products/(\d*)/tickets"]]);
+        $this->assertTrue($rule($request));
+
+        /* Should not authenticate */
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api/products/xxx/tickets"))
+            ->withMethod("GET");
+        $this->assertFalse($rule($request));
+    }
 }
