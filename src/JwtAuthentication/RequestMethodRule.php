@@ -13,7 +13,7 @@
  *
  */
 
-namespace Slim\Middleware\JwtAuthentication;
+namespace Tuupola\Middleware\JwtAuthentication;
 
 use \Psr\Http\Message\RequestInterface;
 

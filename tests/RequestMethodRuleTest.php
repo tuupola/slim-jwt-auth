@@ -13,7 +13,7 @@
  *
  */
 
-namespace Slim\Middleware\JwtAuthentication;
+namespace Tuupola\Middleware\JwtAuthentication;
 
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\ServerRequestFactory;

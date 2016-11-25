@@ -13,10 +13,10 @@
  *
  */
 
-namespace Slim\Middleware;
+namespace Tuupola\Middleware;
 
-use Slim\Middleware\JwtAuthentication\RequestMethodRule;
-use Slim\Middleware\JwtAuthentication\RequestPathRule;
+use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
+use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Http\Message\RequestInterface;

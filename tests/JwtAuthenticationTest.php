@@ -13,7 +13,7 @@
  *
  */
 
-namespace Slim\Middleware;
+namespace Tuupola\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -516,28 +516,28 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetPath()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setPath("/admin");
         $this->assertEquals("/admin", $auth->getPath());
     }
 
     public function testShouldGetAndSetPassthrough()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setPassthrough("/admin/ping");
         $this->assertEquals("/admin/ping", $auth->getPassthrough());
     }
 
     public function testShouldGetAndSetSecret()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setSecret("supersecretkeyyoushouldnotcommittogithub");
         $this->assertEquals("supersecretkeyyoushouldnotcommittogithub", $auth->getSecret());
     }
 
     public function testShouldGetAndSetSecure()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $this->assertTrue($auth->getSecure());
         $auth->setSecure(false);
         $this->assertFalse($auth->getSecure());
@@ -545,7 +545,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetRelaxed()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $relaxed = array("localhost", "dev.example.com");
         $auth->setRelaxed($relaxed);
         $this->assertEquals($relaxed, $auth->getRelaxed());
@@ -553,7 +553,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetEnvironment()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setEnvironment("HTTP_SOMETHING");
         $this->assertEquals("HTTP_SOMETHING", $auth->getEnvironment());
 
@@ -563,14 +563,14 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetCookieName()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setCookie("nekot");
         $this->assertEquals("nekot", $auth->getCookie());
     }
 
     public function testShouldGetAndSetCallback()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setCallback(function ($request, $response, $params) {
             return true;
         });
@@ -579,7 +579,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetError()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setError(function ($request, $response, $params) {
             return true;
         });
@@ -588,7 +588,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetRules()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setRules(array(
             function ($app) {
                 return true;
@@ -602,16 +602,16 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldSetAndGetLogger()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $logger = new \Psr\Log\NullLogger;
         $auth->setLogger($logger);
 
         $this->assertInstanceOf("\Psr\Log\NullLogger", $auth->getLogger());
     }
 
-    public function testShouldSLog()
+    public function testShouldLog()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $logger = new \Psr\Log\NullLogger;
         $auth->setLogger($logger);
         $this->assertNull($auth->log(\Psr\Log\LogLevel::WARNING, "Token not found"));
@@ -625,7 +625,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $response = new Response;
 
-        $auth = new \Slim\Middleware\JwtAuthentication([
+        $auth = new \Tuupola\Middleware\JwtAuthentication([
             "path" => ["/api", "/bar"],
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
@@ -671,28 +671,28 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldGetAndSetAttributeName()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setAttribute("nekot");
         $this->assertEquals("nekot", $auth->getAttribute());
     }
 
     public function testShouldGetAndSetHeader()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setHeader("X-Token");
         $this->assertEquals("X-Token", $auth->getHeader());
     }
 
     public function testShouldGetAndSetRegexp()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setRegexp("/Token\s+(.*)$/i");
         $this->assertEquals("/Token\s+(.*)$/i", $auth->getRegexp());
     }
 
     public function testShouldGetAndSetAlgorithm()
     {
-        $auth = new \Slim\Middleware\JwtAuthentication;
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $auth->setAlgorithm("HS256");
         $this->assertEquals("HS256", $auth->getAlgorithm());
     }

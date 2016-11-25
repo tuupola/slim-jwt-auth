@@ -30,12 +30,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Slim\\Middleware\\": "src"
+            "Tuupola\\Middleware\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Slim\\Middleware\\": "tests"
+            "Tuupola\\Middleware\\": "tests"
         }
     }
 }
