@@ -28,7 +28,7 @@ RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 ## Usage
 
-Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. Note again that `secret` is not the token. It is the secret you use to sign the token. 
+Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. Note again that `secret` is not the token. It is the secret you use to sign the token.
 
 For simplicity's sake examples show `secret` hardcoded in code. In real life you should store it somewhere else. Good option is environment variable. You can use [dotenv](https://github.com/vlucas/phpdotenv) or something similar for development. Examples assume you are using Slim Framework.
 
@@ -385,18 +385,18 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ## Testing
 
-You can run tests either manually...
+You can run individual tests either manually...
 
 ``` bash
-$ vendor/bin/phpunit
-$ vendor/bin/phpcs --standard=PSR2 src/ -p
+$ composer phplint
+$ composer phpcs
+$ composer phpunit
 ```
 
-... or automatically on every code change.
+... or automatically on every code change. You will need [entr](http://entrproject.org/) for this to work.
 
 ``` bash
-$ npm install
-$ grunt watch
+$ composer watch
 ```
 
 ## Contributing
