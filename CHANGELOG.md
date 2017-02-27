@@ -6,11 +6,11 @@ All notable changes to this project will be documented in this file, in reverse 
 
 This is a security release.
 
-`RequestPathRule` now removes multiple slashes from the URI before determining whether the path should be authenticated or not. For client `/foo` and `//foo` are different URIs. On server side it depends on implementation but they usually map to the same route action.
+`RequestPathRule` now removes multiple slashes from the URI before determining whether the path should be authenticated or not. For HTTP client `/foo` and `//foo` are different URIs and technically valid according to [RFC3986](https://tools.ietf.org/html/rfc3986). However on serverside it depends on implementation and often `/foo`, `//foo` and even `/////fooo` are considered a same route.
 
-Different PSR-7 implementations were behaving in different way. Diactoros [removes multiple leading slashes](https://github.com/zendframework/zend-diactoros/blob/master/CHANGELOG.md#104---2015-06-23) while Slim does not.
+Different PSR-7 implementations were behaving in different way. Diactoros [removes multiple leading slashes](https://github.com/zendframework/zend-diactoros/blob/master/CHANGELOG.md#104---2015-06-23). By default Slim does not alter any slashes. However when installed in subfolder [Slim removes all slashed](https://github.com/slimphp/Slim/issues/1554).
 
-This means if you are authenticating a subfolder, for example `/api`, with Slim it was possible to bypass authentication by doing a request to `GET //api`. Diactoros was not affected.
+This means if you are authenticating a subfolder, for example `/api` and Slim is installed in document root it was possible to bypass authentication by doing a request to `//api`. Problem did not exist if Slim was installed in subfolder. Diactoros was not affected.
 
 ```php
 $app->add(new \Slim\Middleware\JwtAuthentication([
@@ -23,7 +23,6 @@ If you were using default setting of authenticating all routes you were not affe
 
 ```php
 $app->add(new \Slim\Middleware\JwtAuthentication([
-    "path" => "/",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
