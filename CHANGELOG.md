@@ -42,5 +42,5 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ### Fixed
 
-- #50 where in some cases it was possible to bypass authentication by adding multiple slashes to request URI.
+- Bug [#50](https://github.com/tuupola/slim-jwt-auth/issues/50) where in some cases it was possible to bypass authentication by adding multiple slashes to request URI.
 
