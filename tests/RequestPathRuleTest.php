@@ -133,4 +133,44 @@ class RequestPathTest extends \PHPUnit_Framework_TestCase
             ->withMethod("GET");
         $this->assertFalse($rule($request));
     }
+
+    public function testBug50ShouldAuthenticateMultipleSlashes()
+    {
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/"))
+            ->withMethod("GET");
+
+        $rule = new RequestPathRule(["path" => "/v1/api"]);
+        $this->assertFalse($rule($request));
+
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/v1/api"))
+            ->withMethod("GET");
+
+        $this->assertTrue($rule($request));
+
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/v1//api"))
+            ->withMethod("GET");
+
+        $this->assertTrue($rule($request));
+
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/v1//////api"))
+            ->withMethod("GET");
+
+        $this->assertTrue($rule($request));
+
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com//v1/api"))
+            ->withMethod("GET");
+
+        $this->assertTrue($rule($request));
+
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com//////v1/api"))
+            ->withMethod("GET");
+
+        $this->assertTrue($rule($request));
+    }
 }

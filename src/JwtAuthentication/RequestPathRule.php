@@ -49,7 +49,7 @@ class RequestPathRule implements RuleInterface
     public function __invoke(RequestInterface $request)
     {
         $uri = "/" . $request->getUri()->getPath();
-        $uri = str_replace("//", "/", $uri);
+        $uri = preg_replace("#/+#", "/", $uri);
 
         /* If request path is matches passthrough should not authenticate. */
         foreach ((array)$this->options["passthrough"] as $passthrough) {
