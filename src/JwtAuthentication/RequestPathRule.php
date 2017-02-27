@@ -30,6 +30,7 @@ class RequestPathRule implements RuleInterface
     public function __invoke(\Slim\Slim $app)
     {
         $uri = $app->request->getResourceUri();
+        $uri = preg_replace("#/+#", "/", $uri);
 
         /* If request path is matches passthrough should not authenticate. */
         foreach ((array)$this->options["passthrough"] as $passthrough) {

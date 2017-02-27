@@ -128,4 +128,44 @@ class MatchPathTest extends \PHPUnit_Framework_TestCase
         ));
         $this->assertFalse($rule(new \Slim\Slim));
     }
+
+    public function testBug50ShouldAuthenticateMultipleSlashes()
+    {
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/"
+        ));
+
+        $rule = new RequestPathRule(array("path" => "/v1/api"));
+        $this->assertFalse($rule(new \Slim\Slim));
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/v1/api"
+        ));
+        $this->assertTrue($rule(new \Slim\Slim));
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/v1//api"
+        ));
+        $this->assertTrue($rule(new \Slim\Slim));
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "/v1//////api"
+        ));
+        $this->assertTrue($rule(new \Slim\Slim));
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "//v1/api"
+        ));
+        $this->assertTrue($rule(new \Slim\Slim));
+
+        \Slim\Environment::mock(array(
+            "SCRIPT_NAME" => "/index.php",
+            "PATH_INFO" => "//////v1/api"
+        ));
+    }
 }
