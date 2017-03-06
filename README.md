@@ -236,7 +236,7 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
 
 ### Rules
 
-The optional `rules` parameter allows you to pass in rules which define whether the request should be authenticated or not. Rule is a callable which receives the Slim app as parameter. If the callable returns boolean `false` request will not be authenticated.
+The optional `rules` parameter allows you to pass in rules which define whether the request should be authenticated or not. A rule is a callable which receives the request as parameter. If any of the rules returns boolean `false` the request will not be authenticated.
 
 By default middleware configuration looks like this. All paths are authenticated with all request methods except `OPTIONS`.
 
