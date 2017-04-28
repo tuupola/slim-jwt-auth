@@ -149,7 +149,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             null,
             null,
             null,
-            ["token" => self::$token],
+            ["nekot" => self::$token],
             null
         );
         $request = $request
@@ -159,7 +159,8 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $response = new Response;
 
         $auth = new JwtAuthentication([
-            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "cookie" => "nekot",
         ]);
 
         $next = function (ServerRequest $request, Response $response) {
@@ -404,6 +405,34 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $response = $auth($request, $response, $next);
     }
 
+    public function testShoulAllowInsecure()
+    {
+        $request = (new ServerRequest)
+            ->withUri(new Uri("http://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "secure" => false
+        ]);
+
+        $next = function (ServerRequest $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+
+        $response = $auth($request, $response, $next);
+    }
+
     public function testShouldRelaxInsecureInLocalhost()
     {
         $request = (new ServerRequest)
@@ -426,6 +455,82 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Foo", $response->getBody());
+    }
+
+    public function testShouldRelaxInsecureInExampleCom()
+    {
+        $request = (new ServerRequest)
+            ->withUri(new Uri("http://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "relaxed" => ["example.com"],
+        ]);
+
+        $next = function (ServerRequest $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
+    public function testShouldAttachToken()
+    {
+        $request = (new ServerRequest)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+        ]);
+
+        $next = function (ServerRequest $request, Response $response) {
+            $token = $request->getAttribute("token");
+            $response->getBody()->write($token->iss);
+            return $response;
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
+    }
+
+    public function testShouldAttachCustomToken()
+    {
+        $request = (new ServerRequest)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "attribute" => "nekot",
+        ]);
+
+        $next = function (ServerRequest $request, Response $response) {
+            $token = $request->getAttribute("nekot");
+            $response->getBody()->write($token->iss);
+            return $response;
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
     }
 
     public function testShouldCallAfter()
@@ -457,8 +562,6 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(is_object($dummy));
         $this->assertEquals(self::$token_as_array, (array)$dummy);
     }
-
-
 
     public function testShouldCallError()
     {
