@@ -41,7 +41,6 @@ class JwtAuthentication
     private $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
-        "environment" => ["HTTP_AUTHORIZATION", "REDIRECT_HTTP_AUTHORIZATION"],
         "algorithm" => ["HS256", "HS512", "HS384"],
         "header" => "Authorization",
         "regexp" => "/Bearer\s+(.*)$/i",
@@ -201,45 +200,25 @@ class JwtAuthentication
      */
     public function fetchToken(RequestInterface $request)
     {
-        /* If using PHP in CGI mode and non standard environment */
-        $server_params = $request->getServerParams();
         $header = "";
-        $message = "";
+        $message = "Using token from request header";
 
-        /* Check for each given environment */
-        foreach ((array) $this->options["environment"] as $environment) {
-            if (isset($server_params[$environment])) {
-                $message = "Using token from environment";
-                $header = $server_params[$environment];
-            }
-        }
-
-        /* Nothing in environment, try header instead */
-        if (empty($header)) {
-            $message = "Using token from request header";
-            $headers = $request->getHeader($this->options["header"]);
-            $header = isset($headers[0]) ? $headers[0] : "";
-        }
-
-        /* Try apache_request_headers() as last resort */
-        if (empty($header) && function_exists("apache_request_headers")) {
-            $message = "Using token from apache_request_headers()";
-            $headers = apache_request_headers();
-            $header = isset($headers[$this->options["header"]]) ? $headers[$this->options["header"]] : "";
-        }
+        /* Check for token in header. */
+        $headers = $request->getHeader($this->options["header"]);
+        $header = isset($headers[0]) ? $headers[0] : "";
 
         if (preg_match($this->options["regexp"], $header, $matches)) {
             $this->log(LogLevel::DEBUG, $message);
             return $matches[1];
         }
 
-        /* Bearer not found, try a cookie. */
-        $cookie_params = $request->getCookieParams();
+        /* Token not found in header try a cookie. */
+        $cookieParams = $request->getCookieParams();
 
-        if (isset($cookie_params[$this->options["cookie"]])) {
+        if (isset($cookieParams[$this->options["cookie"]])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
-            $this->log(LogLevel::DEBUG, $cookie_params[$this->options["cookie"]]);
-            return $cookie_params[$this->options["cookie"]];
+            $this->log(LogLevel::DEBUG, $cookieParams[$this->options["cookie"]]);
+            return $cookieParams[$this->options["cookie"]];
         };
 
         /* If everything fails log and return false. */

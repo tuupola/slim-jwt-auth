@@ -428,32 +428,6 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    public function testShouldFetchTokenFromEnvironment()
-    {
-        $request = ServerRequestFactory::fromGlobals(
-            ["HTTP_BRAWNDO" => "Bearer " . self::$token]
-        );
-        $request = $request
-            ->withUri(new Uri("https://example.com/api"))
-            ->withMethod("GET");
-
-        $response = new Response;
-
-        $auth = new JwtAuthentication([
-            "environment" => ["HTTP_AUTHORIZATION", "HTTP_BRAWNDO"],
-            "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ]);
-
-        $this->assertEquals(self::$token, $auth->fetchToken($request));
-
-        $auth = new JwtAuthentication([
-            "environment" => "HTTP_BRAWNDO",
-            "secret" => "supersecretkeyyoushouldnotcommittogithub"
-        ]);
-
-        $this->assertEquals(self::$token, $auth->fetchToken($request));
-    }
-
     public function testShouldCallAfter()
     {
         $request = (new Request)
