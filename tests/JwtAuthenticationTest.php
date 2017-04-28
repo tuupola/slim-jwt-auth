@@ -441,7 +441,6 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
             "after" => function ($request, $response, $arguments) use (&$dummy) {
-                $this->setMessage("After was called");
                 $dummy = $arguments["decoded"];
             }
         ]);
@@ -457,7 +456,6 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
         $this->assertTrue(is_object($dummy));
         $this->assertEquals(self::$token_as_array, (array)$dummy);
-        $this->assertEquals("After was called", $auth->getMessage());
     }
 
 
@@ -520,106 +518,12 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($dummy);
     }
 
-    public function testShouldGetAndSetPath()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setPath("/admin");
-        $this->assertEquals("/admin", $auth->getPath());
-    }
-
-    public function testShouldGetAndSetPassthrough()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setPassthrough("/admin/ping");
-        $this->assertEquals("/admin/ping", $auth->getPassthrough());
-    }
-
-    public function testShouldGetAndSetSecret()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setSecret("supersecretkeyyoushouldnotcommittogithub");
-        $this->assertEquals("supersecretkeyyoushouldnotcommittogithub", $auth->getSecret());
-    }
-
-    public function testShouldGetAndSetSecure()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $this->assertTrue($auth->getSecure());
-        $auth->setSecure(false);
-        $this->assertFalse($auth->getSecure());
-    }
-
-    public function testShouldGetAndSetRelaxed()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $relaxed = array("localhost", "dev.example.com");
-        $auth->setRelaxed($relaxed);
-        $this->assertEquals($relaxed, $auth->getRelaxed());
-    }
-
-    public function testShouldGetAndSetEnvironment()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setEnvironment("HTTP_SOMETHING");
-        $this->assertEquals("HTTP_SOMETHING", $auth->getEnvironment());
-
-        $auth->setEnvironment(["HTTP_SOMETHING", "HTTP_OTHER"]);
-        $this->assertEquals(["HTTP_SOMETHING", "HTTP_OTHER"], $auth->getEnvironment());
-    }
-
-    public function testShouldGetAndSetCookieName()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setCookie("nekot");
-        $this->assertEquals("nekot", $auth->getCookie());
-    }
-
-    public function testShouldGetAndSetCallback()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setCallback(function ($request, $response, $params) {
-            return true;
-        });
-        $this->assertTrue(is_callable($auth->getCallback()));
-    }
-
-    public function testShouldGetAndSetError()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setError(function ($request, $response, $params) {
-            return true;
-        });
-        $this->assertTrue(is_callable($auth->getError()));
-    }
-
-    public function testShouldGetAndSetRules()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setRules(array(
-            function ($app) {
-                return true;
-            },
-            function ($app) {
-                return false;
-            }
-        ));
-        $this->assertEquals(2, count($auth->getRules()));
-    }
-
-    public function testShouldSetAndGetLogger()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $logger = new \Psr\Log\NullLogger;
-        $auth->setLogger($logger);
-
-        $this->assertInstanceOf("\Psr\Log\NullLogger", $auth->getLogger());
-    }
-
     public function testShouldLog()
     {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
         $logger = new \Psr\Log\NullLogger;
-        $auth->setLogger($logger);
+        $auth = new \Tuupola\Middleware\JwtAuthentication([
+            "logger" => $logger
+        ]);
         $this->assertNull($auth->log(\Psr\Log\LogLevel::WARNING, "Token not found"));
     }
 
@@ -705,53 +609,4 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("test", (string) $response->getBody());
 
     }
-
-    public function testShouldGetAndSetAttributeName()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setAttribute("nekot");
-        $this->assertEquals("nekot", $auth->getAttribute());
-    }
-
-    public function testShouldGetAndSetHeader()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setHeader("X-Token");
-        $this->assertEquals("X-Token", $auth->getHeader());
-    }
-
-    public function testShouldGetAndSetRegexp()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setRegexp("/Token\s+(.*)$/i");
-        $this->assertEquals("/Token\s+(.*)$/i", $auth->getRegexp());
-    }
-
-    public function testShouldGetAndSetAlgorithm()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $auth->setAlgorithm("HS256");
-        $this->assertEquals("HS256", $auth->getAlgorithm());
-    }
-
-    public function testShouldGetAndSetBefore()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $before = function () {
-            return "It's got Electrolytes.";
-        };
-        $auth->setBefore($before);
-        $this->assertEquals($before, $auth->getBefore());
-    }
-
-    public function testShouldGetAndSetAfter()
-    {
-        $auth = new \Tuupola\Middleware\JwtAuthentication;
-        $after = function () {
-            return "That is what plants crave.";
-        };
-        $auth->setAfter($after);
-        $this->assertEquals($after, $auth->getAfter());
-    }
-
 }

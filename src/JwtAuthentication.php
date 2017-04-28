@@ -113,14 +113,14 @@ class JwtAuthentication
 
         /* If token cannot be found return with 401 Unauthorized. */
         if (false === $token = $this->fetchToken($request)) {
-            return $this->error($request, $response, [
+            return $this->processError($request, $response, [
                 "message" => $this->message
             ])->withStatus(401);
         }
 
         /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
-            return $this->error($request, $response, [
+            return $this->processError($request, $response, [
                 "message" => $this->message,
                 "token" => $token
             ])->withStatus(401);
@@ -181,7 +181,7 @@ class JwtAuthentication
 
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function error(RequestInterface $request, ResponseInterface $response, $arguments)
+    public function processError(RequestInterface $request, ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
             $handler_response = $this->options["error"]($request, $response, $arguments);
@@ -249,7 +249,7 @@ class JwtAuthentication
     }
 
     /**
-     * Hydate options from given array
+     * Hydrate options from given array
      *
      * @param array $data Array of options.
      * @return self
@@ -259,26 +259,16 @@ class JwtAuthentication
         foreach ($data as $key => $value) {
             /* https://github.com/facebook/hhvm/issues/6368 */
             $key = str_replace(".", " ", $key);
-            $method = "set" . ucwords($key);
+            $method = lcfirst(ucwords($key));
             $method = str_replace(" ", "", $method);
             if (method_exists($this, $method)) {
                 /* Try to use setter */
                 call_user_func([$this, $method], $value);
             } else {
-                /* Or fallback to setting property directly */
-                $this->$key = $value;
+                /* Or fallback to setting option directly */
+                $this->options[$key] = $value;
             }
         }
-    }
-
-    /**
-     * Get path where middleware is be binded to
-     *
-     * @return string
-     */
-    public function getPath()
-    {
-        return $this->options["path"];
     }
 
     /**
@@ -287,20 +277,10 @@ class JwtAuthentication
      * @param string|string[] $$path
      * @return self
      */
-    public function setPath($path)
+    private function path($path)
     {
         $this->options["path"] = $path;
         return $this;
-    }
-
-    /**
-     * Get path which middleware ignores
-     *
-     * @return string|array
-     */
-    public function getPassthrough()
-    {
-        return $this->options["passthrough"];
     }
 
     /**
@@ -309,42 +289,10 @@ class JwtAuthentication
      * @param string|string[] $passthrough
      * @return self
      */
-    public function setPassthrough($passthrough)
+    private function passthrough($passthrough)
     {
         $this->options["passthrough"] = $passthrough;
         return $this;
-    }
-
-    /**
-     * Get the environment name where to search the token from
-     *
-     * @return string Name of environment variable.
-     */
-    public function getEnvironment()
-    {
-        return $this->options["environment"];
-    }
-
-    /**
-     * Set the environment name where to search the token from
-     *
-     * @param string $environment
-     * @return self
-     */
-    public function setEnvironment($environment)
-    {
-        $this->options["environment"] = $environment;
-        return $this;
-    }
-
-    /**
-     * Get the cookie name where to search the token from
-     *
-     * @return string
-     */
-    public function getCookie()
-    {
-        return $this->options["cookie"];
     }
 
     /**
@@ -353,20 +301,10 @@ class JwtAuthentication
      * @param string $cookie
      * @return self
      */
-    public function setCookie($cookie)
+    private function cookie($cookie)
     {
         $this->options["cookie"] = $cookie;
         return $this;
-    }
-
-    /**
-     * Get the secure flag
-     *
-     * @return boolean
-     */
-    public function getSecure()
-    {
-        return $this->options["secure"];
     }
 
     /**
@@ -375,21 +313,10 @@ class JwtAuthentication
      * @param boolean $secure
      * @return self
      */
-    public function setSecure($secure)
+    private function secure($secure)
     {
         $this->options["secure"] = !!$secure;
         return $this;
-    }
-
-
-    /**
-     * Get hosts where secure rule is relaxed
-     *
-     * @return array
-     */
-    public function getRelaxed()
-    {
-        return $this->options["relaxed"];
     }
 
     /**
@@ -398,20 +325,10 @@ class JwtAuthentication
      * @param string[] $relaxed
      * @return self
      */
-    public function setRelaxed(array $relaxed)
+    private function relaxed(array $relaxed)
     {
         $this->options["relaxed"] = $relaxed;
         return $this;
-    }
-
-    /**
-     * Get the secret key
-     *
-     * @return string
-     */
-    public function getSecret()
-    {
-        return $this->options["secret"];
     }
 
     /**
@@ -420,42 +337,10 @@ class JwtAuthentication
      * @param string $secret
      * @return self
      */
-    public function setSecret($secret)
+    private function secret($secret)
     {
         $this->options["secret"] = $secret;
         return $this;
-    }
-
-    /**
-     * Get the callback
-     *
-     * @return callable
-     */
-    public function getCallback()
-    {
-        return $this->options["callback"];
-    }
-
-    /**
-     * Set the callback
-     *
-     * @param callable $callback
-     * @return self
-     */
-    public function setCallback($callback)
-    {
-        $this->options["callback"] = $callback->bindTo($this);
-        return $this;
-    }
-
-    /**
-     * Get the error handler
-     *
-     * @return callable
-     */
-    public function getError()
-    {
-        return $this->options["error"];
     }
 
     /**
@@ -464,20 +349,10 @@ class JwtAuthentication
      * @param callable $error
      * @return self
      */
-    public function setError($error)
+    private function error($error)
     {
         $this->options["error"] = $error;
         return $this;
-    }
-
-    /**
-     * Get the rules stack
-     *
-     * @return \SplStack
-     */
-    public function getRules()
-    {
-        return $this->rules;
     }
 
     /**
@@ -486,7 +361,7 @@ class JwtAuthentication
      * @param array $rules
      * @return self
      */
-    public function setRules(array $rules)
+    public function rules(array $rules)
     {
         /* Clear the stack */
         unset($this->rules);
@@ -510,25 +385,13 @@ class JwtAuthentication
         return $this;
     }
 
-    /* Cannot use traits since PHP 5.3 should be supported */
-
-    /**
-     * Get the logger
-     *
-     * @return \Psr\Log\LoggerInterface $logger
-     */
-    public function getLogger()
-    {
-        return $this->logger;
-    }
-
     /**
      * Set the logger
      *
      * @param \Psr\Log\LoggerInterface $logger
      * @return self
      */
-    public function setLogger(LoggerInterface $logger = null)
+    private function logger(LoggerInterface $logger = null)
     {
         $this->logger = $logger;
         return $this;
@@ -551,35 +414,15 @@ class JwtAuthentication
     }
 
     /**
-     * Get last error message
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return $this->message;
-    }
-
-    /**
      * Set the last error message
      *
      * @param string
      * @return self
      */
-    public function setMessage($message)
+    private function message($message)
     {
         $this->message = $message;
         return $this;
-    }
-
-    /**
-     * Get the attribute name used to attach decoded token to request
-     *
-     * @return string
-     */
-    public function getAttribute()
-    {
-        return $this->options["attribute"];
     }
 
     /**
@@ -588,20 +431,10 @@ class JwtAuthentication
      * @param string
      * @return self
      */
-    public function setAttribute($attribute)
+    private function attribute($attribute)
     {
         $this->options["attribute"] = $attribute;
         return $this;
-    }
-
-    /**
-     * Get the header where token is searched from
-     *
-     * @return string
-     */
-    public function getHeader()
-    {
-        return $this->options["header"];
     }
 
     /**
@@ -610,20 +443,10 @@ class JwtAuthentication
      * @param string
      * @return self
      */
-    public function setHeader($header)
+    private function header($header)
     {
         $this->options["header"] = $header;
         return $this;
-    }
-
-    /**
-     * Get the regexp used to extract token from header or environment
-     *
-     * @return string
-     */
-    public function getRegexp()
-    {
-        return $this->options["regexp"];
     }
 
     /**
@@ -632,20 +455,10 @@ class JwtAuthentication
      * @param string
      * @return self
      */
-    public function setRegexp($regexp)
+    private function regexp($regexp)
     {
         $this->options["regexp"] = $regexp;
         return $this;
-    }
-
-    /**
-     * Get the allowed algorithms
-     *
-     * @return string|string[]
-     */
-    public function getAlgorithm()
-    {
-        return $this->options["algorithm"];
     }
 
     /**
@@ -654,20 +467,10 @@ class JwtAuthentication
      * @param string|string[] $algorithm
      * @return self
      */
-    public function setAlgorithm($algorithm)
+    private function algorithm($algorithm)
     {
         $this->options["algorithm"] = $algorithm;
         return $this;
-    }
-
-    /**
-     * Get the before handler
-     *
-     * @return string
-     */
-    public function getBefore()
-    {
-        return $this->options["before"];
     }
 
     /**
@@ -676,20 +479,10 @@ class JwtAuthentication
      * @return self
      */
 
-    public function setBefore($before)
+    private function before($before)
     {
         $this->options["before"] = $before->bindTo($this);
         return $this;
-    }
-
-    /**
-     * Get the after handler
-     *
-     * @return string
-     */
-    public function getAfter()
-    {
-        return $this->options["after"];
     }
 
     /**
@@ -697,7 +490,7 @@ class JwtAuthentication
      *
      * @return self
      */
-    public function setAfter($after)
+    private function after($after)
     {
         $this->options["after"] = $after->bindTo($this);
         return $this;
