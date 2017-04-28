@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/tuupola/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/tuupola/slim-jwt-auth)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Build Status](https://img.shields.io/travis/tuupola/slim-jwt-auth/3.x∏.svg?style=flat-square)](https://travis-ci.org/tuupola/slim-jwt-auth)
+[![Build Status](https://img.shields.io/travis/tuupola/slim-jwt-auth/3.x.svg?style=flat-square)](https://travis-ci.org/tuupola/slim-jwt-auth)
 [![HHVM Status](https://img.shields.io/hhvm/tuupola/slim-jwt-auth.svg?style=flat-square)](http://hhvm.h4cc.de/package/tuupola/slim-jwt-auth)
 [![Coverage](http://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth/3.x.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth/branch/3.x)
 
