@@ -47,7 +47,7 @@ class JwtAuthentication
         "cookie" => "token",
         "attribute" => "token",
         "path" => null,
-        "passthrough" => null,
+        "ignore" => null,
         "before" => null,
         "after" => null,
         "error" => null
@@ -69,7 +69,7 @@ class JwtAuthentication
         /* If nothing was passed in options add default rules. */
         if (!isset($options["rules"])) {
             $this->addRule(new RequestMethodRule([
-                "passthrough" => ["OPTIONS"]
+                "ignore" => ["OPTIONS"]
             ]));
         }
 
@@ -77,7 +77,7 @@ class JwtAuthentication
         if (null !== ($this->options["path"])) {
             $this->addRule(new RequestPathRule([
                 "path" => $this->options["path"],
-                "passthrough" => $this->options["passthrough"]
+                "ignore" => $this->options["ignore"]
             ]));
         }
     }
@@ -286,12 +286,12 @@ class JwtAuthentication
     /**
      * Set path which middleware ignores
      *
-     * @param string|string[] $passthrough
+     * @param string|string[] $ignore
      * @return self
      */
-    private function passthrough($passthrough)
+    private function ignore($ignore)
     {
-        $this->options["passthrough"] = $passthrough;
+        $this->options["ignore"] = $ignore;
         return $this;
     }
 

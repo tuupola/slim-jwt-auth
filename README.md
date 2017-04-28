@@ -69,17 +69,17 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 ]));
 ```
 
-### Passthrough
+### Ignore
 
 
-With optional `passthrough` parameter you can make exceptions to `path` parameter. In the example below everything starting with `/api` and `/admin`  will be authenticated with the exception of `/api/token` and `/admin/ping` which will not be authenticated.
+With optional `ignore` parameter you can make exceptions to `path` parameter. In the example below everything starting with `/api` and `/admin`  will be authenticated with the exception of `/api/token` and `/admin/ping` which will not be authenticated.
 
 ``` php
 $app = new \Slim\App;
 
 $app->add(new \Tuupola\Middleware\JwtAuthentication([
     "path" => ["/api", "/admin"],
-    "passthrough" => ["/api/token", "/admin/ping"],
+    "ignore" => ["/api/token", "/admin/ping"],
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -251,16 +251,16 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
     "rules" => [
         new \Tuupola\Middleware\JwtAuthentication\RequestPathRule([
             "path" => "/",
-            "passthrough" => []
+            "ignore" => []
         ]),
         new \Tuupola\Middleware\JwtAuthentication\RequestMethodRule([
-            "passthrough" => ["OPTIONS"]
+            "ignore" => ["OPTIONS"]
         ])
     ]
 ]));
 ```
 
-RequestPathRule contains both a `path` parameter and a `passthrough` parameter. Latter contains paths which should not be authenticated. RequestMethodRule contains `passthrough` parameter of request methods which also should not be authenticated. Think of `passthrough` as a whitelist.
+RequestPathRule contains both a `path` parameter and a `ignore` parameter. Latter contains paths which should not be authenticated. RequestMethodRule contains `ignore` parameter of request methods which also should not be authenticated. Think of `ignore` as a whitelist.
 
 Example use case for this is an API. Token can be retrieved via [HTTP Basic Auth](https://github.com/tuupola/slim-basic-auth) protected address. There also is an unprotected url for pinging. Rest of the API is protected by the JWT middleware.
 
@@ -273,10 +273,10 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
     "rules" => [
         new RequestPathRule([
             "path" => "/api",
-            "passthrough" => ["/api/token", "/api/ping"]
+            "ignore" => ["/api/token", "/api/ping"]
         ]),
         new \Tuupola\Middleware\JwtAuthentication\RequestMethodRule([
-            "passthrough" => ["OPTIONS"]
+            "ignore" => ["OPTIONS"]
         ])
     ]
 ]));

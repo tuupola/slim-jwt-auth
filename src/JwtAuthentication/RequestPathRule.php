@@ -28,7 +28,7 @@ class RequestPathRule implements RuleInterface
      */
     protected $options = [
         "path" => ["/"],
-        "passthrough" => []
+        "ignore" => []
     ];
 
     /**
@@ -51,10 +51,10 @@ class RequestPathRule implements RuleInterface
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
 
-        /* If request path is matches passthrough should not authenticate. */
-        foreach ((array)$this->options["passthrough"] as $passthrough) {
-            $passthrough = rtrim($passthrough, "/");
-            if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
+        /* If request path is matches ignore should not authenticate. */
+        foreach ((array)$this->options["ignore"] as $ignore) {
+            $ignore = rtrim($ignore, "/");
+            if (!!preg_match("@^{$ignore}(/.*)?$@", $uri)) {
                 return false;
             }
         }

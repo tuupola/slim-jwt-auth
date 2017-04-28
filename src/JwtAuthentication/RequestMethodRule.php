@@ -28,7 +28,7 @@ class RequestMethodRule implements RuleInterface
      * Stores all the options passed to the rule
      */
     protected $options = [
-        "passthrough" => ["OPTIONS"]
+        "ignore" => ["OPTIONS"]
     ];
 
     /**
@@ -48,6 +48,6 @@ class RequestMethodRule implements RuleInterface
      */
     public function __invoke(RequestInterface $request)
     {
-        return !in_array($request->getMethod(), $this->options["passthrough"]);
+        return !in_array($request->getMethod(), $this->options["ignore"]);
     }
 }

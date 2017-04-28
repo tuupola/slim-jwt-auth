@@ -356,7 +356,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    public function testShouldReturn200WithoutTokenWithPassthrough()
+    public function testShouldReturn200WithoutTokenWithIgnore()
     {
         $request = (new Request)
             ->withUri(new Uri("https://example.com/api/ping"))
@@ -366,7 +366,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new JwtAuthentication([
             "path" => ["/api", "/foo"],
-            "passthrough" => ["/api/ping"],
+            "ignore" => ["/api/ping"],
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
