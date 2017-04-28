@@ -1,15 +1,16 @@
 <?php
 
-/*
- * This file is part of PSR-7 JSON Web Token Authentication middleware
+/**
+ * This file is part of PSR-7 & PSR-15 JWT Authentication middleware
  *
- * Copyright (c) 2015-2016 Mika Tuupola
+ * Copyright (c) 2015-2017 Mika Tuupola
  *
  * Licensed under the MIT license:
  *   http://www.opensource.org/licenses/mit-license.php
  *
  * Project home:
  *   https://github.com/tuupola/slim-jwt-auth
+ *   https://appelsiini.net/projects/slim-jwt-auth
  *
  */
 
@@ -156,9 +157,9 @@ final class JwtAuthentication implements MiddlewareInterface
         /* Modify $request before calling next middleware. */
         if (is_callable($this->options["before"])) {
             $response = (new ResponseFactory)->createResponse(200);
-            $before_request = $this->options["before"]($request, $response, $params);
-            if ($before_request instanceof \Psr\Http\Message\ServerRequestInterface) {
-                $request = $before_request;
+            $beforeRequest = $this->options["before"]($request, $response, $params);
+            if ($beforeRequest instanceof ServerRequestInterface) {
+                $request = $beforeRequest;
             }
         }
 
@@ -167,9 +168,9 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $response before returning. */
         if (is_callable($this->options["after"])) {
-            $after_response = $this->options["after"]($request, $response, $params);
-            if ($after_response instanceof \Psr\Http\Message\ResponseInterface) {
-                return $after_response;
+            $afterResponse = $this->options["after"]($request, $response, $params);
+            if ($afterResponse instanceof ResponseInterface) {
+                return $afterResponse;
             }
         }
 
@@ -179,7 +180,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Check if middleware should authenticate
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param ServerRequestInterface $request
      * @return boolean True if middleware should authenticate.
      */
     public function shouldAuthenticate(ServerRequestInterface $request)
@@ -196,18 +197,18 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Call the error handler if it exists
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @param mixed[] $arguments
 
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
     public function processError(ServerRequestInterface $request, ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
-            $handler_response = $this->options["error"]($request, $response, $arguments);
-            if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
-                return $handler_response;
+            $handlerResponse = $this->options["error"]($request, $response, $arguments);
+            if ($handlerResponse instanceof ResponseInterface) {
+                return $handlerResponse;
             }
         }
         return $response;
@@ -216,7 +217,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Fetch the access token
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param ServerRequestInterface $request
      * @return string|null Base64 encoded JSON Web Token or null if not found.
      */
     public function fetchToken(ServerRequestInterface $request)
@@ -251,7 +252,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Decode the token
      *
-     * @param string $$token
+     * @param string $token
      * @return object|boolean The JWT's payload as a PHP object or false in case of error
      */
     public function decodeToken($token)
@@ -432,18 +433,6 @@ final class JwtAuthentication implements MiddlewareInterface
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);
         }
-    }
-
-    /**
-     * Set the last error message
-     *
-     * @param string
-     * @return self
-     */
-    private function message($message)
-    {
-        $this->message = $message;
-        return $this;
     }
 
     /**
