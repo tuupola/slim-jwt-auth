@@ -192,9 +192,13 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 ]));
 ```
 
-### Callback
+### Before
 
-Callback is called only when authentication succeeds. It receives decoded token in arguments. If callback returns boolean `false` authentication is forced to be failed.
+Before funcion is called only when authentication succeeds but before the next incoming middleware is called. You can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything else than `\Psr\Http\Message\RequestInterface` the return value will be ignored.
+
+### After
+
+After function is called only when authentication succeeds and after the incoming middleware stack has been called. You can use this to alter the response before passing it next outgoing middleware in the stack. If it returns anything else than `\Psr\Http\Message\ResponseInterface` the return value will be ignored.
 
 You can also use callback for storing the value of decoded token for later use.
 

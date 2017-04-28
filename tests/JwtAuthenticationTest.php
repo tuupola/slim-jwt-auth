@@ -22,8 +22,9 @@ use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
+use Zend\Diactoros\Stream;
 
-class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
+class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
     /* @codingStandardsIgnoreStart */
     public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
@@ -172,7 +173,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    public function testShouldReturn401WithFalseFromCallback()
+    public function testShouldReturn401WithFalseFromAfter()
     {
         $request = (new Request)
             ->withUri(new Uri("https://example.com/api"))
@@ -183,8 +184,10 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($params) {
-                return false;
+            "after" => function ($request, $response, $arguments) {
+                return $response
+                    ->withBody(new Stream("php://memory"))
+                    ->withStatus(401);
             }
         ]);
 
@@ -199,7 +202,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturnDefaultMessageWithFalseFromCallback()
+    public function testShouldAlterResponseWithAfter()
     {
         $request = (new Request)
             ->withUri(new Uri("https://example.com/api"))
@@ -210,12 +213,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($params) {
-                return false;
-            },
-            "error" => function (Request $request, Response $response, $arguments) {
-                $response->getBody()->write($arguments["message"]);
-                return $response;
+            "after" => function ($request, $response, $arguments) {
+                return $response->withHeader("X-Brawndo", "plants crave");
             }
         ]);
 
@@ -226,9 +225,40 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $response = $auth($request, $response, $next);
 
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Callback returned false", $response->getBody());
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
     }
+
+    // public function testShouldReturnDefaultMessageWithFalseFromCallback()
+    // {
+    //     $request = (new Request)
+    //         ->withUri(new Uri("https://example.com/api"))
+    //         ->withMethod("GET")
+    //         ->withHeader("Authorization", "Bearer " . self::$token);
+
+    //     $response = new Response;
+
+    //     $auth = new JwtAuthentication([
+    //         "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    //         "callback" => function ($params) {
+    //             return false;
+    //         },
+    //         "error" => function (Request $request, Response $response, $arguments) {
+    //             $response->getBody()->write($arguments["message"]);
+    //             return $response;
+    //         }
+    //     ]);
+
+    //     $next = function (Request $request, Response $response) {
+    //         $response->getBody()->write("Foo");
+    //         return $response;
+    //     };
+
+    //     $response = $auth($request, $response, $next);
+
+    //     $this->assertEquals(401, $response->getStatusCode());
+    //     $this->assertEquals("Callback returned false", $response->getBody());
+    // }
 
     public function testShouldReturn401WithInvalidAlgorithm()
     {
@@ -424,7 +454,7 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(self::$token, $auth->fetchToken($request));
     }
 
-    public function testShouldCallCallback()
+    public function testShouldCallAfter()
     {
         $request = (new Request)
             ->withUri(new Uri("https://example.com/api"))
@@ -436,8 +466,8 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $dummy = null;
         $auth = new JwtAuthentication([
             "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "callback" => function ($request, $response, $arguments) use (&$dummy) {
-                $this->setMessage("Callback was called");
+            "after" => function ($request, $response, $arguments) use (&$dummy) {
+                $this->setMessage("After was called");
                 $dummy = $arguments["decoded"];
             }
         ]);
@@ -453,8 +483,10 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Foo", $response->getBody());
         $this->assertTrue(is_object($dummy));
         $this->assertEquals(self::$token_as_array, (array)$dummy);
-        $this->assertEquals("Callback was called", $auth->getMessage());
+        $this->assertEquals("After was called", $auth->getMessage());
     }
+
+
 
     public function testShouldCallError()
     {
@@ -641,7 +673,36 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldAttachDecodedTokenToRequest()
+    public function testShouldReturn401FromAfter()
+    {
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET")
+            ->withHeader("Authorization", "Bearer " . self::$token);
+
+        $response = new Response;
+
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "after" => function ($request, $response, $arguments) {
+                return $response
+                    ->withBody(new Stream("php://memory"))
+                    ->withStatus(401);
+                }
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
+
+    public function testShouldModifyRequestUsingBefore()
     {
         $request = (new Request)
             ->withUri(new Uri("https://example.com/api"))
@@ -652,21 +713,23 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $dummy = null;
         $auth = new JwtAuthentication([
-            "secret" => "supersecretkeyyoushouldnotcommittogithub"
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "before" => function ($request, $response, $arguments) {
+                return $request->withAttribute("test", "test");
+            }
         ]);
 
-        $next = function (Request $request, Response $response) use (&$dummy) {
-            $dummy = $request->getAttribute("token");
-            $response->getBody()->write("Foo");
+        $next = function (Request $request, Response $response) {
+            $test = $request->getAttribute("test");
+            $response->getBody()->write($test);
             return $response;
         };
 
         $response = $auth($request, $response, $next);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Foo", $response->getBody());
-        $this->assertTrue(is_object($dummy));
-        $this->assertEquals(self::$token_as_array, (array)$dummy);
+        $this->assertEquals("test", (string) $response->getBody());
+
     }
 
     public function testShouldGetAndSetAttributeName()
@@ -696,4 +759,25 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $auth->setAlgorithm("HS256");
         $this->assertEquals("HS256", $auth->getAlgorithm());
     }
+
+    public function testShouldGetAndSetBefore()
+    {
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
+        $before = function () {
+            return "It's got Electrolytes.";
+        };
+        $auth->setBefore($before);
+        $this->assertEquals($before, $auth->getBefore());
+    }
+
+    public function testShouldGetAndSetAfter()
+    {
+        $auth = new \Tuupola\Middleware\JwtAuthentication;
+        $after = function () {
+            return "That is what plants crave.";
+        };
+        $auth->setAfter($after);
+        $this->assertEquals($after, $auth->getAfter());
+    }
+
 }

@@ -49,7 +49,8 @@ class JwtAuthentication
         "attribute" => "token",
         "path" => null,
         "passthrough" => null,
-        "callback" => null,
+        "before" => null,
+        "after" => null,
         "error" => null
     ];
 
@@ -126,23 +127,33 @@ class JwtAuthentication
             ])->withStatus(401);
         }
 
-        /* If callback returns false return with 401 Unauthorized. */
-        if (is_callable($this->options["callback"])) {
-            $params = ["decoded" => $decoded];
-            if (false === $this->options["callback"]($request, $response, $params)) {
-                return $this->error($request, $response, [
-                    "message" => $this->message ? $this->message : "Callback returned false"
-                ])->withStatus(401);
-            }
-        }
+        $params = ["decoded" => $decoded];
 
         /* Add decoded token to request as attribute when requested. */
         if ($this->options["attribute"]) {
             $request = $request->withAttribute($this->options["attribute"], $decoded);
         }
 
-        /* Everything ok, call next middleware and return. */
-        return $next($request, $response);
+        /* Modify $request before calling next middleware. */
+        if (is_callable($this->options["before"])) {
+            $before_request = $this->options["before"]($request, $response, $params);
+            if ($before_request instanceof \Psr\Http\Message\RequestInterface) {
+                $request = $before_request;
+            }
+        }
+
+        /* Everything ok, call next middleware. */
+        $response = $next($request, $response);
+
+        /* Modify $response before returning. */
+        if (is_callable($this->options["after"])) {
+            $after_response = $this->options["after"]($request, $response, $params);
+            if ($after_response instanceof \Psr\Http\Message\ResponseInterface) {
+                return $after_response;
+            }
+        }
+
+        return $response;
     }
 
     /**
@@ -264,17 +275,22 @@ class JwtAuthentication
      * @param array $data Array of options.
      * @return self
      */
-    private function hydrate(array $data = [])
+    public function hydrate($data = [])
     {
         foreach ($data as $key => $value) {
-            $method = "set" . ucfirst($key);
+            /* https://github.com/facebook/hhvm/issues/6368 */
+            $key = str_replace(".", " ", $key);
+            $method = "set" . ucwords($key);
+            $method = str_replace(" ", "", $method);
             if (method_exists($this, $method)) {
-                call_user_func(array($this, $method), $value);
+                /* Try to use setter */
+                call_user_func([$this, $method], $value);
+            } else {
+                /* Or fallback to setting property directly */
+                $this->$key = $value;
             }
         }
-        return $this;
     }
-
 
     /**
      * Get path where middleware is be binded to
@@ -662,6 +678,49 @@ class JwtAuthentication
     public function setAlgorithm($algorithm)
     {
         $this->options["algorithm"] = $algorithm;
+        return $this;
+    }
+
+    /**
+     * Get the before handler
+     *
+     * @return string
+     */
+    public function getBefore()
+    {
+        return $this->options["before"];
+    }
+
+    /**
+     * Set the before handler
+     *
+     * @return self
+     */
+
+    public function setBefore($before)
+    {
+        $this->options["before"] = $before->bindTo($this);
+        return $this;
+    }
+
+    /**
+     * Get the after handler
+     *
+     * @return string
+     */
+    public function getAfter()
+    {
+        return $this->options["after"];
+    }
+
+    /**
+     * Set the after handler
+     *
+     * @return self
+     */
+    public function setAfter($after)
+    {
+        $this->options["after"] = $after->bindTo($this);
         return $this;
     }
 }
