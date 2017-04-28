@@ -17,8 +17,8 @@ namespace Tuupola\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
-use Zend\Diactoros\ServerRequest as Request;
+use Equip\Dispatch\MiddlewareCollection;
+use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
@@ -46,7 +46,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithoutToken()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET");
         $response = new Response;
@@ -55,7 +55,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -81,7 +81,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -94,7 +94,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromHeader()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("X-Token", "Bearer " . self::$token);
@@ -106,7 +106,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "header" => "X-Token"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -119,7 +119,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("X-Token", self::$token);
@@ -132,7 +132,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "regexp" => "/(.*)/"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -162,7 +162,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -175,7 +175,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithFalseFromAfter()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -191,7 +191,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -204,7 +204,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAlterResponseWithAfter()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -218,7 +218,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -262,7 +262,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401WithInvalidAlgorithm()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -274,7 +274,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "algorithm" => "nosuch"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -287,7 +287,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithOptions()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("OPTIONS");
 
@@ -297,7 +297,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -310,7 +310,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn400WithInvalidToken()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer invalid" . self::$token);
@@ -321,7 +321,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -334,7 +334,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithoutTokenWithPath()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/public"))
             ->withMethod("GET");
 
@@ -345,7 +345,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -358,7 +358,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn200WithoutTokenWithIgnore()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api/ping"))
             ->withMethod("GET");
 
@@ -370,7 +370,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -385,7 +385,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException("RuntimeException");
 
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("http://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -396,7 +396,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -406,7 +406,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldRelaxInsecureInLocalhost()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("http://localhost/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -417,7 +417,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -430,7 +430,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallAfter()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -445,7 +445,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -462,7 +462,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallError()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET");
 
@@ -476,7 +476,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -490,7 +490,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldCallErrorAndModifyBody()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET");
 
@@ -506,7 +506,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -529,7 +529,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAllowUnauthenticatedHttp()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("http://example.com/public/foo"))
             ->withMethod("GET");
 
@@ -540,7 +540,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             "secret" => "supersecretkeyyoushouldnotcommittogithub"
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Success");
             return $response;
         };
@@ -553,7 +553,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldReturn401FromAfter()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -569,7 +569,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
                 }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -582,7 +582,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldModifyRequestUsingBefore()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET")
             ->withHeader("Authorization", "Bearer " . self::$token);
@@ -597,7 +597,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
             }
         ]);
 
-        $next = function (Request $request, Response $response) {
+        $next = function (ServerRequest $request, Response $response) {
             $test = $request->getAttribute("test");
             $response->getBody()->write($test);
             return $response;
@@ -607,6 +607,39 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("test", (string) $response->getBody());
+    }
 
+    public function testShouldHandlePsr15()
+    {
+        if (!class_exists("Equip\Dispatch\MiddlewareCollection")) {
+            $this->markTestSkipped(
+                "MiddlewareCollection class is not available."
+            );
+        }
+
+
+        $request = (new ServerRequest)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
+        $response = new Response;
+
+        $auth =
+
+        $default = function (Request $request) {
+            $response = new Response;
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub"
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
     }
 }

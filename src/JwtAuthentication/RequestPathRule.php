@@ -15,18 +15,18 @@
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Rule to decide by request path whether the request should be authenticated or not.
  */
 
-class RequestPathRule implements RuleInterface
+final class RequestPathRule implements RuleInterface
 {
     /**
      * Stores all the options passed to the rule
      */
-    protected $options = [
+    private $options = [
         "path" => ["/"],
         "ignore" => []
     ];
@@ -43,10 +43,10 @@ class RequestPathRule implements RuleInterface
     }
 
     /**
-     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return boolean
      */
-    public function __invoke(RequestInterface $request)
+    public function __invoke(ServerRequestInterface $request)
     {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);

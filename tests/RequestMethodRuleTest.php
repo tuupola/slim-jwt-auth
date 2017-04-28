@@ -15,7 +15,7 @@
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
-use Zend\Diactoros\ServerRequest as Request;
+use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
@@ -25,7 +25,7 @@ class RequestMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldNotAuthenticateOptions()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("OPTIONS");
 
@@ -37,7 +37,7 @@ class RequestMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAuthenticatePost()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("POST");
 
@@ -48,7 +48,7 @@ class RequestMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldAuthenticateGet()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET");
 
@@ -59,7 +59,7 @@ class RequestMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldConfigureIgnore()
     {
-        $request = (new Request)
+        $request = (new ServerRequest)
             ->withUri(new Uri("https://example.com/api"))
             ->withMethod("GET");
 

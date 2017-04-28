@@ -15,25 +15,29 @@
 
 namespace Tuupola\Middleware;
 
-use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
-use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
+use Firebase\JWT\JWT;
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Firebase\JWT\JWT;
+use Tuupola\Middleware\JwtAuthentication\CallableDelegate;
+use Tuupola\Middleware\JwtAuthentication\ResponseFactory;
+use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
+use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
-class JwtAuthentication
+final class JwtAuthentication implements MiddlewareInterface
 {
     /**
      * PSR-3 compliant logger
      */
-    protected $logger;
+    private $logger;
 
     /**
      * Last error message
      */
-    protected $message;
+    private $message;
 
     /**
      * Stores all the options passed to the rule
@@ -82,22 +86,36 @@ class JwtAuthentication
         }
     }
 
+
     /**
-     * Call the middleware
+     * Process a request in PSR-7 style and return a response
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @param callable $next
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
-    public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    {
+        return $this->process($request, new CallableDelegate($next, $response));
+    }
+
+
+    /**
+     * Process a request in PSR-15 style and return a response
+     *
+     * @param ServerRequestInterface $request
+     * @param DelegateInterface $delegate
+     * @return ResponseInterface
+     */
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         $scheme = $request->getUri()->getScheme();
         $host = $request->getUri()->getHost();
 
         /* If rules say we should not authenticate call next and return. */
         if (false === $this->shouldAuthenticate($request)) {
-            return $next($request, $response);
+            return $delegate->process($request);
         }
 
         /* HTTP allowed only if secure is false or server is in relaxed array. */
@@ -113,17 +131,19 @@ class JwtAuthentication
 
         /* If token cannot be found return with 401 Unauthorized. */
         if (false === $token = $this->fetchToken($request)) {
+            $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($request, $response, [
                 "message" => $this->message
-            ])->withStatus(401);
+            ]);
         }
 
         /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
+            $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($request, $response, [
                 "message" => $this->message,
                 "token" => $token
-            ])->withStatus(401);
+            ]);
         }
 
         $params = ["decoded" => $decoded];
@@ -135,14 +155,15 @@ class JwtAuthentication
 
         /* Modify $request before calling next middleware. */
         if (is_callable($this->options["before"])) {
+            $response = (new ResponseFactory)->createResponse(200);
             $before_request = $this->options["before"]($request, $response, $params);
-            if ($before_request instanceof \Psr\Http\Message\RequestInterface) {
+            if ($before_request instanceof \Psr\Http\Message\ServerRequestInterface) {
                 $request = $before_request;
             }
         }
 
         /* Everything ok, call next middleware. */
-        $response = $next($request, $response);
+        $response = $delegate->process($request);
 
         /* Modify $response before returning. */
         if (is_callable($this->options["after"])) {
@@ -158,10 +179,10 @@ class JwtAuthentication
     /**
      * Check if middleware should authenticate
      *
-     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return boolean True if middleware should authenticate.
      */
-    public function shouldAuthenticate(RequestInterface $request)
+    public function shouldAuthenticate(ServerRequestInterface $request)
     {
         /* If any of the rules in stack return false will not authenticate */
         foreach ($this->rules as $callable) {
@@ -175,13 +196,13 @@ class JwtAuthentication
     /**
      * Call the error handler if it exists
      *
-     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @param \Psr\Http\Message\ResponseInterface $response
      * @param mixed[] $arguments
 
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function processError(RequestInterface $request, ResponseInterface $response, $arguments)
+    public function processError(ServerRequestInterface $request, ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
             $handler_response = $this->options["error"]($request, $response, $arguments);
@@ -195,10 +216,10 @@ class JwtAuthentication
     /**
      * Fetch the access token
      *
-     * @param \Psr\Http\Message\RequestInterface $request
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return string|null Base64 encoded JSON Web Token or null if not found.
      */
-    public function fetchToken(RequestInterface $request)
+    public function fetchToken(ServerRequestInterface $request)
     {
         $header = "";
         $message = "Using token from request header";
@@ -349,7 +370,7 @@ class JwtAuthentication
      * @param callable $error
      * @return self
      */
-    private function error($error)
+    private function error(callable $error)
     {
         $this->options["error"] = $error;
         return $this;
@@ -479,7 +500,7 @@ class JwtAuthentication
      * @return self
      */
 
-    private function before($before)
+    private function before(callable $before)
     {
         $this->options["before"] = $before->bindTo($this);
         return $this;
@@ -490,7 +511,7 @@ class JwtAuthentication
      *
      * @return self
      */
-    private function after($after)
+    private function after(callable $after)
     {
         $this->options["after"] = $after->bindTo($this);
         return $this;
