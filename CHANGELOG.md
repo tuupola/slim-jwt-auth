@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## 2.3.3 - 2017-07-12
+### Added
+
+- Support for `firebase/php-jwt:^5.0`.
+
 ## 2.3.2 - 2017-02-27
 
 This is a security release.
@@ -26,18 +31,6 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
-
-### Added
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
 
 ### Fixed
 
