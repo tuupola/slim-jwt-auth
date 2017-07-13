@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file, in reverse 
 ## 2.3.3 - 2017-07-12
 ### Added
 
-- Support for `firebase/php-jwt:^5.0`.
+- Support for `firebase/php-jwt:^5.0`. See #59 and #61.
 
 ## 2.3.2 - 2017-02-27
 
