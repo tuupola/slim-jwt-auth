@@ -32,9 +32,9 @@ Configuration options are passed as an array. The only mandatory parameter is `s
 For simplicity's sake examples show `secret` hardcoded in code. In real life you should store it somewhere else. Good option is environment variable. You can use [dotenv](https://github.com/vlucas/phpdotenv) or something similar for development. Examples assume you are using Slim Framework.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -42,27 +42,27 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 An example where your secret is stored as an environment variable:
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => getenv("JWT_SECRET")
 ]));
 ```
 
 When a request is made, the middleware tries to validate and decode the token. If a token is not found or there is an error when validating and decoding it, the server will respond with `401 Unauthorized`.
 
-Validation errors are triggered when the token has been tampered with or the token has expired. For all possible validation errors, see [JWT library ](https://github.com/firebase/php-jwt/blob/master/src/JWT.php#L60-L123) source.
+Validation errors are triggered when the token has been tampered with or the token has expired. For all possible validation errors, see [JWT library](https://github.com/firebase/php-jwt/blob/master/src/JWT.php#L60-L138) source.
 
 
 ## Optional parameters
 ### Path
 
-The optional `path` parameter allows you to specify the protected part of your website. It can be either a string or an array. You do not need to specify each URL. Instead think of `path` setting as a folder. In the example below everything starting with `/api` will be authenticated.
+The optional `path` parameter allows you to specify the protected part of your website. It can be either a string or an array. You do not need to specify each URL. Instead think of `path` setting as a folder. In the example below everything starting with `/api` will be authenticated. If you do not define `path` all routes will be protected.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "path" => "/api", /* or ["/api", "/admin"] */
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
@@ -70,56 +70,27 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 
 ### Ignore
 
-
 With optional `ignore` parameter you can make exceptions to `path` parameter. In the example below everything starting with `/api` and `/admin`  will be authenticated with the exception of `/api/token` and `/admin/ping` which will not be authenticated.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "path" => ["/api", "/admin"],
     "ignore" => ["/api/token", "/admin/ping"],
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
 
-### Environment
-
-By default middleware tries to find the token from `HTTP_AUTHORIZATION` and `REDIRECT_HTTP_AUTHORIZATION` environments. You can change this using `environment` parameter. Note that usually you should also use matching `header` parameter.
-
-``` php
-$app = new \Slim\App;
-
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
-    "environment" => ["HTTP_BRAWNDO", "REDIRECT_HTTP_BRAWNDO"],
-    "header" => "Brawndo",
-    "secret" => "supersecretkeyyoushouldnotcommittogithub"
-]));
-```
-
 ### Header
 
-If token is not found from environment the middleware tries to find it from `Authorization` header. You can change cookie name using `header` parameter. Note that usually you should also use matching `environment` parameter.
+By default middleware tries to find the token from `Authorization` header. You can change header name using the `header` parameter.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
-    "environment" => "HTTP_X_TOKEN",
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "header" => "X-Token",
-    "secret" => "supersecretkeyyoushouldnotcommittogithub"
-]));
-```
-
-### Cookie
-
-If token is not found from neither environment or header, the middleware tries to find it from cookie named `token`. You can change cookie name using `cookie` parameter.
-
-``` php
-$app = new \Slim\App;
-
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
-    "cookie" => "nekot",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -129,11 +100,24 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 By default the middleware assumes the value of the header is in `Bearer <token>` format. You can change this behaviour with `regexp` parameter. For example if you have custom header such as `X-Token: <token>` you should pass both header and regexp parameters.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "header" => "X-Token",
     "regexp" => "/(.*)/",
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+
+### Cookie
+
+If token is not found from neither environment or header, the middleware tries to find it from cookie named `token`. You can change cookie name using `cookie` parameter.
+
+``` php
+$app = new Slim\App;
+
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "cookie" => "nekot",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 ```
@@ -143,24 +127,22 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
     "algorithm" => ["HS256", "HS384"]
 ]));
 ```
 
-
-
 ### Attribute
 
-When the token is decoded successfully and authentication succees the contents of decoded token as saved as `token` attribute to the `$request` object. You can change this with. `attribute` parameter. Set to `null` or `false` to disable this behavour
+When the token is decoded successfully and authentication succeeds the contents of the decoded token is saved as `token` attribute to the `$request` object. You can change this with. `attribute` parameter. Set to `null` or `false` to disable this behavour
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "attribute" => "jwt",
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
@@ -178,13 +160,13 @@ The optional `logger` parameter allows you to pass in a PSR-3 compatible logger 
 use Monolog\Logger;
 use Monolog\Handler\RotatingFileHandler;
 
-$app = new \Slim\App;
+$app = new Slim\App;
 
 $logger = new Logger("slim");
 $rotating = new RotatingFileHandler(__DIR__ . "/logs/slim.log", 0, Logger::DEBUG);
 $logger->pushHandler($rotating);
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "path" => "/api",
     "logger" => $logger,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
@@ -193,39 +175,43 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 
 ### Before
 
-Before funcion is called only when authentication succeeds but before the next incoming middleware is called. You can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything else than `\Psr\Http\Message\RequestInterface` the return value will be ignored.
+Before funcion is called only when authentication succeeds but before the next incoming middleware is called. You can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything else than `Psr\Http\Message\RequestInterface` the return value will be ignored.
+
+``` php
+$app = new Slim\App;
+
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "before" => function ($request, $response, $arguments) {
+        return $request->withAttribute("test", "test");
+    }
+]));
+```
 
 ### After
 
-After function is called only when authentication succeeds and after the incoming middleware stack has been called. You can use this to alter the response before passing it next outgoing middleware in the stack. If it returns anything else than `\Psr\Http\Message\ResponseInterface` the return value will be ignored.
+After function is called only when authentication succeeds and after the incoming middleware stack has been called. You can use this to alter the response before passing it next outgoing middleware in the stack. If it returns anything else than `Psr\Http\Message\ResponseInterface` the return value will be ignored.
 
-You can also use callback for storing the value of decoded token for later use.
 
-```php
-$app = new \Slim\App;
+``` php
+$app = new Slim\App;
 
-$container = $app->getContainer();
-
-$container["jwt"] = function ($container) {
-    return new StdClass;
-};
-
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($request, $response, $arguments) use ($container) {
-        $container["jwt"] = $arguments["decoded"];
+    "after" => function ($request, $response, $arguments) {
+        return $response->withHeader("X-Brawndo", "plants crave");
     }
 ]));
 ```
 
 ### Error
 
-Error is called when authentication fails. It receives last error message in arguments.
+Error is called when authentication fails. It receives last error message in arguments. You can use this for example to return JSON formatted error responses.
 
 ```php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
     "error" => function ($request, $response, $arguments) {
         $data["status"] = "error";
@@ -244,15 +230,15 @@ The optional `rules` parameter allows you to pass in rules which define whether 
 By default middleware configuration looks like this. All paths are authenticated with all request methods except `OPTIONS`.
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "rules" => [
-        new \Tuupola\Middleware\JwtAuthentication\RequestPathRule([
+        new Tuupola\Middleware\JwtAuthentication\RequestPathRule([
             "path" => "/",
             "ignore" => []
         ]),
-        new \Tuupola\Middleware\JwtAuthentication\RequestMethodRule([
+        new Tuupola\Middleware\JwtAuthentication\RequestMethodRule([
             "ignore" => ["OPTIONS"]
         ])
     ]
@@ -261,43 +247,14 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 
 RequestPathRule contains both a `path` parameter and a `ignore` parameter. Latter contains paths which should not be authenticated. RequestMethodRule contains `ignore` parameter of request methods which also should not be authenticated. Think of `ignore` as a whitelist.
 
-Example use case for this is an API. Token can be retrieved via [HTTP Basic Auth](https://github.com/tuupola/slim-basic-auth) protected address. There also is an unprotected url for pinging. Rest of the API is protected by the JWT middleware.
-
-``` php
-$app = new \Slim\App;
-
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
-    "logger" => $logger,
-    "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "rules" => [
-        new RequestPathRule([
-            "path" => "/api",
-            "ignore" => ["/api/token", "/api/ping"]
-        ]),
-        new \Tuupola\Middleware\JwtAuthentication\RequestMethodRule([
-            "ignore" => ["OPTIONS"]
-        ])
-    ]
-]));
-
-$app->add(new \Slim\Middleware\HttpBasicAuthentication([
-    "path" => "/api/token",
-    "users" => [
-        "user" => "password"
-    ]
-]));
-
-$app->post("/token", function () {
-  /* Here generate and return JWT to the client. */
-});
-```
+99% of the cases you do not need to use the `rules` parameter. It is only provided for special cases when defaults do not suffice.
 
 ## Security
 
 JSON Web Tokens are essentially passwords. You should treat them as such and you should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw a `RuntimeException`. This rule is relaxed for requests on localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
 
 ``` php
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secure" => false,
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
@@ -306,7 +263,7 @@ $app->add(new \Tuupola\Middleware\JwtAuthentication([
 Alternatively you can list your development host to have relaxed security.
 
 ``` php
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secure" => true,
     "relaxed" => ["localhost", "dev.example.com"],
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
@@ -330,7 +287,7 @@ Let assume you have token which includes data for scope. In middleware callback 
 ```
 
 ``` php
-$app = new \Slim\App;
+$app = new Slim\App;
 
 $container = $app->getContainer();
 
@@ -338,7 +295,7 @@ $container["jwt"] = function ($container) {
     return new StdClass;
 };
 
-$app->add(new \Tuupola\Middleware\JwtAuthentication([
+$app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
     "callback" => function ($request, $response, $arguments) use ($container) {
         $container["jwt"] = $arguments["decoded"];
