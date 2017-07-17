@@ -73,14 +73,14 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* If nothing was passed in options add default rules. */
         if (!isset($options["rules"])) {
-            $this->addRule(new RequestMethodRule([
+            $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
         }
 
         /* If path was given in easy mode add rule for it. */
         if (null !== ($this->options["path"])) {
-            $this->addRule(new RequestPathRule([
+            $this->rules->push(new RequestPathRule([
                 "path" => $this->options["path"],
                 "ignore" => $this->options["ignore"]
             ]));
@@ -383,16 +383,17 @@ final class JwtAuthentication implements MiddlewareInterface
      * @param array $rules
      * @return self
      */
-    public function rules(array $rules)
+    public function withRules(array $rules)
     {
+        $new = clone $this;
         /* Clear the stack */
-        unset($this->rules);
-        $this->rules = new \SplStack;
+        unset($new->rules);
+        $new->rules = new \SplStack;
         /* Add the rules */
         foreach ($rules as $callable) {
-            $this->addRule($callable);
+            $new = $new->addRule($callable);
         }
-        return $this;
+        return $new;
     }
 
     /**
@@ -401,10 +402,12 @@ final class JwtAuthentication implements MiddlewareInterface
      * @param callable $callable Callable which returns a boolean.
      * @return self
      */
-    public function addRule($callable)
+    public function addRule(callable $callable)
     {
-        $this->rules->push($callable);
-        return $this;
+        $new = clone $this;
+        $new->rules = clone $this->rules;
+        $new->rules->push($callable);
+        return $new;
     }
 
     /**
