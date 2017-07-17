@@ -276,7 +276,7 @@ By default middleware only authenticates. This is not very interesting. Beauty o
 
 **It is up to you to implement how token data is stored or possible authorization implemented.**
 
-Let assume you have token which includes data for scope. In middleware callback you store the decoded token data to `$app->jwt` and later use it for authorization.
+Let assume you have token which includes data for scope. By default middleware saves the contents of the token to `token` attribute of the request.
 
 ``` php
 [
@@ -289,21 +289,12 @@ Let assume you have token which includes data for scope. In middleware callback 
 ``` php
 $app = new Slim\App;
 
-$container = $app->getContainer();
-
-$container["jwt"] = function ($container) {
-    return new StdClass;
-};
-
 $app->add(new Tuupola\Middleware\JwtAuthentication([
-    "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "callback" => function ($request, $response, $arguments) use ($container) {
-        $container["jwt"] = $arguments["decoded"];
-    }
+    "secret" => "supersecretkeyyoushouldnotcommittogithub"
 ]));
 
 $app->delete("/item/{id}", function ($request, $response, $arguments) {
-    if (in_array("delete", $this->jwt->scope)) {
+    if (in_array("delete", $request->token->scope)) {
         /* Code for deleting item */
     } else {
         /* No scope so respond with 401 Unauthorized */
@@ -314,17 +305,13 @@ $app->delete("/item/{id}", function ($request, $response, $arguments) {
 
 ## Testing
 
-You can run individual tests either manually...
+You can run tests either manually or automatically on every code change. Automatic tests require [entr](http://entrproject.org/) to work.
 
 ``` bash
-$ composer phplint
-$ composer phpcs
-$ composer phpunit
+$ composer test
 ```
-
-... or automatically on every code change. You will need [entr](http://entrproject.org/) for this to work.
-
 ``` bash
+$ brew install entr
 $ composer watch
 ```
 
