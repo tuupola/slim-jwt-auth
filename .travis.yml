@@ -15,8 +15,8 @@ matrix:
     include:
         - php: hhvm
           dist: trusty
-    - php: 7.1
-      env: DEPENDENCIES=lowest
+        - php: 7.1
+          env: DEPENDENCIES=lowest
 
 before_install:
     - pip install --user codecov
