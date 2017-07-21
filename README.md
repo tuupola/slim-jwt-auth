@@ -4,7 +4,6 @@
 [![Packagist](https://img.shields.io/packagist/dm/tuupola/slim-jwt-auth.svg)](https://packagist.org/packages/tuupola/slim-jwt-auth)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Build Status](https://img.shields.io/travis/tuupola/slim-jwt-auth/master.svg?style=flat-square)](https://travis-ci.org/tuupola/slim-jwt-auth)
-[![HHVM Status](https://img.shields.io/hhvm/tuupola/slim-jwt-auth.svg?style=flat-square)](http://hhvm.h4cc.de/package/tuupola/slim-jwt-auth)
 [![Coverage](http://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth/2.x.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth/branch/2.x)
 
 This middleware implements JSON Web Token Authentication. It was originally developed for Slim but can be used with any framework using PSR-7 style middlewares. It has been tested with [Slim Framework](http://www.slimframework.com/) and [Zend Expressive](https://zendframework.github.io/zend-expressive/).
