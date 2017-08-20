@@ -27,7 +27,8 @@
     "require-dev": {
         "phpunit/phpunit" : "^4.6",
         "squizlabs/php_codesniffer": "^2.3",
-        "zendframework/zend-diactoros": "^1.3"
+        "zendframework/zend-diactoros": "^1.3",
+        "overtrue/phplint": "^0.2.4"
     },
     "autoload": {
         "psr-4": {
@@ -38,12 +39,5 @@
         "psr-4": {
             "Slim\\Middleware\\": "tests"
         }
-    },
-    "scripts": {
-        "test": "composer phplint && composer phpcs && composer phpunit",
-        "phpcs": "vendor/bin/phpcs --standard=PSR2 --extensions=php --ignore=*/vendor/*,*/tests/* . -p",
-        "phpunit": "vendor/bin/phpunit --coverage-text --coverage-html ./report",
-        "phplint": "env phplint  '**/*.php' '!vendor/**'",
-        "watch": "find . -name \"*.php\" -not -path \"./vendor/*\" -o -name \"*.json\" -not -path \"./vendor/*\"| entr -c composer test"
     }
 }

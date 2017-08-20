@@ -2,3 +2,5 @@
 /vendor/
 /report/
 composer.lock
+.phplint-cache
+coverage.xml
