@@ -113,26 +113,26 @@ class JwtAuthentication
 
         /* If token cannot be found return with 401 Unauthorized. */
         if (false === $token = $this->fetchToken($request)) {
-            return $this->error($request, $response, [
+            return $this->error($request, $response->withStatus(401), [
                 "message" => $this->message
-            ])->withStatus(401);
+            ], $next);
         }
 
         /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
-            return $this->error($request, $response, [
+            return $this->error($request, $response->withStatus(401), [
                 "message" => $this->message,
                 "token" => $token
-            ])->withStatus(401);
+            ], $next);
         }
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
             $params = ["decoded" => $decoded];
             if (false === $this->options["callback"]($request, $response, $params)) {
-                return $this->error($request, $response, [
+                return $this->error($request, $response->withStatus(401), [
                     "message" => $this->message ? $this->message : "Callback returned false"
-                ])->withStatus(401);
+                ], $next);
             }
         }
 
@@ -168,13 +168,14 @@ class JwtAuthentication
      * @param \Psr\Http\Message\RequestInterface $request
      * @param \Psr\Http\Message\ResponseInterface $response
      * @param mixed[] $arguments
-
+     * @param callable $next
+     *
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function error(RequestInterface $request, ResponseInterface $response, $arguments)
+    public function error(RequestInterface $request, ResponseInterface $response, $arguments, callable $next)
     {
         if (is_callable($this->options["error"])) {
-            $handler_response = $this->options["error"]($request, $response, $arguments);
+            $handler_response = $this->options["error"]($request, $response, $arguments, $next);
             if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
                 return $handler_response;
             }

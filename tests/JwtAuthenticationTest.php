@@ -514,6 +514,35 @@ class JwtBasicAuthenticationTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($dummy);
     }
 
+    public function testShouldCallErrorButThrough()
+    {
+        $request = (new Request)
+            ->withUri(new Uri("https://example.com/api"))
+            ->withMethod("GET");
+
+        $response = new Response;
+
+        $dummy = null;
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "error" => function ($request, $response, $arguments, $next) use (&$dummy) {
+                $dummy = true;
+                return $next($request, $response);
+            }
+        ]);
+
+        $next = function (Request $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response->withStatus(200);
+        };
+
+        $response = $auth($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+        $this->assertTrue($dummy);
+    }
+
     public function testShouldGetAndSetPath()
     {
         $auth = new \Slim\Middleware\JwtAuthentication;
