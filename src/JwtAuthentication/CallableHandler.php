@@ -20,7 +20,7 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class CallableDelegate implements RequestHandlerInterface
+final class CallableHandler implements RequestHandlerInterface
 {
     private $callable;
     private $response;

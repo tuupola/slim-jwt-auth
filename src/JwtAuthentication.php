@@ -24,7 +24,7 @@ use Psr\Log\LogLevel;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Tuupola\Http\Factory\ResponseFactory;
-use Tuupola\Middleware\JwtAuthentication\CallableDelegate;
+use Tuupola\Middleware\JwtAuthentication\CallableHandler;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
@@ -98,7 +98,7 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        return $this->process($request, new CallableDelegate($next, $response));
+        return $this->process($request, new CallableHandler($next, $response));
     }
 
 
