@@ -17,8 +17,8 @@
 namespace Tuupola\Middleware;
 
 use Firebase\JWT\JWT;
-use Interop\Http\ServerMiddleware\MiddlewareInterface;
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Http\Message\ServerRequestInterface;
@@ -106,17 +106,17 @@ final class JwtAuthentication implements MiddlewareInterface
      * Process a request in PSR-15 style and return a response
      *
      * @param ServerRequestInterface $request
-     * @param DelegateInterface $delegate
+     * @param RequestHandlerInterface $handler
      * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $scheme = $request->getUri()->getScheme();
         $host = $request->getUri()->getHost();
 
         /* If rules say we should not authenticate call next and return. */
         if (false === $this->shouldAuthenticate($request)) {
-            return $delegate->process($request);
+            return $handler->handle($request);
         }
 
         /* HTTP allowed only if secure is false or server is in relaxed array. */
@@ -164,7 +164,7 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         /* Everything ok, call next middleware. */
-        $response = $delegate->process($request);
+        $response = $handler->handle($request);
 
         /* Modify $response before returning. */
         if (is_callable($this->options["after"])) {
