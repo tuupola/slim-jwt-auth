@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## [Unreleased]
+## [3.0.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0-rc.3...2.3.3) - Unreleased
 ### Changed
 
 - Namespace changed from `Slim\Middleware` to `Tuupola\Middleware`
@@ -14,11 +14,8 @@ All notable changes to this project will be documented in this file, in reverse 
 
 - New `after` callback. It is called after executing other middlewares in the stack.
 
-### Deprecated
 ### Removed
 
 - Most setters and getters for settings. Pass settings in an array only during initialization.
-
-### Fixed
-### Security
+- Support for PHP 5.X. PSR-15 is now PHP 7.x only.
 

@@ -16,11 +16,11 @@
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class CallableDelegate implements DelegateInterface
+final class CallableHandler implements RequestHandlerInterface
 {
     private $callable;
     private $response;
@@ -31,7 +31,7 @@ final class CallableDelegate implements DelegateInterface
         $this->response = $response;
     }
 
-    public function process(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $callable = $this->callable;
         return $callable($request, $this->response);
