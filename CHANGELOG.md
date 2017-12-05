@@ -8,7 +8,8 @@ All notable changes to this project will be documented in this file, in reverse 
 - Namespace changed from `Slim\Middleware` to `Tuupola\Middleware`
 - Middleware now uses only `Authorization` header or cookie from the PSR-7 request. The `HTTP_AUTHORIZATION` environment are now ignored.
 - The `callback` setting was renamed to `before`. It is called before executing other middlewares in the stack.
--  The `passthrough` setting was renamed to `ignore`.
+- The `passthrough` setting was renamed to `ignore`.
+- Public setter methods `addRule()` and `withRules()` are now immutable.
 
 ### Added
 
