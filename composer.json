@@ -45,6 +45,11 @@
             "Tuupola\\Middleware\\": "tests"
         }
     },
+    "extra": {
+        "branch-alias": {
+            "dev-3.x": "3.0.x-dev"
+        }
+    },
     "scripts": {
         "test": "composer phplint && composer phpcs && composer phpunit",
         "phpcs": "vendor/bin/phpcs --standard=PSR2 --extensions=php --ignore=*/vendor/*,*/tests/* . -p",
