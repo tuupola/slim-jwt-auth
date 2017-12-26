@@ -23,13 +23,15 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Tuupola\Middleware\DoublePassTrait;
 use Tuupola\Http\Factory\ResponseFactory;
-use Tuupola\Middleware\JwtAuthentication\CallableHandler;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
 final class JwtAuthentication implements MiddlewareInterface
 {
+    use DoublePassTrait;
+
     /**
      * PSR-3 compliant logger
      */
@@ -86,21 +88,6 @@ final class JwtAuthentication implements MiddlewareInterface
             ]));
         }
     }
-
-
-    /**
-     * Process a request in PSR-7 style and return a response
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
-        return $this->process($request, new CallableHandler($next, $response));
-    }
-
 
     /**
      * Process a request in PSR-15 style and return a response
