@@ -222,6 +222,10 @@ class JwtAuthentication
             return $matches[1];
         }
 
+        if (!empty($header)) {
+            return $header;
+        }
+        
         /* Bearer not found, try a cookie. */
         $cookie_params = $request->getCookieParams();
 
