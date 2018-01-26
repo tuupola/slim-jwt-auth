@@ -674,7 +674,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $response, $arguments) {
+                "before" => function ($request, $arguments) {
                     $before = get_class($this);
                     return $request->withAttribute("before", $before);
                 },
