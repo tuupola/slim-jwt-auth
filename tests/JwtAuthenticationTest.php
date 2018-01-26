@@ -629,19 +629,11 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldHandlePsr15()
     {
-        if (!class_exists("Equip\Dispatch\MiddlewareCollection")) {
-            $this->markTestSkipped(
-                "MiddlewareCollection class is not available."
-            );
-        }
-
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
 
-        $response = (new ResponseFactory)->createResponse();
-
-        $default = function (Request $request) {
-            $response = new Response;
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
@@ -663,10 +655,8 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
 
-        $response = (new ResponseFactory)->createResponse();
-
-        $default = function (Request $request) {
-            $response = new Response;
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
