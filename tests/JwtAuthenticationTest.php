@@ -22,6 +22,8 @@ use Psr\Http\Message\ResponseInterface;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Http\Factory\StreamFactory;
+use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
+use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
 class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 {
@@ -654,5 +656,47 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
+    }
+
+    public function testShouldHandleRulesArrayBug84()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api");
+
+        $response = (new ResponseFactory)->createResponse();
+
+        $default = function (Request $request) {
+            $response = new Response;
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "rules" => [
+                    new RequestPathRule([
+                        "path" => ["/api"],
+                        "ignore" => ["/api/login"],
+                    ]),
+                    new RequestMethodRule([
+                        "ignore" => ["OPTIONS"],
+                    ])
+                ],
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api/login");
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
     }
 }
