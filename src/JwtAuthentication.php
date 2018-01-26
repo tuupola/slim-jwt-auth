@@ -125,7 +125,7 @@ final class JwtAuthentication implements MiddlewareInterface
         /* If token cannot be found return with 401 Unauthorized. */
         if (false === $token = $this->fetchToken($request)) {
             $response = (new ResponseFactory)->createResponse(401);
-            return $this->processError($request, $response, [
+            return $this->processError($response, [
                 "message" => $this->message
             ]);
         }
@@ -133,7 +133,7 @@ final class JwtAuthentication implements MiddlewareInterface
         /* If token cannot be decoded return with 401 Unauthorized. */
         if (false === $decoded = $this->decodeToken($token)) {
             $response = (new ResponseFactory)->createResponse(401);
-            return $this->processError($request, $response, [
+            return $this->processError($response, [
                 "message" => $this->message,
                 "token" => $token
             ]);
@@ -189,16 +189,15 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Call the error handler if it exists
      *
-     * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param mixed[] $arguments
 
      * @return ResponseInterface
      */
-    public function processError(ServerRequestInterface $request, ResponseInterface $response, $arguments)
+    public function processError(ResponseInterface $response, $arguments)
     {
         if (is_callable($this->options["error"])) {
-            $handlerResponse = $this->options["error"]($request, $response, $arguments);
+            $handlerResponse = $this->options["error"]($response, $arguments);
             if ($handlerResponse instanceof ResponseInterface) {
                 return $handlerResponse;
             }
