@@ -182,7 +182,7 @@ $app = new Slim\App;
 
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "before" => function ($request, $response, $arguments) {
+    "before" => function ($request, $arguments) {
         return $request->withAttribute("test", "test");
     }
 ]));
@@ -198,7 +198,7 @@ $app = new Slim\App;
 
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "after" => function ($request, $response, $arguments) {
+    "after" => function ($response, $arguments) {
         return $response->withHeader("X-Brawndo", "plants crave");
     }
 ]));
@@ -213,7 +213,7 @@ $app = new Slim\App;
 
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "error" => function ($request, $response, $arguments) {
+    "error" => function ($response, $arguments) {
         $data["status"] = "error";
         $data["message"] = $arguments["message"];
         return $response
