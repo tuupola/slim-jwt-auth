@@ -33,13 +33,14 @@
         "psr/http-message": "^1.0",
         "tuupola/http-factory": "^0.3.0",
         "tuupola/callable-handler": "^0.3.0",
-        "psr/http-server-middleware": "^1.0"
+        "psr/http-server-middleware": "^1.0",
+        "phpunit/phpunit": "^6.5"
     },
     "require-dev": {
-        "phpunit/phpunit" : "^4.6",
         "squizlabs/php_codesniffer": "^2.3",
         "zendframework/zend-diactoros": "^1.3",
-        "equip/dispatch": "dev-approved-psr15 as 1.0.x-dev",        "overtrue/phplint": "^0.2.4"
+        "equip/dispatch": "dev-approved-psr15 as 1.0.x-dev",        "overtrue/phplint": "^0.2.4",
+        "codedungeon/phpunit-result-printer": "^0.5.4"
     },
     "autoload": {
         "psr-4": {
