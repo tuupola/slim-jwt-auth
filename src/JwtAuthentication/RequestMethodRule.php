@@ -35,7 +35,6 @@ final class RequestMethodRule implements RuleInterface
     /**
      * Create a new rule instance
      *
-     * @param string[] $options
      * @return void
      */
     public function __construct(array $options = [])

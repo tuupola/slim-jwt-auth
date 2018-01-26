@@ -16,6 +16,7 @@
 
 namespace Tuupola\Middleware;
 
+use Closure;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -123,7 +124,7 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         /* If token cannot be found return with 401 Unauthorized. */
-        if (false === $token = $this->fetchToken($request)) {
+        if (null === $token = $this->fetchToken($request)) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
                 "message" => $this->message
@@ -208,7 +209,6 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Fetch the access token
      *
-     * @param ServerRequestInterface $request
      * @return string|null Base64 encoded JSON Web Token or null if not found.
      */
     public function fetchToken(ServerRequestInterface $request)
@@ -237,17 +237,19 @@ final class JwtAuthentication implements MiddlewareInterface
         /* If everything fails log and return false. */
         $this->message = "Token not found";
         $this->log(LogLevel::WARNING, $this->message);
-        return false;
+        return null;
     }
 
     /**
      * Decode the token
      *
-     * @param string $token
      * @return object|boolean The JWT's payload as a PHP object or false in case of error
      */
-    public function decodeToken($token)
+    public function decodeToken(?string $token)
     {
+        if (empty($token)) {
+            return false;
+        }
         try {
             return JWT::decode(
                 $token,
@@ -285,15 +287,11 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set path where middleware should be binded to
-     *
-     * @param string|string[] $$path
-     * @return self
+     * Set path where middleware should bind to
      */
-    private function path($path)
+    private function path(array $path)
     {
         $this->options["path"] = $path;
-        return $this;
     }
 
     /**
@@ -389,9 +387,6 @@ final class JwtAuthentication implements MiddlewareInterface
 
     /**
      * Add rule to the stack
-     *
-     * @param callable $callable Callable which returns a boolean.
-     * @return self
      */
     public function addRule(callable $callable)
     {
@@ -415,14 +410,8 @@ final class JwtAuthentication implements MiddlewareInterface
 
     /**
      * Logs with an arbitrary level.
-     *
-     * @param mixed $level
-     * @param string $message
-     * @param array $context
-     *
-     * @return null
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, string $message, array $context = [])
     {
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);
@@ -431,38 +420,26 @@ final class JwtAuthentication implements MiddlewareInterface
 
     /**
      * Set the attribute name used to attach decoded token to request
-     *
-     * @param string
-     * @return self
      */
-    private function attribute($attribute)
+    private function attribute(string $attribute)
     {
         $this->options["attribute"] = $attribute;
-        return $this;
     }
 
     /**
      * Set the header where token is searched from
-     *
-     * @param string
-     * @return self
      */
-    private function header($header)
+    private function header(string $header)
     {
         $this->options["header"] = $header;
-        return $this;
     }
 
     /**
      * Set the regexp used to extract token from header or environment
-     *
-     * @param string
-     * @return self
      */
-    private function regexp($regexp)
+    private function regexp(string $regexp)
     {
         $this->options["regexp"] = $regexp;
-        return $this;
     }
 
     /**
@@ -483,7 +460,7 @@ final class JwtAuthentication implements MiddlewareInterface
      * @return self
      */
 
-    private function before(callable $before)
+    private function before(Closure $before)
     {
         $this->options["before"] = $before->bindTo($this);
         return $this;
@@ -494,7 +471,7 @@ final class JwtAuthentication implements MiddlewareInterface
      *
      * @return self
      */
-    private function after(callable $after)
+    private function after(Closure $after)
     {
         $this->options["after"] = $after->bindTo($this);
         return $this;
