@@ -160,7 +160,7 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $response before returning. */
         if (is_callable($this->options["after"])) {
-            $afterResponse = $this->options["after"]($request, $response, $params);
+            $afterResponse = $this->options["after"]($response, $params);
             if ($afterResponse instanceof ResponseInterface) {
                 return $afterResponse;
             }

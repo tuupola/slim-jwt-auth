@@ -160,7 +160,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($request, $response, $arguments) {
+                "after" => function ($response, $arguments) {
                     return $response->withHeader("X-Brawndo", "plants crave");
                 }
             ])
@@ -463,7 +463,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($request, $response, $arguments) use (&$dummy) {
+                "after" => function ($response, $arguments) use (&$dummy) {
                     $dummy = $arguments["decoded"];
                 }
             ])
@@ -576,7 +576,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($request, $response, $arguments) {
+                "after" => function ($response, $arguments) {
                     return $response
                         ->withBody((new StreamFactory)->createStream())
                         ->withStatus(401);
@@ -678,7 +678,7 @@ class JwtAuthenticationTest extends TestCase
                     $before = get_class($this);
                     return $request->withAttribute("before", $before);
                 },
-                "after" => function ($request, $response, $arguments) {
+                "after" => function ($response, $arguments) {
                     $after = get_class($this);
                     $response->getBody()->write($after);
                     return $response;
