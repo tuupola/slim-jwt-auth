@@ -17,6 +17,7 @@
 namespace Tuupola\Middleware;
 
 use Equip\Dispatch\MiddlewareCollection;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Tuupola\Http\Factory\ResponseFactory;
@@ -25,7 +26,7 @@ use Tuupola\Http\Factory\StreamFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
-class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
+class JwtAuthenticationTest extends TestCase
 {
     /* @codingStandardsIgnoreStart */
     public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
@@ -312,7 +313,7 @@ class JwtAuthenticationTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldNotAllowInsecure()
     {
-        $this->setExpectedException("RuntimeException");
+        $this->expectException("RuntimeException");
 
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
