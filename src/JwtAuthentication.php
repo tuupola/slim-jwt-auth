@@ -43,6 +43,11 @@ final class JwtAuthentication implements MiddlewareInterface
     private $message;
 
     /**
+     * The rules stack.
+     */
+    private $rules;
+
+    /**
      * Stores all the options passed to the rule
      */
     private $options = [
@@ -494,5 +499,13 @@ final class JwtAuthentication implements MiddlewareInterface
     {
         $this->options["after"] = $after->bindTo($this);
         return $this;
+    }
+
+    /**
+     * Set the rules
+     */
+    private function rules(array $rules)
+    {
+        $this->rules = $rules;
     }
 }
