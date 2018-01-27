@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is part of PSR-7 & PSR-15 JWT Authentication middleware
  *

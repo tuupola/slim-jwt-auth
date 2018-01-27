@@ -401,7 +401,7 @@ class JwtAuthenticationTest extends TestCase
             $token = $request->getAttribute("token");
 
             $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($token->iss);
+            $response->getBody()->write($token["iss"]);
 
             return $response;
         };
@@ -428,7 +428,7 @@ class JwtAuthenticationTest extends TestCase
             $token = $request->getAttribute("nekot");
 
             $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($token->iss);
+            $response->getBody()->write($token["iss"]);
 
             return $response;
         };
