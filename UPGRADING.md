@@ -31,13 +31,13 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 ]));
 ```
 
-You should now do the following instead. Note also that `$response` object is not bassed to `before` anymore.
+You should now do the following instead. Note also that `$response` object is not bassed to `before` anymore. The `before` handler should return ``Psr\Http\Message\ServerRequestInterface`. Anything else will be ignored.
 
 ```php
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "ignore" => ["/token"],
     "before" => function ($request, $arguments) {
-        print_r($arguments);
+        return $response->withHeader("Foo", "bar");
     }
 ]));
 ```
