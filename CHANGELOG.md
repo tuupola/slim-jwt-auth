@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file, in reverse 
 - Before callback now receives only request and arguments, response was removed.
 - After callback now receives only response and arguments, request was removed.
 - PHP 7.1 is now minimal requirement.
+- The decoded token is now an array instead of object.
 
 ### Added
 - Support for the [approved version of PSR-15](https://github.com/php-fig/http-server-middleware).
