@@ -19,6 +19,8 @@ declare(strict_types=1);
 namespace Tuupola\Middleware;
 
 use Closure;
+use DomainException;
+use Exception;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -117,20 +119,14 @@ final class JwtAuthentication implements MiddlewareInterface
             }
         }
 
-        /* If token cannot be found return with 401 Unauthorized. */
-        if (null === $token = $this->fetchToken($request)) {
+        /* If token cannot be found or decoded return with 401 Unauthorized. */
+        try {
+            $token = $this->fetchToken($request);
+            $decoded = $this->decodeToken($token);
+        } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
-                "message" => $this->message
-            ]);
-        }
-
-        /* If token cannot be decoded return with 401 Unauthorized. */
-        if (null === $decoded = $this->decodeToken($token)) {
-            $response = (new ResponseFactory)->createResponse(401);
-            return $this->processError($response, [
-                "message" => $this->message,
-                "token" => $token
+                "message" => $exception->getMessage()
             ]);
         }
 
@@ -224,7 +220,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Fetch the access token.
      */
-    private function fetchToken(ServerRequestInterface $request): ?string
+    private function fetchToken(ServerRequestInterface $request): string
     {
         $header = "";
         $message = "Using token from request header";
@@ -247,20 +243,16 @@ final class JwtAuthentication implements MiddlewareInterface
             return $cookieParams[$this->options["cookie"]];
         };
 
-        /* If everything fails log and return false. */
-        $this->message = "Token not found";
-        $this->log(LogLevel::WARNING, $this->message);
-        return null;
+        /* If everything fails log and throw. */
+        $this->log(LogLevel::WARNING, "Token not found");
+        throw new RuntimeException("Token not found.");
     }
 
     /**
      * Decode the token.
      */
-    private function decodeToken(?string $token): ?array
+    private function decodeToken(string $token): array
     {
-        if (empty($token)) {
-            return null;
-        }
         try {
             $decoded = JWT::decode(
                 $token,
@@ -268,10 +260,9 @@ final class JwtAuthentication implements MiddlewareInterface
                 (array) $this->options["algorithm"]
             );
             return (array) $decoded;
-        } catch (\Exception $exception) {
-            $this->message = $exception->getMessage();
+        } catch (Exception $exception) {
             $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
-            return null;
+            throw $exception;
         }
     }
 
@@ -328,7 +319,7 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set hosts where secure rule is relaxed
+     * Set hosts where secure rule is relaxed.
      */
     private function relaxed(array $relaxed): void
     {
@@ -338,7 +329,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the secret key.
      */
-    private function secret(string $secret)
+    private function secret(string $secret): void
     {
         $this->options["secret"] = $secret;
     }
@@ -352,9 +343,7 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set the logger
-     *
-     * @param \Psr\Log\LoggerInterface $logger
+     * Set the logger.
      */
     private function logger(LoggerInterface $logger = null)
     {
@@ -364,76 +353,66 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Logs with an arbitrary level.
      */
-    private function log($level, string $message, array $context = [])
+    private function log($level, string $message, array $context = []): void
     {
         if ($this->logger) {
-            return $this->logger->log($level, $message, $context);
+            $this->logger->log($level, $message, $context);
         }
     }
 
     /**
-     * Set the attribute name used to attach decoded token to request
+     * Set the attribute name used to attach decoded token to request.
      */
-    private function attribute(string $attribute)
+    private function attribute(string $attribute): void
     {
         $this->options["attribute"] = $attribute;
     }
 
     /**
-     * Set the header where token is searched from
+     * Set the header where token is searched from.
      */
-    private function header(string $header)
+    private function header(string $header): void
     {
         $this->options["header"] = $header;
     }
 
     /**
-     * Set the regexp used to extract token from header or environment
+     * Set the regexp used to extract token from header or environment.
      */
-    private function regexp(string $regexp)
+    private function regexp(string $regexp): void
     {
         $this->options["regexp"] = $regexp;
     }
 
     /**
      * Set the allowed algorithms
-     *
-     * @param string|string[] $algorithm
-     * @return self
      */
-    private function algorithm($algorithm)
+    private function algorithm($algorithm): void
     {
-        $this->options["algorithm"] = $algorithm;
-        return $this;
+        $this->options["algorithm"] = (array) $algorithm;
     }
 
     /**
-     * Set the before handler
-     *
-     * @return self
+     * Set the before handler.
      */
 
-    private function before(Closure $before)
+    private function before(Closure $before): void
     {
         $this->options["before"] = $before->bindTo($this);
-        return $this;
     }
 
     /**
-     * Set the after handler
-     *
-     * @return self
+     * Set the after handler.
      */
-    private function after(Closure $after)
+    private function after(Closure $after): void
     {
         $this->options["after"] = $after->bindTo($this);
-        return $this;
     }
 
     /**
-     * Set the rules
+     * Set the rules.
      */
-    private function rules(array $rules)
+    private function rules(array $rules): void
     {
         $this->rules = $rules;
     }
