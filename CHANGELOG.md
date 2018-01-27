@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file, in reverse 
 - Error callback now receives only response and arguments, request was removed.
 - Before callback now receives only request and arguments, response was removed.
 - After callback now receives only response and arguments, request was removed.
+- PHP 7.1 is now minimal requirement.
 
 ### Added
 - Support for the [approved version of PSR-15](https://github.com/php-fig/http-server-middleware).
@@ -19,5 +20,4 @@ All notable changes to this project will be documented in this file, in reverse 
 
 ### Removed
 - Most setters and getters for settings. Pass settings in an array only during initialization.
-- Support for PHP 5.X. PSR-15 is now PHP 7.x only.
 
