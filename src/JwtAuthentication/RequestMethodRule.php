@@ -18,37 +18,27 @@ declare(strict_types=1);
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
-use \Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Rule to decide by HTTP verb whether the request should be authenticated or not.
  */
-
 final class RequestMethodRule implements RuleInterface
 {
 
     /**
-     * Stores all the options passed to the rule
+     * Stores all the options passed to the rule.
      */
     private $options = [
         "ignore" => ["OPTIONS"]
     ];
 
-    /**
-     * Create a new rule instance
-     *
-     * @return void
-     */
     public function __construct(array $options = [])
     {
         $this->options = array_merge($this->options, $options);
     }
 
-    /**
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @return boolean
-     */
-    public function __invoke(ServerRequestInterface $request)
+    public function __invoke(ServerRequestInterface $request): bool
     {
         return !in_array($request->getMethod(), $this->options["ignore"]);
     }
