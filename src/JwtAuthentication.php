@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is part of PSR-7 & PSR-15 JWT Authentication middleware
  *
@@ -17,6 +19,8 @@
 namespace Tuupola\Middleware;
 
 use Closure;
+use DomainException;
+use Exception;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -24,6 +28,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use RuntimeException;
 use Tuupola\Middleware\DoublePassTrait;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
@@ -34,12 +39,12 @@ final class JwtAuthentication implements MiddlewareInterface
     use DoublePassTrait;
 
     /**
-     * PSR-3 compliant logger
+     * PSR-3 compliant logger.
      */
     private $logger;
 
     /**
-     * Last error message
+     * Last error message.
      */
     private $message;
 
@@ -49,7 +54,7 @@ final class JwtAuthentication implements MiddlewareInterface
     private $rules;
 
     /**
-     * Stores all the options passed to the rule
+     * Stores all the options passed to the middleware.
      */
     private $options = [
         "secure" => true,
@@ -66,11 +71,6 @@ final class JwtAuthentication implements MiddlewareInterface
         "error" => null
     ];
 
-    /**
-     * Create a new middleware instance
-     *
-     * @param string[] $options
-     */
     public function __construct(array $options = [])
     {
         /* Setup stack for rules */
@@ -96,11 +96,7 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Process a request in PSR-15 style and return a response
-     *
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
+     * Process a request in PSR-15 style and return a response.
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -119,24 +115,18 @@ final class JwtAuthentication implements MiddlewareInterface
                     "Insecure use of middleware over %s denied by configuration.",
                     strtoupper($scheme)
                 );
-                throw new \RuntimeException($message);
+                throw new RuntimeException($message);
             }
         }
 
-        /* If token cannot be found return with 401 Unauthorized. */
-        if (null === $token = $this->fetchToken($request)) {
+        /* If token cannot be found or decoded return with 401 Unauthorized. */
+        try {
+            $token = $this->fetchToken($request);
+            $decoded = $this->decodeToken($token);
+        } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
-                "message" => $this->message
-            ]);
-        }
-
-        /* If token cannot be decoded return with 401 Unauthorized. */
-        if (false === $decoded = $this->decodeToken($token)) {
-            $response = (new ResponseFactory)->createResponse(401);
-            return $this->processError($response, [
-                "message" => $this->message,
-                "token" => $token
+                "message" => $exception->getMessage()
             ]);
         }
 
@@ -171,12 +161,36 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Check if middleware should authenticate
-     *
-     * @param ServerRequestInterface $request
-     * @return boolean True if middleware should authenticate.
+     * Set all rules in the stack.
      */
-    public function shouldAuthenticate(ServerRequestInterface $request)
+    public function withRules(array $rules): self
+    {
+        $new = clone $this;
+        /* Clear the stack */
+        unset($new->rules);
+        $new->rules = new \SplStack;
+        /* Add the rules */
+        foreach ($rules as $callable) {
+            $new = $new->addRule($callable);
+        }
+        return $new;
+    }
+
+    /**
+     * Add a rule to the stack.
+     */
+    public function addRule(callable $callable): self
+    {
+        $new = clone $this;
+        $new->rules = clone $this->rules;
+        $new->rules->push($callable);
+        return $new;
+    }
+
+    /**
+     * Check if middleware should authenticate.
+     */
+    private function shouldAuthenticate(ServerRequestInterface $request): bool
     {
         /* If any of the rules in stack return false will not authenticate */
         foreach ($this->rules as $callable) {
@@ -188,14 +202,9 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Call the error handler if it exists
-     *
-     * @param ResponseInterface $response
-     * @param mixed[] $arguments
-
-     * @return ResponseInterface
+     * Call the error handler if it exists.
      */
-    public function processError(ResponseInterface $response, $arguments)
+    private function processError(ResponseInterface $response, array $arguments): ResponseInterface
     {
         if (is_callable($this->options["error"])) {
             $handlerResponse = $this->options["error"]($response, $arguments);
@@ -207,11 +216,9 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Fetch the access token
-     *
-     * @return string|null Base64 encoded JSON Web Token or null if not found.
+     * Fetch the access token.
      */
-    public function fetchToken(ServerRequestInterface $request)
+    private function fetchToken(ServerRequestInterface $request): string
     {
         $header = "";
         $message = "Using token from request header";
@@ -234,42 +241,33 @@ final class JwtAuthentication implements MiddlewareInterface
             return $cookieParams[$this->options["cookie"]];
         };
 
-        /* If everything fails log and return false. */
-        $this->message = "Token not found";
-        $this->log(LogLevel::WARNING, $this->message);
-        return null;
+        /* If everything fails log and throw. */
+        $this->log(LogLevel::WARNING, "Token not found");
+        throw new RuntimeException("Token not found.");
     }
 
     /**
-     * Decode the token
-     *
-     * @return object|boolean The JWT's payload as a PHP object or false in case of error
+     * Decode the token.
      */
-    public function decodeToken(?string $token)
+    private function decodeToken(string $token): array
     {
-        if (empty($token)) {
-            return false;
-        }
         try {
-            return JWT::decode(
+            $decoded = JWT::decode(
                 $token,
                 $this->options["secret"],
                 (array) $this->options["algorithm"]
             );
-        } catch (\Exception $exception) {
-            $this->message = $exception->getMessage();
+            return (array) $decoded;
+        } catch (Exception $exception) {
             $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
-            return false;
+            throw $exception;
         }
     }
 
     /**
-     * Hydrate options from given array
-     *
-     * @param array $data Array of options.
-     * @return self
+     * Hydrate options from given array.
      */
-    public function hydrate($data = [])
+    private function hydrate($data = []): void
     {
         foreach ($data as $key => $value) {
             /* https://github.com/facebook/hhvm/issues/6368 */
@@ -287,200 +285,132 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set path where middleware should bind to
+     * Set path where middleware should bind to.
      */
-    private function path(array $path)
+    private function path($path): void
     {
-        $this->options["path"] = $path;
+        $this->options["path"] = (array) $path;
     }
 
     /**
-     * Set path which middleware ignores
-     *
-     * @param string|string[] $ignore
-     * @return self
+     * Set path which middleware ignores.
      */
-    private function ignore($ignore)
+    private function ignore($ignore): void
     {
-        $this->options["ignore"] = $ignore;
-        return $this;
+        $this->options["ignore"] = (array) $ignore;
     }
 
     /**
-     * Set the cookie name where to search the token from
-     *
-     * @param string $cookie
-     * @return self
+     * Set the cookie name where to search the token from.
      */
-    private function cookie($cookie)
+    private function cookie($cookie): void
     {
         $this->options["cookie"] = $cookie;
-        return $this;
     }
 
     /**
-     * Set the secure flag
-     *
-     * @param boolean $secure
-     * @return self
+     * Set the secure flag.
      */
-    private function secure($secure)
+    private function secure(bool $secure): void
     {
-        $this->options["secure"] = !!$secure;
-        return $this;
+        $this->options["secure"] = $secure;
     }
 
     /**
-     * Set hosts where secure rule is relaxed
-     *
-     * @param string[] $relaxed
-     * @return self
+     * Set hosts where secure rule is relaxed.
      */
-    private function relaxed(array $relaxed)
+    private function relaxed(array $relaxed): void
     {
         $this->options["relaxed"] = $relaxed;
-        return $this;
     }
 
     /**
-     * Set the secret key
-     *
-     * @param string $secret
-     * @return self
+     * Set the secret key.
      */
-    private function secret($secret)
+    private function secret(string $secret): void
     {
         $this->options["secret"] = $secret;
-        return $this;
     }
 
     /**
-     * Set the error handler
-     *
-     * @param callable $error
-     * @return self
+     * Set the error handler.
      */
-    private function error(callable $error)
+    private function error(Closure $error): void
     {
-        $this->options["error"] = $error;
-        return $this;
+        $this->options["error"] = $error->bindTo($this);
     }
 
     /**
-     * Set all rules in the stack
-     *
-     * @param array $rules
-     * @return self
-     */
-    public function withRules(array $rules)
-    {
-        $new = clone $this;
-        /* Clear the stack */
-        unset($new->rules);
-        $new->rules = new \SplStack;
-        /* Add the rules */
-        foreach ($rules as $callable) {
-            $new = $new->addRule($callable);
-        }
-        return $new;
-    }
-
-    /**
-     * Add rule to the stack
-     */
-    public function addRule(callable $callable)
-    {
-        $new = clone $this;
-        $new->rules = clone $this->rules;
-        $new->rules->push($callable);
-        return $new;
-    }
-
-    /**
-     * Set the logger
-     *
-     * @param \Psr\Log\LoggerInterface $logger
-     * @return self
+     * Set the logger.
      */
     private function logger(LoggerInterface $logger = null)
     {
         $this->logger = $logger;
-        return $this;
     }
 
     /**
      * Logs with an arbitrary level.
      */
-    public function log($level, string $message, array $context = [])
+    private function log($level, string $message, array $context = []): void
     {
         if ($this->logger) {
-            return $this->logger->log($level, $message, $context);
+            $this->logger->log($level, $message, $context);
         }
     }
 
     /**
-     * Set the attribute name used to attach decoded token to request
+     * Set the attribute name used to attach decoded token to request.
      */
-    private function attribute(string $attribute)
+    private function attribute(string $attribute): void
     {
         $this->options["attribute"] = $attribute;
     }
 
     /**
-     * Set the header where token is searched from
+     * Set the header where token is searched from.
      */
-    private function header(string $header)
+    private function header(string $header): void
     {
         $this->options["header"] = $header;
     }
 
     /**
-     * Set the regexp used to extract token from header or environment
+     * Set the regexp used to extract token from header or environment.
      */
-    private function regexp(string $regexp)
+    private function regexp(string $regexp): void
     {
         $this->options["regexp"] = $regexp;
     }
 
     /**
      * Set the allowed algorithms
-     *
-     * @param string|string[] $algorithm
-     * @return self
      */
-    private function algorithm($algorithm)
+    private function algorithm($algorithm): void
     {
-        $this->options["algorithm"] = $algorithm;
-        return $this;
+        $this->options["algorithm"] = (array) $algorithm;
     }
 
     /**
-     * Set the before handler
-     *
-     * @return self
+     * Set the before handler.
      */
 
-    private function before(Closure $before)
+    private function before(Closure $before): void
     {
         $this->options["before"] = $before->bindTo($this);
-        return $this;
     }
 
     /**
-     * Set the after handler
-     *
-     * @return self
+     * Set the after handler.
      */
-    private function after(Closure $after)
+    private function after(Closure $after): void
     {
         $this->options["after"] = $after->bindTo($this);
-        return $this;
     }
 
     /**
-     * Set the rules
+     * Set the rules.
      */
-    private function rules(array $rules)
+    private function rules(array $rules): void
     {
         $this->rules = $rules;
     }

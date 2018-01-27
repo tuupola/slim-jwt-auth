@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is part of PSR-7 & PSR-15 JWT Authentication middleware
  *
@@ -32,22 +34,12 @@ final class RequestPathRule implements RuleInterface
         "ignore" => []
     ];
 
-    /**
-     * Create a new rule instance
-     *
-     * @param string[] $options
-     * @return void
-     */
     public function __construct($options = [])
     {
         $this->options = array_merge($this->options, $options);
     }
 
-    /**
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @return boolean
-     */
-    public function __invoke(ServerRequestInterface $request)
+    public function __invoke(ServerRequestInterface $request): bool
     {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
