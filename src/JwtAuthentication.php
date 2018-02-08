@@ -128,7 +128,7 @@ class JwtAuthentication
 
         /* If callback returns false return with 401 Unauthorized. */
         if (is_callable($this->options["callback"])) {
-            $params = ["decoded" => $decoded];
+            $params = ["decoded" => $decoded, "token" => $token];
             if (false === $this->options["callback"]($request, $response, $params)) {
                 return $this->error($request, $response, [
                     "message" => $this->message ? $this->message : "Callback returned false"
