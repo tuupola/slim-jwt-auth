@@ -37,7 +37,7 @@ You should now do the following instead. Note also that `$response` object is no
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "ignore" => ["/token"],
     "before" => function ($request, $arguments) {
-        return $response->withHeader("Foo", "bar");
+        return $request->withHeader("Foo", "bar");
     }
 ]));
 ```
