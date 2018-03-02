@@ -2,7 +2,8 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## [3.0.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0-rc.4...2.3.3) - Unreleased
+## [3.0.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0...2.3.3) - 20180302
+
 ### Changed
 - Namespace changed from `Slim\Middleware` to `Tuupola\Middleware`
 - Middleware now uses only `Authorization` header or cookie from the PSR-7 request. The `HTTP_AUTHORIZATION` environment are now ignored.
