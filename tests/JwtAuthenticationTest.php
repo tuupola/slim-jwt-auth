@@ -30,6 +30,7 @@ class JwtAuthenticationTest extends TestCase
 {
     /* @codingStandardsIgnoreStart */
     public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
+    public static $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
     /* @codingStandardsIgnoreEnd */
 
     public static $token_as_array = [
@@ -226,6 +227,30 @@ class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer invalid" . self::$token);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub"
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
+
+    public function testShouldReturn400WithExpiredToken()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$expired);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
