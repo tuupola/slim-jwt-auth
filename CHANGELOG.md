@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## 2.4.0 - Unreleased
+### Added
+
+- Callback now receives also the raw token in arguments [#93](https://github.com/tuupola/slim-jwt-auth/pull/93).
+  ```php
+  $app->add(new \Slim\Middleware\JwtAuthentication([
+      "secret" => "supersecretkeyyoushouldnotcommittogithub",
+      "callback" => function ($request, $response, $arguments) {
+          print_r($arguments["token"]);
+      }
+  ]));
+  ```
+
 ## 2.3.3 - 2017-07-12
 ### Added
 
