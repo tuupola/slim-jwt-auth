@@ -357,18 +357,15 @@ $app->delete("/item/{id}", function ($request, $response, $arguments) {
 
 ## Testing
 
-You can run individual tests either manually...
+You can run tests either manually or automatically on every code change. Automatic tests require [entr](http://entrproject.org/) to work.
 
 ``` bash
-$ composer phplint
-$ composer phpcs
-$ composer phpunit
+$ make test
 ```
 
-... or automatically on every code change. You will need [entr](http://entrproject.org/) for this to work.
-
 ``` bash
-$ composer watch
+$ brew install entr
+$ make watch
 ```
 
 ## Contributing
