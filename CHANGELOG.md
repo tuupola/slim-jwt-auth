@@ -2,10 +2,9 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## 2.4.0 - Unreleased
+## 2.4.0 - 2018-04-03
 ### Added
-
-- Callback now receives also the raw token in arguments [#93](https://github.com/tuupola/slim-jwt-auth/pull/93).
+- Callback now receives also the raw token in arguments ([#93](https://github.com/tuupola/slim-jwt-auth/pull/93)).
   ```php
   $app->add(new \Slim\Middleware\JwtAuthentication([
       "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -15,10 +14,13 @@ All notable changes to this project will be documented in this file, in reverse 
   ]));
   ```
 
+### Changed
+- Response status code set in error handler is no longer ignored ([#111](https://github.com/tuupola/slim-jwt-auth/pull/111)) ([#110](https://github.com/tuupola/slim-jwt-auth/issues/110)).
+
 ## 2.3.3 - 2017-07-12
 ### Added
 
-- Support for `firebase/php-jwt:^5.0`. See [#59](https://github.com/tuupola/slim-jwt-auth/issues/59) and [#61](https://github.com/tuupola/slim-jwt-auth/pull/61).
+- Support for `firebase/php-jwt:^5.0` ([#59](https://github.com/tuupola/slim-jwt-auth/issues/59)) ([#61](https://github.com/tuupola/slim-jwt-auth/pull/61)).
 
 ## 2.3.2 - 2017-02-27
 
