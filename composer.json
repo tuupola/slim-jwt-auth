@@ -1,5 +1,5 @@
 {
-    "name": "tuupola/slim-jwt-auth",
+    "name": "D4rkMindz/slim-jwt-auth",
     "description": "PSR-7 JWT Authentication Middleware",
     "keywords": [
         "psr-7",
