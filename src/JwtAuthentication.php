@@ -84,6 +84,13 @@ final class JwtAuthentication implements MiddlewareInterface
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
+        }else{
+
+            $rulesC = $this->rules;
+            $this->rules = new \SplStack;
+            foreach ($rulesC as $rule){
+                $this->rules->push($rule);
+            }
         }
 
         /* If path was given in easy mode add rule for it. */
