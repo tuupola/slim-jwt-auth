@@ -46,6 +46,7 @@ class JwtAuthentication
         "header" => "Authorization",
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
+        "url" => "access_token",
         "attribute" => "token",
         "path" => null,
         "passthrough" => null,
@@ -229,6 +230,14 @@ class JwtAuthentication
             $this->log(LogLevel::DEBUG, "Using token from cookie");
             $this->log(LogLevel::DEBUG, $cookie_params[$this->options["cookie"]]);
             return $cookie_params[$this->options["cookie"]];
+        };
+
+        /* cookie not found, try the query params. */
+        $params = $request->getQueryParams();
+        if (isset($params[$this->options["url"]]) && !empty($params[$this->options["url"]])) {
+            $this->log(LogLevel::DEBUG, "Using token from query params");
+            $this->log(LogLevel::DEBUG, $params[$this->options["url"]]);
+            return $params[$this->options["url"]];
         };
 
         /* If everything fails log and return false. */

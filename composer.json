@@ -1,6 +1,6 @@
 {
-    "name": "tuupola/slim-jwt-auth",
-    "description": "PSR-7 JWT Authentication Middleware",
+    "name": "elbanyaoui/slim-jwt-auth",
+    "description": "PSR-7 JWT Authentication Middleware a customized version created by elbanyaoui based on tuupola/slim-jwt-auth project",
     "keywords": [
         "psr-7",
         "middleware",
@@ -8,13 +8,13 @@
         "json",
         "auth"
     ],
-    "homepage": "https://github.com/tuupola/slim-jwt-auth",
+    "homepage": "https://github.com/elbanyaoui/slim-jwt-auth",
     "license": "MIT",
     "authors": [
         {
-            "name": "Mika Tuupola",
-            "email": "tuupola@appelsiini.net",
-            "homepage": "http://www.appelsiini.net/",
+            "name": "Moahmmed EL BANYAOUI",
+            "email": "elbanyaoui@hotmail.com",
+            "homepage": "http://www.elbanyaoui.com",
             "role": "Developer"
         }
     ],
