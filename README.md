@@ -17,7 +17,7 @@ For example implementation see [Slim API Skeleton](https://github.com/tuupola/sl
 Install latest version using [composer](https://getcomposer.org/).
 
 ``` bash
-$ composer require tuupola/slim-jwt-auth
+$ composer require elbanyaoui/slim-jwt-auth
 ```
 
 If using Apache add the following to the `.htaccess` file. Otherwise PHP wont have access to `Authorization: Bearer` header.
@@ -81,6 +81,35 @@ $app->add(new \Slim\Middleware\JwtAuthentication([
     "path" => ["/api", "/admin"],
     "passthrough" => ["/api/token", "/admin/ping"],
     "secret" => "supersecretkeyyoushouldnotcommittogithub"
+]));
+```
+### Passthrough by request and method
+
+
+With optional `passthrough` parameter you can make exceptions to `path` parameter. In the example below everything starting with `/api` and `/admin`  will be authenticated with the exception of `/api/token` and `/admin/ping` which will not be authenticated.
+
+``` php
+$app = new \Slim\App();
+
+$app->add(new \Slim\Middleware\JwtAuthentication([
+    "path" => ["/api", "/admin"],
+    "passthrough" => ["/api/token", "/admin/ping"],
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+	"rules" => [
+        new\Slim\Middleware\JwtAuthentication\RequestMethodRule([
+            "passthrough" => ["OPTIONS"]
+        ]),
+        new\Slim\Middleware\JwtAuthentication\RequestMethodPathRule([
+            "passthrough" => [
+                "GET"=>"/items/"
+            ]
+        ]),
+        new\Slim\Middleware\JwtAuthentication\RequestMethodPathRule([
+            "passthrough" => [
+                "GET"=>"/categories/"
+            ]
+        ])
+    ],
 ]));
 ```
 
