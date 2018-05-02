@@ -297,7 +297,8 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 ]));
 
 $app->delete("/item/{id}", function ($request, $response, $arguments) {
-    if (in_array("delete", $request->token->scope)) {
+    $token = $request->getAttribute("token");
+    if (in_array("delete", $token["scope"])) {
         /* Code for deleting item */
     } else {
         /* No scope so respond with 401 Unauthorized */
