@@ -254,7 +254,7 @@ final class JwtAuthentication implements MiddlewareInterface
         try {
             $decoded = JWT::decode(
                 $token,
-                $this->options["secret"],
+                is_callable($this->options["secret"]) ? $this->options["secret"]($token) : $this->options["secret"],
                 (array) $this->options["algorithm"]
             );
             return (array) $decoded;
@@ -327,7 +327,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the secret key.
      */
-    private function secret(string $secret): void
+    private function secret($secret): void
     {
         $this->options["secret"] = $secret;
     }
