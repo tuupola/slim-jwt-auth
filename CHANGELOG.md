@@ -2,11 +2,11 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## [3.1.0](https://github.com/tuupola/slim-jwt-auth/compare/3.1.0...3.0.0) - 2018-08-07
+## [3.1.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0...3.1.0) - 2018-08-07
 ### Added
 - Support for the stable version of PSR-17
 
-## [3.0.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0...2.3.3) - 2018-03-02
+## [3.0.0](https://github.com/tuupola/slim-jwt-auth/compare/2.3.3...3.0.0) - 2018-03-02
 
 ### Changed
 - Namespace changed from `Slim\Middleware` to `Tuupola\Middleware`
