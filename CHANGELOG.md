@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## [3.1.1](https://github.com/tuupola/slim-jwt-auth/compare/3.1.0...3.1.1) - 2018-10-12
+### Added
+- Support for tuupola/callable-handler:^1.0 and tuupola/http-factory:^1.0
+
 ## [3.1.0](https://github.com/tuupola/slim-jwt-auth/compare/3.0.0...3.1.0) - 2018-08-07
 ### Added
 - Support for the stable version of PSR-17
