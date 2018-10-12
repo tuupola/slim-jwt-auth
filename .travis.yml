@@ -14,8 +14,8 @@ matrix:
 
 env:
     matrix:
-        - PREFER_LOWEST = "--prefer-lowest --prefer-stable"
-        - PREFER_LOWEST = ""
+        - PREFER_LOWEST="--prefer-lowest --prefer-stable"
+        - PREFER_LOWEST=""
 
 before_script:
     - travis_retry composer self-update
