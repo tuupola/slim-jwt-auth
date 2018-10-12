@@ -30,7 +30,7 @@
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^2.3",
-        "zendframework/zend-diactoros": "^1.3",
+        "zendframework/zend-diactoros": "^1.3|^2.0",
         "overtrue/phplint": "^0.2.4",
         "codedungeon/phpunit-result-printer": "^0.5.4",
         "phpstan/phpstan": "^0.9.1",
