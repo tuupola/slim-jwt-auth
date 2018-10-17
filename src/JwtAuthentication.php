@@ -343,7 +343,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the secret key.
      */
-    private function secret(string $secret): void
+    private function secret($secret): void
     {
         $this->options["secret"] = $secret;
     }
