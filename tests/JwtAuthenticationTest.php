@@ -533,7 +533,11 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                "error" => function (
+                    ServerRequestInterface $request,
+                    ResponseInterface $response,
+                    $arguments
+                ) use (&$dummy) {
                     $dummy = true;
                 }
             ])
@@ -562,7 +566,11 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                "error" => function (
+                    ServerRequestInterface $request,
+                    ResponseInterface $response,
+                    $arguments
+                ) use (&$dummy) {
                     $dummy = true;
                     $response->getBody()->write("Error");
                     return $response;

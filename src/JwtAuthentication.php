@@ -141,7 +141,7 @@ final class JwtAuthentication implements MiddlewareInterface
             $decoded = $this->decodeToken($token);
         } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
-            return $this->processError($response, [
+            return $this->processError($request, $response, [
                 "message" => $exception->getMessage()
             ]);
         }
@@ -155,7 +155,6 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $request before calling next middleware. */
         if (is_callable($this->options["before"])) {
-            $response = (new ResponseFactory)->createResponse(200);
             $beforeRequest = $this->options["before"]($request, $params);
             if ($beforeRequest instanceof ServerRequestInterface) {
                 $request = $beforeRequest;
@@ -220,10 +219,13 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Call the error handler if it exists.
      */
-    private function processError(ResponseInterface $response, array $arguments): ResponseInterface
-    {
+    private function processError(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $arguments
+    ): ResponseInterface {
         if (is_callable($this->options["error"])) {
-            $handlerResponse = $this->options["error"]($response, $arguments);
+            $handlerResponse = $this->options["error"]($request, $response, $arguments);
             if ($handlerResponse instanceof ResponseInterface) {
                 return $handlerResponse;
             }
