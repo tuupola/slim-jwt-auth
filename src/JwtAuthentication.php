@@ -80,7 +80,7 @@ final class JwtAuthentication implements MiddlewareInterface
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
         "attribute" => "token",
-        "path" => null,
+        "path" => "/",
         "ignore" => null,
         "before" => null,
         "after" => null,
@@ -96,14 +96,12 @@ final class JwtAuthentication implements MiddlewareInterface
         $this->hydrate($options);
 
         /* If nothing was passed in options add default rules. */
+        /* This also means $options["rules"] overrides $options["path"] */
+        /* and $options["ignore"] */
         if (!isset($options["rules"])) {
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
-        }
-
-        /* If path was given in easy mode add rule for it. */
-        if (null !== ($this->options["path"])) {
             $this->rules->push(new RequestPathRule([
                 "path" => $this->options["path"],
                 "ignore" => $this->options["ignore"]
@@ -428,6 +426,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function rules(array $rules): void
     {
-        $this->rules = $rules;
+        foreach ($rules as $callable) {
+            $this->rules->push($callable);
+        }
     }
 }
