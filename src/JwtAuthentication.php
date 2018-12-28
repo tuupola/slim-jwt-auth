@@ -36,6 +36,7 @@ namespace Tuupola\Middleware;
 
 use Closure;
 use DomainException;
+use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
@@ -343,6 +344,11 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function secret($secret): void
     {
+        if (false === is_array($secret) && false === is_string($secret)) {
+            throw new InvalidArgumentException(
+                'Secret must be either a string or an array of "kid" => "secret" pairs'
+            );
+        }
         $this->options["secret"] = $secret;
     }
 
