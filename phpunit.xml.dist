@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" stopOnError="false" stopOnFailure="false" stopOnIncomplete="false" stopOnSkipped="false" printerClass="Codedungeon\PHPUnitPrettyResultPrinter\Printer">
+<phpunit colors="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" stopOnError="false" stopOnFailure="false" stopOnIncomplete="false" stopOnSkipped="false" bootstrap="vendor/autoload.php">
     <testsuites>
         <testsuite name="all">
             <directory suffix="Test.php">tests/</directory>
@@ -7,10 +7,7 @@
     </testsuites>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">src/</directory>
+            <directory suffix=".php">src</directory>
         </whitelist>
-        <blacklist>
-            <directory suffix=".php">vendor/</directory>
-        </blacklist>
     </filter>
 </phpunit>
