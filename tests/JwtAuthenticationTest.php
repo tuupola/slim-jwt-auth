@@ -762,6 +762,52 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+    public function testShouldHandleRules()
+    {
+        $auth = new JwtAuthentication([
+            "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            "rules" => [
+                new RequestPathRule([
+                    "path" => ["/api"],
+                    "ignore" => ["/api/login"],
+                ])
+            ],
+        ]);
+
+        $collection = new MiddlewareCollection([$auth]);
+        $this->checkRulesDispatch($collection, "https://example.com/api", 401, "");
+        $this->checkRulesDispatch($collection, "https://example.com/api/login", 200, "Success");
+
+        $collection = new MiddlewareCollection([$auth->withRules([
+            new RequestPathRule([
+                "path" => ["/api"]
+            ])
+        ])]);
+        $this->checkRulesDispatch($collection, "https://example.com/api", 401, "");
+        $this->checkRulesDispatch($collection, "https://example.com/api/login", 401, "");
+    }
+
+    private function checkRulesDispatch(
+        MiddlewareCollection $collection,
+        string $uri,
+        int $httpCode,
+        string $responseBody
+    ) {
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", $uri);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals($httpCode, $response->getStatusCode());
+        $this->assertEquals($responseBody, $response->getBody());
+    }
+
     public function testShouldHandleDefaultPathBug118()
     {
         $request = (new ServerRequestFactory)

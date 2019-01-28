@@ -51,7 +51,7 @@ use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
-final class JwtAuthentication implements MiddlewareInterface
+class JwtAuthentication implements MiddlewareInterface
 {
     use DoublePassTrait;
 
@@ -136,8 +136,7 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* If token cannot be found or decoded return with 401 Unauthorized. */
         try {
-            $token = $this->fetchToken($request);
-            $decoded = $this->decodeToken($token);
+            $decoded = $this->fetchDecodedToken($request);
         } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
@@ -154,7 +153,6 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $request before calling next middleware. */
         if (is_callable($this->options["before"])) {
-            $response = (new ResponseFactory)->createResponse(200);
             $beforeRequest = $this->options["before"]($request, $params);
             if ($beforeRequest instanceof ServerRequestInterface) {
                 $request = $beforeRequest;
@@ -235,15 +233,12 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function fetchToken(ServerRequestInterface $request): string
     {
-        $header = "";
-        $message = "Using token from request header";
-
         /* Check for token in header. */
         $headers = $request->getHeader($this->options["header"]);
         $header = isset($headers[0]) ? $headers[0] : "";
 
         if (preg_match($this->options["regexp"], $header, $matches)) {
-            $this->log(LogLevel::DEBUG, $message);
+            $this->log(LogLevel::DEBUG, "Using token from request header");
             return $matches[1];
         }
 
@@ -254,7 +249,7 @@ final class JwtAuthentication implements MiddlewareInterface
             $this->log(LogLevel::DEBUG, "Using token from cookie");
             $this->log(LogLevel::DEBUG, $cookieParams[$this->options["cookie"]]);
             return $cookieParams[$this->options["cookie"]];
-        };
+        }
 
         /* If everything fails log and throw. */
         $this->log(LogLevel::WARNING, "Token not found");
@@ -277,6 +272,12 @@ final class JwtAuthentication implements MiddlewareInterface
             $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
             throw $exception;
         }
+    }
+
+    protected function fetchDecodedToken(ServerRequestInterface $request): array
+    {
+        $token = $this->fetchToken($request);
+        return $this->decodeToken($token);
     }
 
     /**
