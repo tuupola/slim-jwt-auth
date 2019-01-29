@@ -45,17 +45,27 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 class JwtAuthenticationTest extends TestCase
 {
     /* @codingStandardsIgnoreStart */
-    public static $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTc0NDM1Mjc0MSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.YzPxtyHLqiJMUaPE6DzBonGUyqLlddxIisxSFk2Gk7Y";
+    public static $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
+    public static $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
     public static $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
     /* @codingStandardsIgnoreEnd */
 
-    public static $token_as_array = [
+    public static $acmeTokenArray = [
         "iss" => "Acme Toothpics Ltd",
         "iat" => "1428819941",
         "exp" => "1744352741",
         "aud" => "www.example.com",
         "sub" => "someone@example.com",
         "scope" => ["read", "write", "delete"]
+    ];
+
+    public static $betaTokenArray = [
+        "iss" => "Beta Sponsorship Ltd",
+        "iat" => "1428819941",
+        "exp" => "1744352741",
+        "aud" => "www.example.com",
+        "sub" => "someone@example.com",
+        "scope" => ["read"]
     ];
 
     public function testShouldBeTrue()
@@ -90,7 +100,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$token);
+            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -115,7 +125,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", self::$token);
+            ->withHeader("X-Token", self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -141,7 +151,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["nekot" => self::$token]);
+            ->withCookieParams(["nekot" => self::$acmeToken]);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -162,11 +172,64 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+
+    public function testShouldReturn200WithSecretArray()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => [
+                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
+                    "beta" =>"anothersecretkeyfornevertocommittogithub"
+                ]
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
+    public function testShouldReturn401WithSecretArray()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => [
+                    "xxxx" =>"supersecretkeyyoushouldnotcommittogithub",
+                    "yyyy" =>"anothersecretkeyfornevertocommittogithub"
+                ]
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
+
     public function testShouldAlterResponseWithAfter()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -193,7 +256,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -242,7 +305,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer invalid" . self::$token);
+            ->withHeader("Authorization", "Bearer invalid" . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -341,7 +404,7 @@ class JwtAuthenticationTest extends TestCase
 
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -362,7 +425,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -387,7 +450,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://localhost/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -411,7 +474,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -436,13 +499,13 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $token = $request->getAttribute("token");
+            $acmeToken = $request->getAttribute("token");
 
             $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($token["iss"]);
+            $response->getBody()->write($acmeToken["iss"]);
 
             return $response;
         };
@@ -463,13 +526,13 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $token = $request->getAttribute("nekot");
+            $acmeToken = $request->getAttribute("nekot");
 
             $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($token["iss"]);
+            $response->getBody()->write($acmeToken["iss"]);
 
             return $response;
         };
@@ -491,7 +554,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $dummy = null;
 
@@ -514,7 +577,7 @@ class JwtAuthenticationTest extends TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$token_as_array, (array) $dummy);
+        $this->assertEquals(self::$acmeTokenArray, (array) $dummy);
     }
 
     public function testShouldCallError()
@@ -614,7 +677,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -643,7 +706,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -707,11 +770,43 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+    public function testShouldHandleDefaultPathBug118()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api");
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "ignore" => "/api/login",
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api/login");
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
     public function testShouldBindToMiddleware()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$token);
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -746,7 +841,7 @@ class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$token);
+            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
 
         $response = (new ResponseFactory)->createResponse();
 

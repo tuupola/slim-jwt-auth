@@ -36,6 +36,7 @@ namespace Tuupola\Middleware;
 
 use Closure;
 use DomainException;
+use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
@@ -80,7 +81,7 @@ final class JwtAuthentication implements MiddlewareInterface
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
         "attribute" => "token",
-        "path" => null,
+        "path" => "/",
         "ignore" => null,
         "before" => null,
         "after" => null,
@@ -96,14 +97,12 @@ final class JwtAuthentication implements MiddlewareInterface
         $this->hydrate($options);
 
         /* If nothing was passed in options add default rules. */
+        /* This also means $options["rules"] overrides $options["path"] */
+        /* and $options["ignore"] */
         if (!isset($options["rules"])) {
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
-        }
-
-        /* If path was given in easy mode add rule for it. */
-        if (null !== ($this->options["path"])) {
             $this->rules->push(new RequestPathRule([
                 "path" => $this->options["path"],
                 "ignore" => $this->options["ignore"]
@@ -345,8 +344,13 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the secret key.
      */
-    private function secret(string $secret): void
+    private function secret($secret): void
     {
+        if (false === is_array($secret) && false === is_string($secret)) {
+            throw new InvalidArgumentException(
+                'Secret must be either a string or an array of "kid" => "secret" pairs'
+            );
+        }
         $this->options["secret"] = $secret;
     }
 
@@ -430,6 +434,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function rules(array $rules): void
     {
-        $this->rules = $rules;
+        foreach ($rules as $callable) {
+            $this->rules->push($callable);
+        }
     }
 }
