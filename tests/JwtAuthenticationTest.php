@@ -580,7 +580,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(self::$acmeTokenArray, (array) $dummy);
     }
 
-    public function testShouldCallError()
+    public function testShouldCallAnonymousErrorFunction()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -607,6 +607,58 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
         $this->assertTrue($dummy);
+    }
+
+    public function testShouldCallInvokableErrorClass()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api");
+
+        $dummy = null;
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommit",
+                "error" => new TestErrorHandler
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(402, $response->getStatusCode());
+        $this->assertEquals(TestErrorHandler::class, $response->getBody());
+    }
+
+    public function testShouldCallArrayNotationError()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api");
+
+        $dummy = null;
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommit",
+                "error" => [TestErrorHandler::class, "error"]
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(418, $response->getStatusCode());
+        $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
     public function testShouldCallErrorAndModifyBody()

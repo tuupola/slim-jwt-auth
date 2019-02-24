@@ -355,9 +355,13 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the error handler.
      */
-    private function error(Closure $error): void
+    private function error(callable $error): void
     {
-        $this->options["error"] = $error->bindTo($this);
+        if ($error instanceof Closure) {
+            $this->options["error"] = $error->bindTo($this);
+        } else {
+            $this->options["error"] = $error;
+        }
     }
 
     /**
