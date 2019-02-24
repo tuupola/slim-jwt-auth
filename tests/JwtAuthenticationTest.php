@@ -225,7 +225,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldAlterResponseWithAfter()
+    public function testShouldAlterResponseWithAnonymousAfter()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -250,6 +250,62 @@ class JwtAuthenticationTest extends TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
+    }
+
+    public function testShouldAlterResponseWithInvokableAfter()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "after" => new TestAfterHandler
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(
+            "plants crave",
+            (string) $response->getHeaderLine("X-Brawndo")
+        );
+    }
+
+    public function testShouldAlterResponseWithArrayNotationAfter()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "after" => [TestAfterHandler::class, "after"]
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(
+            "like from toilet?",
+            (string) $response->getHeaderLine("X-Water")
+        );
     }
 
     public function testShouldReturn401WithInvalidAlgorithm()

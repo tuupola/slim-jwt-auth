@@ -430,9 +430,13 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the after handler.
      */
-    private function after(Closure $after): void
+    private function after(callable $after): void
     {
-        $this->options["after"] = $after->bindTo($this);
+        if ($after instanceof Closure) {
+            $this->options["after"] = $after->bindTo($this);
+        } else {
+            $this->options["after"] = $after;
+        }
     }
 
     /**
