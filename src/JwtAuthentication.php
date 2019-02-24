@@ -418,9 +418,13 @@ final class JwtAuthentication implements MiddlewareInterface
      * Set the before handler.
      */
 
-    private function before(Closure $before): void
+    private function before(callable $before): void
     {
-        $this->options["before"] = $before->bindTo($this);
+        if ($before instanceof Closure) {
+            $this->options["before"] = $before->bindTo($this);
+        } else {
+            $this->options["before"] = $before;
+        }
     }
 
     /**

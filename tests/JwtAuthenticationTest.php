@@ -746,7 +746,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingBefore()
+    public function testShouldModifyRequestUsingAnonymousBefore()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
@@ -772,6 +772,58 @@ class JwtAuthenticationTest extends TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("test", (string) $response->getBody());
+    }
+
+    public function testShouldModifyRequestUsingInvokableBefore()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $test = $request->getAttribute("test");
+            $response->getBody()->write($test);
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "before" => new TestBeforeHandler
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("invoke", (string) $response->getBody());
+    }
+
+    public function testShouldModifyRequestUsingArrayNotationBefore()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $test = $request->getAttribute("test");
+            $response->getBody()->write($test);
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "before" => [TestBeforeHandler::class, "before"]
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("function", (string) $response->getBody());
     }
 
     public function testShouldHandleRulesArrayBug84()
