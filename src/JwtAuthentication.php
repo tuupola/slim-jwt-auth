@@ -236,16 +236,14 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function fetchToken(ServerRequestInterface $request): string
     {
-        $header = "";
-        $message = "Using token from request header";
-
         /* Check for token in header. */
-        $headers = $request->getHeader($this->options["header"]);
-        $header = isset($headers[0]) ? $headers[0] : "";
+        $header = $request->getHeaderLine($this->options["header"]);
 
-        if (preg_match($this->options["regexp"], $header, $matches)) {
-            $this->log(LogLevel::DEBUG, $message);
-            return $matches[1];
+        if (false === empty($header)) {
+            if (preg_match($this->options["regexp"], $header, $matches)) {
+                $this->log(LogLevel::DEBUG, "Using token from request header");
+                return $matches[1];
+            }
         }
 
         /* Token not found in header try a cookie. */
