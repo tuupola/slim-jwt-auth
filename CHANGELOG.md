@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## [3.3.0](https://github.com/tuupola/slim-jwt-auth/compare/3.2.0...master) - unreleased
+### Changed
+- Relaxed the typehinting of `error`, `before` and `after` handlers from `Closure` to `callable`. This allows the usage of invokable classes and array notation callables in addition to anonymous functions.
+  ```php
+  $middleware = new JwtAuthentication([
+      "secret" => "supersecretkeyyoushouldnotcommit",
+      "error" => new SomeErrorHandler
+  ]);
+
+  $middleware = new JwtAuthentication([
+      "secret" => "supersecretkeyyoushouldnotcommit",
+      "error" => [SomeErrorHandler::class, "error"]
+  ]);
+  ```
+
+
 ## [3.2.0](https://github.com/tuupola/slim-jwt-auth/compare/3.1.1...3.2.0) - 2019-01-26
 
 ### Fixed
