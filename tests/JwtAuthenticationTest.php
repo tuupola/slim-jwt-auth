@@ -1028,7 +1028,7 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
                     $dummy = $arguments["uri"];
                 }
@@ -1040,5 +1040,31 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
         $this->assertEquals("https://example.com/api/foo?bar=pop", $dummy);
+    }
+
+    public function testShouldUseCookieIfHeaderMissingIssue156()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withCookieParams(["token" => self::$acmeToken]);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "header" => "X-Token",
+                "regexp" => "/(.*)/",
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
     }
 }
