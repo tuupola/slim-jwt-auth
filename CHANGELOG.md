@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file, in reverse 
       "error" => [SomeErrorHandler::class, "error"]
   ]);
   ```
+
 ### Added
 - The `error` handler now receives the request uri in the `$arguments` array. This is a workaround for [#96](https://github.com/tuupola/slim-jwt-auth/issues/96) which will be fixed in `4.x`.
   ```php
@@ -26,6 +27,9 @@ All notable changes to this project will be documented in this file, in reverse 
       }
   ]);
   ```
+
+### Fixed
+- Cookie was ignored if using `/(.*)/` as regexp and the configured header was missing from request ([#156](https://github.com/tuupola/slim-jwt-auth/pull/156), [#158](https://github.com/tuupola/slim-jwt-auth/pull/158)).
 
 ## [3.2.0](https://github.com/tuupola/slim-jwt-auth/compare/3.1.1...3.2.0) - 2019-01-26
 
