@@ -141,7 +141,8 @@ final class JwtAuthentication implements MiddlewareInterface
         } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
-                "message" => $exception->getMessage()
+                "message" => $exception->getMessage(),
+                "uri" => (string)$request->getUri()
             ]);
         }
 

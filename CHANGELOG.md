@@ -16,7 +16,16 @@ All notable changes to this project will be documented in this file, in reverse 
       "error" => [SomeErrorHandler::class, "error"]
   ]);
   ```
-
+### Added
+- The `error` handler now receives the request uri in the `$arguments` array. This is a workaround for [#96](https://github.com/tuupola/slim-jwt-auth/issues/96) which will be fixed in `4.x`.
+  ```php
+  $middleware = new JwtAuthentication([
+      "secret" => "supersecretkeyyoushouldnotcommit",
+      "error" => function ($response, $arguments) {
+          print_r(arguments["uri"]);
+      }
+  ]);
+  ```
 
 ## [3.2.0](https://github.com/tuupola/slim-jwt-auth/compare/3.1.1...3.2.0) - 2019-01-26
 

@@ -1012,4 +1012,33 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Success", $response->getBody());
     }
+
+    public function testShouldHaveUriInErrorHandlerIssue96()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api/foo?bar=pop");
+
+        $dummy = null;
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommit",
+                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                    $dummy = $arguments["uri"];
+                }
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+        $this->assertEquals("https://example.com/api/foo?bar=pop", $dummy);
+    }
 }
