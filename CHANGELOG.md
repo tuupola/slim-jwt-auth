@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## [3.3.0](https://github.com/tuupola/slim-jwt-auth/compare/3.2.0...master) - unreleased
+## [3.3.0](https://github.com/tuupola/slim-jwt-auth/compare/3.2.0...3.3.0) - 2019-03-11
 ### Changed
 - Relaxed the typehinting of `error`, `before` and `after` handlers from `Closure` to `callable`. This allows the usage of invokable classes and array notation callables in addition to anonymous functions.
   ```php
