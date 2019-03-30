@@ -294,7 +294,7 @@ final class JwtAuthentication implements MiddlewareInterface
 
         return (
             'https' === $scheme
-            || in_array('https', $sanitized, true)
+            || in_array('https', $sanitized, true)
         );
     }
 
