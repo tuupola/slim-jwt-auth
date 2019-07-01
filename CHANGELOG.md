@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
 
-## [3.4.0](https://github.com/tuupola/slim-jwt-auth/compare/3.3.0...3.4.0) - 2019-03-11
+## [3.4.0](https://github.com/tuupola/slim-jwt-auth/compare/3.3.0...3.4.0) - 2019-07-01
 ### Added
 - Raw token to `before` and `after` arguments ([#168](https://github.com/tuupola/slim-jwt-auth/pull/168)).
 
