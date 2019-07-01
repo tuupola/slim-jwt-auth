@@ -3,7 +3,10 @@
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
 
-## [3.3.1](https://github.com/tuupola/slim-jwt-auth/compare/3.3.0...3.3.1) - unreleased
+## [3.4.0](https://github.com/tuupola/slim-jwt-auth/compare/3.3.0...3.4.0) - 2019-03-11
+### Added
+- Raw token to `before` and `after` arguments ([#168](https://github.com/tuupola/slim-jwt-auth/pull/168)).
+
 ### Removed
 - Cookie contents from debug log ([#166](https://github.com/tuupola/slim-jwt-auth/pull/166)).
 
