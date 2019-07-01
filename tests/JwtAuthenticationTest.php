@@ -606,13 +606,14 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
     }
 
-    public function testShouldCallAfter()
+    public function testShouldCallAfterWithProperArguments()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
-        $dummy = null;
+        $decoded = null;
+        $token = null;
 
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
@@ -623,8 +624,9 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) use (&$dummy) {
-                    $dummy = $arguments["decoded"];
+                "after" => function ($response, $arguments) use (&$decoded, &$token) {
+                    $decoded = $arguments["decoded"];
+                    $token = $arguments["token"];
                 }
             ])
         ]);
@@ -633,7 +635,41 @@ class JwtAuthenticationTest extends TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$acmeTokenArray, (array) $dummy);
+        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
+        $this->assertEquals(self::$acmeToken, $token);
+    }
+
+    public function testShouldCallBeforeWithProperArguments()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+
+        $decoded = null;
+        $token = null;
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "before" => function ($response, $arguments) use (&$decoded, &$token) {
+                    $decoded = $arguments["decoded"];
+                    $token = $arguments["token"];
+                }
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
+        $this->assertEquals(self::$acmeToken, $token);
     }
 
     public function testShouldCallAnonymousErrorFunction()

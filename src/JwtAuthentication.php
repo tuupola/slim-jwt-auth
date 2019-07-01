@@ -146,7 +146,10 @@ final class JwtAuthentication implements MiddlewareInterface
             ]);
         }
 
-        $params = ["decoded" => $decoded];
+        $params = [
+            "decoded" => $decoded,
+            "token" => $token,
+        ];
 
         /* Add decoded token to request as attribute when requested. */
         if ($this->options["attribute"]) {

@@ -179,7 +179,7 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 
 ### Before
 
-Before funcion is called only when authentication succeeds but before the next incoming middleware is called. You can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything else than `Psr\Http\Message\ServerRequestInterface` the return value will be ignored.
+Before function is called only when authentication succeeds but before the next incoming middleware is called. You can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything else than `Psr\Http\Message\ServerRequestInterface` the return value will be ignored.
 
 ``` php
 $app = new Slim\App;
@@ -207,6 +207,8 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
     }
 ]));
 ```
+
+> Note that both the after and before callback functions receive the raw token string as well as the decoded claims through the `$arguments` argument.
 
 ### Error
 
