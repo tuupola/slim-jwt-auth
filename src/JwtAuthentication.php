@@ -254,6 +254,9 @@ final class JwtAuthentication implements MiddlewareInterface
 
         if (isset($cookieParams[$this->options["cookie"]])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
+            if (preg_match($this->options["regexp"], $cookieParams[$this->options["cookie"]], $matches)) {
+                return $matches[1];
+            }
             return $cookieParams[$this->options["cookie"]];
         };
 
