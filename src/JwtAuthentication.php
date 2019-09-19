@@ -345,7 +345,7 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function secret($secret): void
     {
-        if (false === is_array($secret) && false === is_string($secret)) {
+        if (false === is_array($secret) && false === is_string($secret) && ! $secret instanceof \ArrayAccess) {
             throw new InvalidArgumentException(
                 'Secret must be either a string or an array of "kid" => "secret" pairs'
             );
