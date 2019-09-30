@@ -172,6 +172,31 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+    public function testShouldReturn200WithTokenFromBearerCookie()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withCookieParams(["nekot" => "Bearer " . self::$acmeToken]);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "cookie" => "nekot",
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
 
     public function testShouldReturn200WithSecretArray()
     {
