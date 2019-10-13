@@ -39,6 +39,7 @@ use DomainException;
 use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -46,7 +47,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use RuntimeException;
-use Tuupola\Middleware\DoublePassTrait;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
@@ -85,7 +85,8 @@ final class JwtAuthentication implements MiddlewareInterface
         "ignore" => null,
         "before" => null,
         "after" => null,
-        "error" => null
+        "error" => null,
+        "responseFactory" => null,
     ];
 
     public function __construct(array $options = [])
@@ -139,7 +140,8 @@ final class JwtAuthentication implements MiddlewareInterface
             $token = $this->fetchToken($request);
             $decoded = $this->decodeToken($token);
         } catch (RuntimeException | DomainException $exception) {
-            $response = (new ResponseFactory)->createResponse(401);
+            $factory = $this->options['responseFactory'] ?? new ResponseFactory;
+            $response = $factory->createResponse(401);
             return $this->processError($response, [
                 "message" => $exception->getMessage(),
                 "uri" => (string)$request->getUri()
@@ -158,7 +160,6 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $request before calling next middleware. */
         if (is_callable($this->options["before"])) {
-            $response = (new ResponseFactory)->createResponse(200);
             $beforeRequest = $this->options["before"]($request, $params);
             if ($beforeRequest instanceof ServerRequestInterface) {
                 $request = $beforeRequest;
@@ -451,5 +452,13 @@ final class JwtAuthentication implements MiddlewareInterface
         foreach ($rules as $callable) {
             $this->rules->push($callable);
         }
+    }
+
+    /**
+     * Set the response factory.
+     */
+    private function responseFactory(ResponseFactoryInterface $factory = null): void
+    {
+        $this->options["responseFactory"] = $factory;
     }
 }
