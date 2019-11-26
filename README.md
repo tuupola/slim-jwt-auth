@@ -229,6 +229,18 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 ]));
 ```
 
+### Response Factory
+
+A custom PSR-17 compatible response factory can be provided. If none is provided, PSR-17 implementation auto-discovery is used. Response factory is used to create a new 401 response.
+
+```php
+$app = new Slim\App;
+
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "responseFactory" => new MyResponseFactory,
+]));
+```
+
 ### Rules
 
 The optional `rules` parameter allows you to pass in rules which define whether the request should be authenticated or not. A rule is a callable which receives the request as parameter. If any of the rules returns boolean `false` the request will not be authenticated.

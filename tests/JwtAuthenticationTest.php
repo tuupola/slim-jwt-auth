@@ -33,14 +33,18 @@ SOFTWARE.
 namespace Tuupola\Middleware;
 
 use Equip\Dispatch\MiddlewareCollection;
+use Exception;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Http\Factory\StreamFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\ResponseFactory as ZendResponseFactory;
 
 class JwtAuthenticationTest extends TestCase
 {
@@ -861,6 +865,49 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("Error", $response->getBody());
         $this->assertTrue($dummy);
+    }
+
+    public function testShouldUseCustomResponseFactory()
+    {
+        // custom response factory will accumulate status codes used in the createResponse call
+        if (class_exists(ZendResponseFactory::class)) {
+            $factory = new class extends ZendResponseFactory {
+                public $used = [];
+                public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
+                {
+                    $this->used[] = $code; // store the codes used
+                    return parent::createResponse($code, $reasonPhrase);
+                }
+            };
+        } else {
+            $factory = new class implements ResponseFactoryInterface {
+                public $used = [];
+                public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
+                {
+                    $this->used[] = $code; // store the codes used
+                    return (new Response)->withStatus($code, $reasonPhrase);
+                }
+            };
+        }
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                "responseFactory" => $factory,
+            ])
+        ]);
+
+        $request = (new ServerRequestFactory)->createServerRequest("GET", "https://example.com/api");
+        $response = $collection->dispatch($request, function () {
+            // this callable is not used anyway due to auth error
+            throw new Exception('not used');
+        });
+
+        // assert correct response status code
+        $this->assertEquals(401, $response->getStatusCode());
+
+        // assert that the custom response factory was used
+        $this->assertSame([401], $factory->used);
     }
 
     public function testShouldAllowUnauthenticatedHttp()
