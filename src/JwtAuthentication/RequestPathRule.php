@@ -59,11 +59,17 @@ final class RequestPathRule implements RuleInterface
     {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
+        
 
         /* If request path is matches ignore should not authenticate. */
         foreach ((array)$this->options["ignore"] as $ignore) {
             $ignore = rtrim($ignore, "/");
-            if (!!preg_match("@^{$ignore}(/.*)?$@", $uri)) {
+            
+            # Fix for dynamic routes:
+            $ignore = preg_replace('({(.*):(.*)})', '($2)', $ignore, -1);
+            $ignore = preg_replace('({(.*)})', '(.*)', $ignore, -1);
+            
+            if (!!preg_match("@^$ignore(/.*)?$@", $uri)) {
                 return false;
             }
         }
@@ -71,7 +77,12 @@ final class RequestPathRule implements RuleInterface
         /* Otherwise check if path matches and we should authenticate. */
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
-            if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
+            
+            # Fix for dynamic routes:
+            $path = preg_replace('({(.*):(.*)})', '($2)', $path, -1);
+            $path = preg_replace('({(.*)})', '(.*)', $path, -1);
+            
+            if (!!preg_match("@^$path(/.*)?$@", $uri)) {
                 return true;
             }
         }
