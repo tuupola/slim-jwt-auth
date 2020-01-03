@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
 
 Copyright (c) 2015-2019 Mika Tuupola
@@ -28,34 +26,26 @@ SOFTWARE.
 
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
- * @see       https://appelsiini.net/projects/slim-jwt-auth
  * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
-namespace Tuupola\Middleware\JwtAuthentication;
+namespace Tuupola\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Rule to decide by HTTP verb whether the request should be authenticated or not.
- */
-final class RequestMethodRule implements RuleInterface
+class TestBeforeHandler
 {
-
-    /**
-     * Stores all the options passed to the rule.
-     */
-    private $options = [
-        "ignore" => ["OPTIONS"]
-    ];
-
-    public function __construct(array $options = [])
-    {
-        $this->options = array_merge($this->options, $options);
+    public function __invoke(
+        ServerRequestInterface $request,
+        array $arguments
+    ) {
+        return $request->withAttribute("test", "invoke");
     }
 
-    public function __invoke(ServerRequestInterface $request): bool
-    {
-        return !in_array($request->getMethod(), $this->options["ignore"]);
+    public static function before(
+        ServerRequestInterface $request,
+        array $arguments
+    ) {
+        return $request->withAttribute("test", "function");
     }
 }

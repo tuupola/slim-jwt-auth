@@ -2,24 +2,41 @@
 
 declare(strict_types=1);
 
+/*
+
+Copyright (c) 2015-2019 Mika Tuupola
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 /**
- * This file is part of PSR-7 & PSR-15 JWT Authentication middleware
- *
- * Copyright (c) 2015-2018 Mika Tuupola
- *
- * Licensed under the MIT license:
- *   http://www.opensource.org/licenses/mit-license.php
- *
- * Project home:
- *   https://github.com/tuupola/slim-jwt-auth
- *   https://appelsiini.net/projects/slim-jwt-auth
- *
+ * @see       https://github.com/tuupola/slim-jwt-auth
+ * @see       https://appelsiini.net/projects/slim-jwt-auth
+ * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
 namespace Tuupola\Middleware;
 
 use Closure;
 use DomainException;
+use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface;
@@ -64,7 +81,7 @@ final class JwtAuthentication implements MiddlewareInterface
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
         "attribute" => "token",
-        "path" => null,
+        "path" => "/",
         "ignore" => null,
         "before" => null,
         "after" => null,
@@ -80,14 +97,12 @@ final class JwtAuthentication implements MiddlewareInterface
         $this->hydrate($options);
 
         /* If nothing was passed in options add default rules. */
+        /* This also means $options["rules"] overrides $options["path"] */
+        /* and $options["ignore"] */
         if (!isset($options["rules"])) {
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
-        }
-
-        /* If path was given in easy mode add rule for it. */
-        if (null !== ($this->options["path"])) {
             $this->rules->push(new RequestPathRule([
                 "path" => $this->options["path"],
                 "ignore" => $this->options["ignore"]
@@ -126,11 +141,15 @@ final class JwtAuthentication implements MiddlewareInterface
         } catch (RuntimeException | DomainException $exception) {
             $response = (new ResponseFactory)->createResponse(401);
             return $this->processError($response, [
-                "message" => $exception->getMessage()
+                "message" => $exception->getMessage(),
+                "uri" => (string)$request->getUri()
             ]);
         }
 
-        $params = ["decoded" => $decoded];
+        $params = [
+            "decoded" => $decoded,
+            "token" => $token,
+        ];
 
         /* Add decoded token to request as attribute when requested. */
         if ($this->options["attribute"]) {
@@ -220,16 +239,14 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function fetchToken(ServerRequestInterface $request): string
     {
-        $header = "";
-        $message = "Using token from request header";
-
         /* Check for token in header. */
-        $headers = $request->getHeader($this->options["header"]);
-        $header = isset($headers[0]) ? $headers[0] : "";
+        $header = $request->getHeaderLine($this->options["header"]);
 
-        if (preg_match($this->options["regexp"], $header, $matches)) {
-            $this->log(LogLevel::DEBUG, $message);
-            return $matches[1];
+        if (false === empty($header)) {
+            if (preg_match($this->options["regexp"], $header, $matches)) {
+                $this->log(LogLevel::DEBUG, "Using token from request header");
+                return $matches[1];
+            }
         }
 
         /* Token not found in header try a cookie. */
@@ -237,7 +254,9 @@ final class JwtAuthentication implements MiddlewareInterface
 
         if (isset($cookieParams[$this->options["cookie"]])) {
             $this->log(LogLevel::DEBUG, "Using token from cookie");
-            $this->log(LogLevel::DEBUG, $cookieParams[$this->options["cookie"]]);
+            if (preg_match($this->options["regexp"], $cookieParams[$this->options["cookie"]], $matches)) {
+                return $matches[1];
+            }
             return $cookieParams[$this->options["cookie"]];
         };
 
@@ -327,17 +346,26 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Set the secret key.
      */
-    private function secret(string $secret): void
+    private function secret($secret): void
     {
+        if (false === is_array($secret) && false === is_string($secret) && ! $secret instanceof \ArrayAccess) {
+            throw new InvalidArgumentException(
+                'Secret must be either a string or an array of "kid" => "secret" pairs'
+            );
+        }
         $this->options["secret"] = $secret;
     }
 
     /**
      * Set the error handler.
      */
-    private function error(Closure $error): void
+    private function error(callable $error): void
     {
-        $this->options["error"] = $error->bindTo($this);
+        if ($error instanceof Closure) {
+            $this->options["error"] = $error->bindTo($this);
+        } else {
+            $this->options["error"] = $error;
+        }
     }
 
     /**
@@ -394,17 +422,25 @@ final class JwtAuthentication implements MiddlewareInterface
      * Set the before handler.
      */
 
-    private function before(Closure $before): void
+    private function before(callable $before): void
     {
-        $this->options["before"] = $before->bindTo($this);
+        if ($before instanceof Closure) {
+            $this->options["before"] = $before->bindTo($this);
+        } else {
+            $this->options["before"] = $before;
+        }
     }
 
     /**
      * Set the after handler.
      */
-    private function after(Closure $after): void
+    private function after(callable $after): void
     {
-        $this->options["after"] = $after->bindTo($this);
+        if ($after instanceof Closure) {
+            $this->options["after"] = $after->bindTo($this);
+        } else {
+            $this->options["after"] = $after;
+        }
     }
 
     /**
@@ -412,6 +448,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function rules(array $rules): void
     {
-        $this->rules = $rules;
+        foreach ($rules as $callable) {
+            $this->rules->push($callable);
+        }
     }
 }

@@ -1,14 +1,20 @@
 # Contributing
 
+## Thanks for contributing!
+
+Following these guidelines improves the possibility of your pull request to get accepted. They also help to save everyones time.
+
 ## Only one feature or change per pull request
 
-Make pull requests only one feature or change at the time. Make pull requests from feature branch. Pull requests should not come from your master branch.
+Pull request should contain only one feature or change. For example you have fixed a bug and optimized some code. Optimization is not related to the bug. These should be submitted as two separate pull requests.
 
-For example you have fixed a bug. You also have optimized some code. Optimization is not related to a bug. These should be submitted as separate pull requests. This way I can easily choose what to include. It is also easier to understand the code changes.
+## Discuss new features first
+
+Before sending a totally new feature it is a good idea to discuss it first. If you have an idea open an issue about it. Maybe there already is a way to achieve what you are after.
 
 ## Write meaningful commit messages
 
-Proper commit message is full sentence. It starts with capital letter but does not end with period. Headlines do not end with period. The GitHub default `Update filename.js` is not enough. When needed include also longer explanation what the commit does.
+Proper commit message is a full sentence. It starts with capital letter but does not end with period. The GitHub default `Update filename.js` is not enough. When needed include also longer explanation what the commit does.
 
 ```
 Capitalized, short (50 chars or less) summary
@@ -23,26 +29,26 @@ two together.
 
 When in doubt see Tim Pope's blogpost [A Note About Git Commit Messages](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
 
+## Follow the existing coding standards
+
+Code should look like it is written by one person. Follow the original coding standard. It might be different than yours but it is not a holy war. This project uses **[PSR-2 Coding Standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md)**.
+
+## Include tests
+
+New features and bugfixes should have an accompanying tests. This single thing greatly improves the possibility of pull request being approved.
+
+## Test before committing
+
+You can run tests either manually or automatically on every code change. Automatic tests require [entr](http://entrproject.org/) to work.
+
+``` bash
+$ make test
+```
+``` bash
+$ brew install entr
+$ make watch
+```
+
 ## Send coherent history
 
 Make sure each individual commit in your pull request is meaningful. If you had to make multiple intermediate commits while developing, please squash them before submitting.
-
-## Follow the existing coding standards
-
-When contributing to open source project it is polite to follow the original authors coding standars. They might be different than yours. It is not a holy war. This project uses **[PSR-2 Coding Standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md)**
-
-## Running Tests
-
-You can run individual tests either manually...
-
-``` bash
-$ composer phplint
-$ composer phpcs
-$ composer phpunit
-```
-
-... or automatically on every code change. You will need [entr](http://entrproject.org/) for this to work.
-
-``` bash
-$ composer watch
-```
