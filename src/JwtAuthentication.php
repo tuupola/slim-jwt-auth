@@ -115,8 +115,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $forwardProto = $request->getHeaderLine('X-Forwarded-Proto');
-        $scheme =  '' !== $forwardProto ? $forwardProto : $request->getUri()->getScheme();
+        $forwardedProto = $request->getHeaderLine('X-Forwarded-Proto');
+        $scheme =  '' !== $forwardedProto ? $forwardedProto : $request->getUri()->getScheme();
         $host = $request->getUri()->getHost();
 
         /* If rules say we should not authenticate call next and return. */
