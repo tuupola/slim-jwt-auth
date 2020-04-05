@@ -556,6 +556,31 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
     }
 
+    public function testShouldAllowInsecureIfForwardedProtoIsSecure()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "http://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$acmeToken)
+            ->withHeader("X-Forwarded-Proto", "https");
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "secret" => "supersecretkeyyoushouldnotcommittogithub",
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
     public function testShoulAllowInsecure()
     {
         $request = (new ServerRequestFactory)
