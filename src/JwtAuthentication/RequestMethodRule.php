@@ -44,11 +44,15 @@ final class RequestMethodRule implements RuleInterface
 
     /**
      * Stores all the options passed to the rule.
+     * @var mixed[]
      */
     private $options = [
         "ignore" => ["OPTIONS"]
     ];
 
+    /**
+     * @param mixed[] $options
+     */
     public function __construct(array $options = [])
     {
         $this->options = array_merge($this->options, $options);

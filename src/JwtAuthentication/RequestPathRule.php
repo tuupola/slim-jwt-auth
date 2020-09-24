@@ -44,13 +44,17 @@ final class RequestPathRule implements RuleInterface
 {
     /**
      * Stores all the options passed to the rule
+     * @var mixed[]
      */
     private $options = [
         "path" => ["/"],
         "ignore" => []
     ];
 
-    public function __construct($options = [])
+    /**
+     * @param mixed[] $options
+     */
+    public function __construct(array $options = [])
     {
         $this->options = array_merge($this->options, $options);
     }
@@ -63,7 +67,7 @@ final class RequestPathRule implements RuleInterface
         /* If request path is matches ignore should not authenticate. */
         foreach ((array)$this->options["ignore"] as $ignore) {
             $ignore = rtrim($ignore, "/");
-            if (!!preg_match("@^{$ignore}(/.*)?$@", $uri)) {
+            if (!!preg_match("@^{$ignore}(/.*)?$@", (string) $uri)) {
                 return false;
             }
         }
@@ -71,7 +75,7 @@ final class RequestPathRule implements RuleInterface
         /* Otherwise check if path matches and we should authenticate. */
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
-            if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
+            if (!!preg_match("@^{$path}(/.*)?$@", (string) $uri)) {
                 return true;
             }
         }

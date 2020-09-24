@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file, in reverse 
 ### Added
 - Possibility to use `ArrayAccess` objects as the `secret` ([#174](https://github.com/tuupola/slim-jwt-auth/pull/174)).
 - Given `regexp` is also used when extracting token from cookie ([#171](https://github.com/tuupola/slim-jwt-auth/pull/171)).
+- Allow installing with PHP 8 ([#191](https://github.com/tuupola/slim-jwt-auth/pull/191)).
 
 ## [3.4.0](https://github.com/tuupola/slim-jwt-auth/compare/3.3.0...3.4.0) - 2019-07-01
 ### Added
