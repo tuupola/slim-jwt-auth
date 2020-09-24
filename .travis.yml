@@ -7,20 +7,25 @@ php:
     - 7.4
     - nightly
 
-matrix:
+jobs:
     fast_finish: true
+    env:
+    global:
+        - COMPOSER_ARGS="--no-interaction"
     allow_failures:
         - php: nightly
 
 env:
-    matrix:
+    global:
+        - COMPOSER_ARGS="--no-interaction"
+    jobs:
         - PREFER_LOWEST="--prefer-lowest --prefer-stable"
         - PREFER_LOWEST=""
 
 before_script:
     - if php -v | grep -q "Xdebug"; then phpenv config-rm xdebug.ini; fi
     - travis_retry composer self-update
-    - travis_retry composer update $PREFER_LOWEST --no-interaction
+    - travis_retry composer update $PREFER_LOWEST $COMPOSER_ARGS
 
 script:
     - make travis
