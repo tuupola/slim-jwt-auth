@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
 
-## [3.5.1](https://github.com/tuupola/slim-jwt-auth/compare/3.5.0...3.5.1) - 2020-10-27
+## [3.5.1](https://github.com/tuupola/slim-jwt-auth/compare/3.5.0...3.5.1) - 2020-10-28
 ### Changed
 - Force atleast tuupola/http-factory:1.0.2 ([#193](https://github.com/tuupola/slim-jwt-auth/issues/193)) ([#194](https://github.com/tuupola/slim-jwt-auth/pull/194)).
 
