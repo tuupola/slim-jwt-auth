@@ -128,7 +128,7 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 
 ### Algorithm
 
-You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).
+You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
 
 ``` php
 $app = new Slim\App;
