@@ -34,8 +34,7 @@
         "overtrue/phplint": "^1.0",
         "phpstan/phpstan": "^0.12.43",
         "phpunit/phpunit": "^7.0|^8.0|^9.0",
-        "equip/dispatch": "^2.0",
-        "codedungeon/phpunit-result-printer": "^0.23.4"
+        "equip/dispatch": "^2.0"
     },
     "autoload": {
         "psr-4": {
