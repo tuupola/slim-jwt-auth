@@ -68,11 +68,6 @@ class JwtAuthenticationTest extends TestCase
         "scope" => ["read"]
     ];
 
-    public function testShouldBeTrue()
-    {
-        $this->assertTrue(true);
-    }
-
     public function testShouldReturn401WithoutToken()
     {
         $request = (new ServerRequestFactory)
