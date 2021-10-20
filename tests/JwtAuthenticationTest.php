@@ -556,7 +556,7 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
     }
 
-    public function testShoulAllowInsecure()
+    public function testShouldAllowInsecure()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
