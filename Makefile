@@ -20,7 +20,7 @@ lint: vendor
 	vendor/bin/phpcs -p --standard=PSR2 --extensions=php --encoding=utf-8 --ignore=*/vendor/*,*/benchmarks/* .
 
 unit: vendor
-	phpdbg -qrr vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml --coverage-html=./report/
+	phpdbg -qrr vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml --coverage-html=./report/
 
 static: vendor
 	vendor/bin/phpstan analyse src --level max
