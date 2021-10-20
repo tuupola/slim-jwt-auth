@@ -68,11 +68,6 @@ class JwtAuthenticationTest extends TestCase
         "scope" => ["read"]
     ];
 
-    public function testShouldBeTrue()
-    {
-        $this->assertTrue(true);
-    }
-
     public function testShouldReturn401WithoutToken()
     {
         $request = (new ServerRequestFactory)
@@ -556,7 +551,7 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
     }
 
-    public function testShoulAllowInsecure()
+    public function testShouldAllowInsecure()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
