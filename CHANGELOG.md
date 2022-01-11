@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## [3.6.0](https://github.com/tuupola/slim-jwt-auth/compare/3.5.2...3.6.0) - unreleased
+### Added
+- Allow installing with latest versions of `psr/log` ([#215](https://github.com/tuupola/slim-jwt-auth/pull/215)).
 
 ## [3.5.2](https://github.com/tuupola/slim-jwt-auth/compare/3.5.1...3.5.2) - 2021-09-17
 
@@ -106,4 +109,3 @@ All notable changes to this project will be documented in this file, in reverse 
 
 ### Removed
 - Most setters and getters for settings. Pass settings in an array only during initialization.
-
