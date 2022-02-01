@@ -4,10 +4,9 @@ This middleware implements JSON Web Token Authentication. It was originally deve
 
 [![Latest Version](https://img.shields.io/packagist/v/tuupola/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/tuupola/slim-jwt-auth)
 [![Packagist](https://img.shields.io/packagist/dm/tuupola/slim-jwt-auth.svg)](https://packagist.org/packages/tuupola/slim-jwt-auth)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Build Status](https://img.shields.io/travis/tuupola/slim-jwt-auth/3.x.svg?style=flat-square)](https://travis-ci.org/tuupola/slim-jwt-auth)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+[![Build Status](https://img.shields.io/github/workflow/status/tuupola/slim-jwt-auth/Tests/3.x?style=flat-square)](https://github.com/tuupola/slim-jwt-auth/actions)
 [![Coverage](https://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth/3.x.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth/branch/3.x)
-
 
 Heads up! You are reading documentation for [3.x branch](https://github.com/tuupola/slim-jwt-auth/tree/3.x) which is PHP 7.1 and up only. If you are using older version of PHP see the [2.x branch](https://github.com/tuupola/slim-jwt-auth/tree/2.x). These two branches are not backwards compatible, see [UPGRADING](https://github.com/tuupola/slim-jwt-auth/blob/3.x/UPGRADING.md) for instructions how to upgrade.
 
@@ -128,7 +127,7 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 
 ### Algorithm
 
-You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/).
+You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
 
 ``` php
 $app = new Slim\App;
@@ -333,4 +332,4 @@ If you discover any security related issues, please email tuupola@appelsiini.net
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.txt) for more information.
+The MIT License (MIT). Please see [License File](LICENSE) for more information.

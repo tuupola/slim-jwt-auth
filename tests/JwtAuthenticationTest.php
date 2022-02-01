@@ -2,7 +2,7 @@
 
 /*
 
-Copyright (c) 2015-2019 Mika Tuupola
+Copyright (c) 2015-2022 Mika Tuupola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -67,11 +67,6 @@ class JwtAuthenticationTest extends TestCase
         "sub" => "someone@example.com",
         "scope" => ["read"]
     ];
-
-    public function testShouldBeTrue()
-    {
-        $this->assertTrue(true);
-    }
 
     public function testShouldReturn401WithoutToken()
     {
@@ -581,7 +576,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShoulAllowInsecure()
+    public function testShouldAllowInsecure()
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")

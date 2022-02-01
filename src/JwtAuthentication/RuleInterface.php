@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 
-Copyright (c) 2015-2019 Mika Tuupola
+Copyright (c) 2015-2022 Mika Tuupola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,5 +38,5 @@ use Psr\Http\Message\ServerRequestInterface;
 
 interface RuleInterface
 {
-    public function __invoke(ServerRequestInterface $request);
+    public function __invoke(ServerRequestInterface $request): bool;
 }

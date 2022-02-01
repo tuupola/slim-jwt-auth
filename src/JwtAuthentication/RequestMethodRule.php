@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 
-Copyright (c) 2015-2019 Mika Tuupola
+Copyright (c) 2015-2022 Mika Tuupola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,11 +44,15 @@ final class RequestMethodRule implements RuleInterface
 
     /**
      * Stores all the options passed to the rule.
+     * @var mixed[]
      */
     private $options = [
         "ignore" => ["OPTIONS"]
     ];
 
+    /**
+     * @param mixed[] $options
+     */
     public function __construct(array $options = [])
     {
         $this->options = array_merge($this->options, $options);

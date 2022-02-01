@@ -2,7 +2,7 @@
 
 /*
 
-Copyright (c) 2015-2019 Mika Tuupola
+Copyright (c) 2015-2022 Mika Tuupola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,21 +33,18 @@ SOFTWARE.
 namespace Tuupola\Middleware\JwtAuthentication;
 
 use PHPUnit\Framework\TestCase;
-use Zend\Diactoros\ServerRequest;
-use Zend\Diactoros\ServerRequestFactory;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Uri;
+use Tuupola\Http\Factory\ServerRequestFactory;
 
 class RequestMethodTest extends TestCase
 {
 
     public function testShouldNotAuthenticateOptions()
     {
-        $request = (new ServerRequest)
-            ->withUri(new Uri("https://example.com/api"))
-            ->withMethod("OPTIONS");
+        $request = (new ServerRequestFactory)->createServerRequest(
+            "OPTIONS",
+            "https://example.com/api"
+        );
 
-        $response = new Response;
         $rule = new RequestMethodRule;
 
         $this->assertFalse($rule($request));
@@ -55,9 +52,10 @@ class RequestMethodTest extends TestCase
 
     public function testShouldAuthenticatePost()
     {
-        $request = (new ServerRequest)
-            ->withUri(new Uri("https://example.com/api"))
-            ->withMethod("POST");
+        $request = (new ServerRequestFactory)->createServerRequest(
+            "POST",
+            "https://example.com/api"
+        );
 
         $rule = new RequestMethodRule;
 
@@ -66,9 +64,10 @@ class RequestMethodTest extends TestCase
 
     public function testShouldAuthenticateGet()
     {
-        $request = (new ServerRequest)
-            ->withUri(new Uri("https://example.com/api"))
-            ->withMethod("GET");
+        $request = (new ServerRequestFactory)->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $rule = new RequestMethodRule;
 
@@ -77,9 +76,10 @@ class RequestMethodTest extends TestCase
 
     public function testShouldConfigureIgnore()
     {
-        $request = (new ServerRequest)
-            ->withUri(new Uri("https://example.com/api"))
-            ->withMethod("GET");
+        $request = (new ServerRequestFactory)->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $rule = new RequestMethodRule([
             "ignore" => ["GET"]
