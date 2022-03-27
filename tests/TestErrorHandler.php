@@ -41,7 +41,9 @@ class TestErrorHandler
         array $arguments
     ) {
         $response->getBody()->write(self::class);
-        return $response->withStatus(402);
+        return $response
+            ->withStatus(402)
+            ->withHeader("X-Foo", "Bar");
     }
 
     public static function error(
@@ -49,6 +51,8 @@ class TestErrorHandler
         array $arguments
     ) {
         $response->getBody()->write(self::class);
-        return $response->withStatus(418);
+        return $response
+            ->withStatus(418)
+            ->withHeader("X-Bar", "Foo");
     }
 }

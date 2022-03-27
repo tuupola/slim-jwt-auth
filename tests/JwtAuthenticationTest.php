@@ -751,8 +751,6 @@ class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
 
-        $dummy = null;
-
         $default = function (ServerRequestInterface $request) {
             $response = (new ResponseFactory)->createResponse();
             $response->getBody()->write("Success");
@@ -763,7 +761,9 @@ class JwtAuthenticationTest extends TestCase
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommit",
                 "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = true;
+                    $response->getBody()->write("error");
+                    return $response
+                        ->withHeader("X-Electrolytes", "Plants");
                 }
             ])
         ]);
@@ -771,8 +771,8 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-        $this->assertTrue($dummy);
+        $this->assertEquals("Plants", $response->getHeaderLine("X-Electrolytes"));
+        $this->assertEquals("error", $response->getBody());
     }
 
     public function testShouldCallInvokableErrorClass()
@@ -798,6 +798,7 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(402, $response->getStatusCode());
+        $this->assertEquals("Bar", $response->getHeaderLine("X-Foo"));
         $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
@@ -824,6 +825,7 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(418, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getHeaderLine("X-Bar"));
         $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
