@@ -34,13 +34,15 @@ SOFTWARE.
 
 namespace Tuupola\Middleware;
 
+use ArrayAccess;
 use Closure;
 use DomainException;
-use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
-use Psr\Http\Message\ServerRequestInterface;
+use Firebase\JWT\Key;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
@@ -90,7 +92,7 @@ final class JwtAuthentication implements MiddlewareInterface
     private array $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
-        "algorithm" => ["HS256", "HS512", "HS384"],
+        "algorithm" => ["HS256"],
         "header" => "Authorization",
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
@@ -306,11 +308,15 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function decodeToken(string $token): array
     {
+        $keys = $this->createKeysFromAlgorithms();
+        if (count($keys) === 1) {
+            $keys = current($keys);
+        }
+
         try {
             $decoded = JWT::decode(
                 $token,
-                $this->options["secret"],
-                (array) $this->options["algorithm"]
+                $keys
             );
             return (array) $decoded;
         } catch (Exception $exception) {
@@ -503,5 +509,23 @@ final class JwtAuthentication implements MiddlewareInterface
         foreach ($rules as $callable) {
             $this->rules->push($callable);
         }
+    }
+
+    private function createKeysFromAlgorithms(): array
+    {
+        $keyObjects = [];
+        foreach ($this->options["algorithm"] as $kid => $algorithm) {
+            $keyId = !is_numeric($kid) ? $kid : $algorithm;
+
+            $secret = $this->options["secret"];
+
+            if (is_array($this->options["secret"]) || $secret instanceof ArrayAccess) {
+                $secret = $this->options["secret"][$kid];
+            }
+
+            $keyObjects[$keyId] = new Key($secret, $algorithm);
+        }
+
+        return $keyObjects;
     }
 }
