@@ -32,9 +32,8 @@ SOFTWARE.
 
 namespace Tuupola\Middleware;
 
+use ArrayObject;
 use Equip\Dispatch\MiddlewareCollection;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -108,7 +107,6 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['HS256'],
                 "header" => "X-Token"
             ])
         ]);
@@ -134,7 +132,6 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['HS256'],
                 "header" => "X-Token",
                 "regexp" => "/(.*)/"
             ])
@@ -161,7 +158,6 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['HS256'],
                 "cookie" => "nekot",
             ])
         ]);
@@ -187,7 +183,6 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['HS256'],
                 "cookie" => "nekot",
             ])
         ]);
@@ -217,7 +212,6 @@ class JwtAuthenticationTest extends TestCase
                     "acme" =>"supersecretkeyyoushouldnotcommittogithub",
                     "beta" =>"anothersecretkeyfornevertocommittogithub"
                 ],
-                "algorithm" => ['acme' => 'HS256', 'beta' => 'HS256'],
             ])
         ]);
 
@@ -264,14 +258,13 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $secret = new ArrayAccessImpl();
+        $secret = new ArrayObject();
         $secret["acme"] = "supersecretkeyyoushouldnotcommittogithub";
         $secret["beta"] ="anothersecretkeyfornevertocommittogithub";
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => $secret,
-                "algorithm" => ['acme' => 'HS256', 'beta' => 'HS256'],
             ])
         ]);
 
@@ -292,14 +285,13 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $secret = new ArrayAccessImpl();
+        $secret = new ArrayObject();
         $secret["xxxx"] = "supersecretkeyyoushouldnotcommittogithub";
         $secret["yyyy"] = "anothersecretkeyfornevertocommittogithub";
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => $secret,
-                "algorithm" => ['xxxx' => 'HS256', 'yyyy' => 'HS256',],
             ])
         ]);
 

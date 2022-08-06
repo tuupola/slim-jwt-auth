@@ -54,6 +54,11 @@ use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 use Tuupola\Middleware\JwtAuthentication\RuleInterface;
 
+use function array_fill_keys;
+use function array_keys;
+use function count;
+use function is_array;
+
 final class JwtAuthentication implements MiddlewareInterface
 {
     use DoublePassTrait;
@@ -332,6 +337,16 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function hydrate(array $data = []): void
     {
+        $data['algorithm'] = $data['algorithm'] ?? $this->options['algorithm'];
+        if ((is_array($data['secret']) || $data['secret'] instanceof ArrayAccess)
+            && is_array($data['algorithm'])
+            && count($data['algorithm']) === 1
+            && count($data['secret']) > count($data['algorithm'])
+        ) {
+            $secretIndex = array_keys((array) $data['secret']);
+            $data['algorithm'] = array_fill_keys($secretIndex, $data['algorithm'][0]);
+        }
+
         foreach ($data as $key => $value) {
             /* https://github.com/facebook/hhvm/issues/6368 */
             $key = str_replace(".", " ", $key);
