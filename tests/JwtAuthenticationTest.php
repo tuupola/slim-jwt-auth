@@ -108,7 +108,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['acme' => 'HS256'],
+                "algorithm" => ['HS256'],
                 "header" => "X-Token"
             ])
         ]);
@@ -134,7 +134,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['acme' => 'HS256'],
+                "algorithm" => ['HS256'],
                 "header" => "X-Token",
                 "regexp" => "/(.*)/"
             ])
@@ -161,7 +161,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['acme' => 'HS256'],
+                "algorithm" => ['HS256'],
                 "cookie" => "nekot",
             ])
         ]);
@@ -187,7 +187,7 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => ['acme' => 'HS256'],
+                "algorithm" => ['HS256'],
                 "cookie" => "nekot",
             ])
         ]);
