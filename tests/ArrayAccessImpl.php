@@ -34,7 +34,7 @@ namespace Tuupola\Middleware;
 
 class ArrayAccessImpl implements \ArrayAccess
 {
-    private $array = [];
+    private array $array = [];
 
     public function offsetExists($offset)
     {
