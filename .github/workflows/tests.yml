@@ -6,6 +6,7 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest]
         php-versions: ["7.1", "7.2", "7.3", "7.4", "8.0", "8.1"]
+        dependency-versions: ["highest", "lowest"]
     runs-on: ${{ matrix.operating-system }}
     steps:
       - name: Checkout code
@@ -19,6 +20,8 @@ jobs:
           #coverage: pcov
       - name: Install Composer dependencies
         uses: ramsey/composer-install@v2
+        with:
+          dependency-versions: ${{ matrix.dependency-versions }}
       - name: Run linter
         run: make lint
       - name: Run unit tests
