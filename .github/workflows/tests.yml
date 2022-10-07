@@ -17,7 +17,7 @@ jobs:
           extensions: gmp
           coverage: xdebug
           #coverage: pcov
-      - name: Install and cache Composer dependencies
+      - name: Install Composer dependencies
         uses: ramsey/composer-install@v2
       - name: Run linter
         run: make lint
