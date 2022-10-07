@@ -34,7 +34,7 @@
         "phpstan/phpstan": "^0.12.43",
         "phpunit/phpunit": "^7.0|^8.5.30|^9.0",
         "equip/dispatch": "^2.0",
-        "nyholm/psr7": "^1.5"
+        "laminas/laminas-diactoros": "^2.0"
     },
     "autoload": {
         "psr-4": {
