@@ -1,2 +1,6 @@
+includes:
+	- phpstan-baseline.neon
+
 parameters:
     treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

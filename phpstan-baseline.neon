@@ -1,0 +1,26 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Offset 'secret' does not exist on array\\{secret\\?\\: array\\<string\\>\\|string, secure\\: bool, relaxed\\: array\\<string\\>, algorithm\\: array\\<string\\>, header\\: string, regexp\\: string, cookie\\: string, attribute\\: string, \\.\\.\\.\\}\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Parameter \\#1 \\$callback of function call_user_func expects callable\\(\\)\\: mixed, array\\{\\$this\\(Tuupola\\\\Middleware\\\\JwtAuthentication\\), string\\} given\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Parameter \\#1 \\$value of method SplDoublyLinkedList\\<Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface\\>\\:\\:push\\(\\) expects Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface, callable\\(\\)\\: mixed given\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Property Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:\\$message is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Property Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:\\$options \\(array\\{secret\\?\\: array\\<string\\>\\|string, secure\\: bool, relaxed\\: array\\<string\\>, algorithm\\: array\\<string\\>, header\\: string, regexp\\: string, cookie\\: string, attribute\\: string, \\.\\.\\.\\}\\) does not accept non\\-empty\\-array\\<string, mixed\\>\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php

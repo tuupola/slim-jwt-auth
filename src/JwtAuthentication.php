@@ -77,7 +77,22 @@ final class JwtAuthentication implements MiddlewareInterface
 
     /**
      * Stores all the options passed to the middleware.
-     * @var mixed[]
+     *
+     * @var array{
+     *   secret?: string|array<string>,
+     *   secure: bool,
+     *   relaxed: array<string>,
+     *   algorithm: array<string>,
+     *   header: string,
+     *   regexp: string,
+     *   cookie: string,
+     *   attribute: string,
+     *   path: array<string>,
+     *   ignore: array<string>,
+     *   before: null|callable,
+     *   after: null|callable,
+     *   error: null|callable,
+     * }
      */
     private $options = [
         "secure" => true,
@@ -87,15 +102,29 @@ final class JwtAuthentication implements MiddlewareInterface
         "regexp" => "/Bearer\s+(.*)$/i",
         "cookie" => "token",
         "attribute" => "token",
-        "path" => "/",
-        "ignore" => null,
+        "path" => ["/"],
+        "ignore" => [],
         "before" => null,
         "after" => null,
         "error" => null
     ];
 
     /**
-     * @param mixed[] $options
+     * @param array{
+     *   secret?: string|array<string>,
+     *   secure?: bool,
+     *   relaxed?: array<string>,
+     *   algorithm?: array<string>,
+     *   header?: string,
+     *   regexp?: string,
+     *   cookie?: string,
+     *   attribute?: string,
+     *   path?: array<string>,
+     *   ignore?: array<string>,
+     *   before?: null|callable,
+     *   after?: null|callable,
+     *   error?: null|callable,
+     * } $options
      */
     public function __construct(array $options = [])
     {
