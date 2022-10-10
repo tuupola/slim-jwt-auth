@@ -3,3 +3,4 @@ includes:
 
 parameters:
     treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
