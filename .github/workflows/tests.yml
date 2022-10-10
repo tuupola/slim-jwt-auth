@@ -3,9 +3,11 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         operating-system: [ubuntu-latest]
         php-versions: ["7.1", "7.2", "7.3", "7.4", "8.0", "8.1"]
+        dependency-versions: ["highest", "lowest"]
     runs-on: ${{ matrix.operating-system }}
     steps:
       - name: Checkout code
@@ -17,18 +19,10 @@ jobs:
           extensions: gmp
           coverage: xdebug
           #coverage: pcov
-      - name: Set composer cache
-        id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-      - name: Cache composer dependencies
-        uses: actions/cache@v2
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v2
         with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
-          #key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader
+          dependency-versions: ${{ matrix.dependency-versions }}
       - name: Run linter
         run: make lint
       - name: Run unit tests
