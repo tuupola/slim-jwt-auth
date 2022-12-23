@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file, in reverse 
 ### Removed
 - Support for pre-release versions of `tuupola/callable-handler` ([#233](https://github.com/tuupola/slim-jwt-auth/pull/233)).
 
+### Changed
+- PHP 7.2 is now the minimum requirement ([#232](https://github.com/tuupola/slim-jwt-auth/pull/232)).
 
 ## [3.6.0](https://github.com/tuupola/slim-jwt-auth/compare/3.5.2...3.6.0) - 2022-01-12
 ### Added
