@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
-## [3.7.0](https://github.com/tuupola/slim-jwt-auth/compare/3.6.0...3.x) - unreleased
+## [3.7.0](https://github.com/tuupola/slim-jwt-auth/compare/3.6.0...3.7.0) - 2022-12-23
 ### Removed
 - Support for pre-release versions of `tuupola/callable-handler` ([#233](https://github.com/tuupola/slim-jwt-auth/pull/233)).
 
