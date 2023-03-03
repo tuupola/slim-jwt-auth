@@ -259,7 +259,7 @@ RequestPathRule contains both a `path` parameter and a `ignore` parameter. Latte
 
 ## Security
 
-JSON Web Tokens are essentially passwords. You should treat them as such and you should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw a `RuntimeException`. This rule is relaxed for requests on localhost. To allow insecure usage you must enable it manually by setting `secure` to `false`.
+JSON Web Tokens are essentially passwords. You should treat them as such and you should always use HTTPS. If the middleware detects insecure usage over HTTP it will throw a `RuntimeException`. By default this rule is relaxed for requests to server running on `localhost`. To allow insecure usage you must enable it manually by setting `secure` to `false`.
 
 ``` php
 $app->add(new Tuupola\Middleware\JwtAuthentication([
@@ -268,7 +268,7 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 ]));
 ```
 
-Alternatively you can list your development host to have relaxed security.
+Alternatively you could list multiple development servers to have relaxed security. With below settings both `localhost` and `dev.example.com` allow incoming unencrypted requests.
 
 ``` php
 $app->add(new Tuupola\Middleware\JwtAuthentication([
