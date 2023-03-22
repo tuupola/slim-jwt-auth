@@ -30,7 +30,7 @@ RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 ## Usage
 
-Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying then token signature. Note again that `secret` is not the token. It is the secret you use to sign the token.
+Configuration options are passed as an array. The only mandatory parameter is `secret` which is used for verifying the token signature. Note again that `secret` is not the token. It is the secret you use to sign the token.
 
 For simplicity's sake examples show `secret` hardcoded in code. In real life you should store it somewhere else. Good option is environment variable. You can use [dotenv](https://github.com/vlucas/phpdotenv) or something similar for development. Examples assume you are using Slim Framework.
 
