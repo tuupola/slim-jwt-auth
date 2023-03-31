@@ -39,6 +39,7 @@ use DomainException;
 use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -94,6 +95,9 @@ final class JwtAuthentication implements MiddlewareInterface
      *   error: null|callable,
      * }
      */
+
+    private $key;
+
     private $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
@@ -145,6 +149,14 @@ final class JwtAuthentication implements MiddlewareInterface
                 "path" => $this->options["path"],
                 "ignore" => $this->options["ignore"]
             ]));
+        }
+
+        if (is_array($this->options["secret"])) {
+            foreach ($this->options["secret"] as $key => $secret) {
+                $this->key[$key] = new Key($secret, "HS256");
+            }
+        } else {
+            $this->key = new Key($this->options["secret"], "HS256");
         }
     }
 
@@ -316,8 +328,7 @@ final class JwtAuthentication implements MiddlewareInterface
         try {
             $decoded = JWT::decode(
                 $token,
-                $this->options["secret"],
-                (array) $this->options["algorithm"]
+                $this->key
             );
             return (array) $decoded;
         } catch (Exception $exception) {
