@@ -153,7 +153,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $scheme = $request->getUri()->getScheme();
+        $forwardedProto = $request->getHeaderLine('X-Forwarded-Proto');
+        $scheme =  '' !== $forwardedProto ? $forwardedProto : $request->getUri()->getScheme();
         $host = $request->getUri()->getHost();
 
         /* If rules say we should not authenticate call next and return. */
@@ -165,8 +166,9 @@ final class JwtAuthentication implements MiddlewareInterface
         if ("https" !== $scheme && true === $this->options["secure"]) {
             if (!in_array($host, $this->options["relaxed"])) {
                 $message = sprintf(
-                    "Insecure use of middleware over %s denied by configuration.",
-                    strtoupper($scheme)
+                    "Insecure use of middleware over %s for host %s denied by configuration.",
+                    strtoupper($scheme),
+                    $host
                 );
                 throw new RuntimeException($message);
             }
