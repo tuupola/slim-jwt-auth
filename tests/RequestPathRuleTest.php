@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -27,184 +29,181 @@ SOFTWARE.
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
  * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
-namespace Tuupola\Middleware\JwtAuthentication;
+namespace Tuupola\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Tuupola\Http\Factory\ServerRequestFactory;
+use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
-class RequestPathTest extends TestCase
+class RequestPathRuleTest extends TestCase
 {
-    public function testShouldAcceptArrayAndStringAsPath()
+    public function testShouldAcceptArrayAndStringAsPath(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
-        $rule = new RequestPathRule(["path" => "/api"]);
+        $rule = new RequestPathRule(['/api']);
         $this->assertTrue($rule($request));
 
-        $rule = new RequestPathRule(["path" => ["/api", "/foo"]]);
+        $rule = new RequestPathRule(['/api', '/foo']);
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateEverything()
+    public function testShouldAuthenticateEverything(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/',
         );
 
-        $rule = new RequestPathRule(["path" => "/"]);
+        $rule = new RequestPathRule(['/']);
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateOnlyApi()
+    public function testShouldAuthenticateOnlyApi(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/',
         );
 
-        $rule = new RequestPathRule(["path" => "/api"]);
+        $rule = new RequestPathRule(['/api']);
         $this->assertFalse($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldIgnoreLogin()
+    public function testShouldIgnoreLogin(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
-        $rule = new RequestPathRule([
-            "path" => "/api",
-            "ignore" => ["/api/login"]
-        ]);
+        $rule = new RequestPathRule(['/api'], ['/api/login']);
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/login"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/login',
         );
 
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticateCreateAndList()
+    public function testShouldAuthenticateCreateAndList(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
         /* Should not authenticate */
-        $rule = new RequestPathRule(["path" => ["/api/create", "/api/list"]]);
+        $rule = new RequestPathRule(['/api/create', '/api/list']);
         $this->assertFalse($rule($request));
 
         /* Should authenticate */
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api/create"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api/create',
         );
 
         $this->assertTrue($rule($request));
 
         /* Should authenticate */
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api/list"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api/list',
         );
 
         $this->assertTrue($rule($request));
 
         /* Should not authenticate */
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api/ping"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api/ping',
         );
 
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticateRegexp()
+    public function testShouldAuthenticateRegexp(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api/products/123/tickets/anything"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api/products/123/tickets/anything',
         );
 
         /* Should authenticate */
-        $rule = new RequestPathRule(["path" => ["/api/products/(\d*)/tickets"]]);
+        $rule = new RequestPathRule(['/api/products/(\d*)/tickets']);
         $this->assertTrue($rule($request));
 
         /* Should not authenticate */
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api/products/xxx/tickets"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api/products/xxx/tickets',
         );
 
         $this->assertFalse($rule($request));
     }
 
-    public function testBug50ShouldAuthenticateMultipleSlashes()
+    public function testBug50ShouldAuthenticateMultipleSlashes(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/',
         );
 
-        $rule = new RequestPathRule(["path" => "/v1/api"]);
+        $rule = new RequestPathRule(['/v1/api']);
         $this->assertFalse($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/v1/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/v1/api',
         );
 
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/v1//api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/v1//api',
         );
 
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/v1//////api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/v1//////api',
         );
 
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com//v1/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com//v1/api',
         );
 
         $this->assertTrue($rule($request));
 
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com//////v1/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com//////v1/api',
         );
 
         $this->assertTrue($rule($request));

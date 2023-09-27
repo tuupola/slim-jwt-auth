@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -27,1156 +29,1185 @@ SOFTWARE.
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
  * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
-namespace Tuupola\Middleware;
+namespace Tuupola\Tests\Middleware;
 
 use Equip\Dispatch\MiddlewareCollection;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Http\Factory\StreamFactory;
+use Tuupola\Middleware\JwtAuthentication;
+use Tuupola\Middleware\JwtAuthentication\ArrayAccessSecret;
+use Tuupola\Middleware\JwtAuthentication\ArrayOfSecret;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
+use Tuupola\Middleware\JwtAuthentication\StringSecret;
+use Tuupola\Middleware\JwtAuthenticationOption;
+use Tuupola\Middleware\JwtAuthentificationAcl;
+use Tuupola\Middleware\JwtAuthentificationAfter;
+use Tuupola\Middleware\JwtAuthentificationBefore;
+use Tuupola\Middleware\JwtAuthentificationError;
+use Tuupola\Middleware\JwtDecodedToken;
+use Tuupola\Tests\Middleware\Assets\ArrayAccessImpl;
+use Tuupola\Tests\Middleware\Assets\TestAfterHandler;
+use Tuupola\Tests\Middleware\Assets\TestBeforeHandler;
+use Tuupola\Tests\Middleware\Assets\TestErrorHandler;
+
+use function assert;
+use function is_string;
+use function json_encode;
 
 class JwtAuthenticationTest extends TestCase
 {
     /* @codingStandardsIgnoreStart */
-    public static $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
-    public static $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
-    public static $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
+    public static string $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
+    public static string $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
+    public static string $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
     /* @codingStandardsIgnoreEnd */
 
-    public static $acmeTokenArray = [
-        "iss" => "Acme Toothpics Ltd",
-        "iat" => "1428819941",
-        "exp" => "1744352741",
-        "aud" => "www.example.com",
-        "sub" => "someone@example.com",
-        "scope" => ["read", "write", "delete"]
+    /** @var array<string, string|string[]> */
+    public static array $acmeTokenArray = [
+        'iss' => 'Acme Toothpics Ltd',
+        'iat' => '1428819941',
+        'exp' => '1744352741',
+        'aud' => 'www.example.com',
+        'sub' => 'someone@example.com',
+        'scope' => ['read', 'write', 'delete'],
     ];
 
-    public static $betaTokenArray = [
-        "iss" => "Beta Sponsorship Ltd",
-        "iat" => "1428819941",
-        "exp" => "1744352741",
-        "aud" => "www.example.com",
-        "sub" => "someone@example.com",
-        "scope" => ["read"]
+    /** @var array<string, string|string[]> */
+    public static array $betaTokenArray = [
+        'iss' => 'Beta Sponsorship Ltd',
+        'iat' => '1428819941',
+        'exp' => '1744352741',
+        'aud' => 'www.example.com',
+        'sub' => 'someone@example.com',
+        'scope' => ['read'],
     ];
 
-    public function testShouldReturn401WithoutToken()
+    public function testShouldReturn401WithoutToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = function (RequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (RequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            $auth = new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromHeader()
+    public function testShouldReturn200WithTokenFromHeader(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('X-Token', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))->withHeader('X-Token');
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
+    public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('X-Token', self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withHeader('X-Token')
+            ->withRegexp('/(.*)/');
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token",
-                "regexp" => "/(.*)/"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromCookie()
+    public function testShouldReturn200WithTokenFromCookie(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["nekot" => self::$acmeToken]);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['nekot' => self::$acmeToken]);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withCookie('nekot');
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "cookie" => "nekot",
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromBearerCookie()
+    public function testShouldReturn200WithTokenFromBearerCookie(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["nekot" => "Bearer " . self::$acmeToken]);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['nekot' => 'Bearer ' . self::$acmeToken]);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withCookie('nekot');
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "cookie" => "nekot",
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-
-    public function testShouldReturn200WithSecretArray()
+    public function testShouldReturn200WithSecretArray(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new ArrayOfSecret([
+            'acme' => 'supersecretkeyyoushouldnotcommittogithub',
+            'beta' => 'anothersecretkeyfornevertocommittogithub',
+        ]));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "beta" =>"anothersecretkeyfornevertocommittogithub"
-                ]
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn401WithSecretArray()
+    public function testShouldReturn401WithSecretArray(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new ArrayOfSecret([
+            'xxxx' => 'supersecretkeyyoushouldnotcommittogithub',
+            'yyyy' => 'anothersecretkeyfornevertocommittogithub',
+        ]));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "xxxx" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "yyyy" =>"anothersecretkeyfornevertocommittogithub"
-                ]
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldReturn200WithSecretArrayAccess()
+    public function testShouldReturn200WithSecretArrayAccess(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $secret = new ArrayAccessImpl();
-        $secret["acme"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["beta"] ="anothersecretkeyfornevertocommittogithub";
+        $secret         = new ArrayAccessImpl();
+        $secret['acme'] = 'supersecretkeyyoushouldnotcommittogithub';
+        $secret['beta'] = 'anothersecretkeyfornevertocommittogithub';
+
+        $option = JwtAuthenticationOption::create(new ArrayAccessSecret($secret));
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn401WithSecretArrayAccess()
+    public function testShouldReturn401WithSecretArrayAccess(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $secret = new ArrayAccessImpl();
-        $secret["xxxx"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["yyyy"] = "anothersecretkeyfornevertocommittogithub";
+        $secret         = new ArrayAccessImpl();
+        $secret['xxxx'] = 'supersecretkeyyoushouldnotcommittogithub';
+        $secret['yyyy'] = 'anothersecretkeyfornevertocommittogithub';
+
+        $option = JwtAuthenticationOption::create(new ArrayAccessSecret($secret));
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldAlterResponseWithAnonymousAfter()
+    public function testShouldAlterResponseWithAnonymousAfter(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
-                    return $response->withHeader("X-Brawndo", "plants crave");
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAfter(new class implements JwtAuthentificationAfter {
+                public function __invoke(ResponseInterface $response, JwtDecodedToken $jwtDecodedToken): ResponseInterface
+                {
+                    return $response->withHeader('X-Brawndo', 'plants crave');
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
+        $this->assertEquals('plants crave', (string) $response->getHeaderLine('X-Brawndo'));
     }
 
-    public function testShouldAlterResponseWithInvokableAfter()
+    public function testShouldAlterResponseWithInvokableAfter(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAfter(new TestAfterHandler());
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => new TestAfterHandler
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(
-            "plants crave",
-            (string) $response->getHeaderLine("X-Brawndo")
+            'plants crave',
+            (string) $response->getHeaderLine('X-Brawndo'),
         );
     }
 
-    public function testShouldAlterResponseWithArrayNotationAfter()
+    public function testShouldReturn401WithInvalidAlgorithm(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => [TestAfterHandler::class, "after"]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(
-            "like from toilet?",
-            (string) $response->getHeaderLine("X-Water")
-        );
-    }
-
-    public function testShouldReturn401WithInvalidAlgorithm()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAlgorithm('nosuch');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => "nosuch",
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldReturn200WithOptions()
+    public function testShouldReturn200WithOptions(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withMethod("OPTIONS");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withMethod('OPTIONS');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn400WithInvalidToken()
+    public function testShouldReturn400WithInvalidToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer invalid" . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer invalid' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldReturn400WithExpiredToken()
+    public function testShouldReturn400WithExpiredToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$expired);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$expired);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldReturn200WithoutTokenWithPath()
+    public function testShouldReturn200WithoutTokenWithPath(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/public');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withPath(['/api', '/foo'])
+            ->addRule(new RequestPathRule(['/api', '/foo'], []));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn200WithoutTokenWithIgnore()
+    public function testShouldReturn200WithoutTokenWithIgnore(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/ping");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/ping');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withPath(['/api', '/foo'])
+            ->withIgnore(['/api/ping'])
+            ->addRule(new RequestPathRule(['/api', '/foo'], ['/api/ping']));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "ignore" => ["/api/ping"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldNotAllowInsecure()
+    public function testShouldNotAllowInsecure(): void
     {
-        $this->expectException("RuntimeException");
+        $this->expectException('RuntimeException');
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
     }
 
-    public function testShouldAllowInsecure()
+    public function testShouldAllowInsecure(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "secure" => false
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldRelaxInsecureInLocalhost()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://localhost/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withSecure(false);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldRelaxInsecureInExampleCom()
+    public function testShouldRelaxInsecureInLocalhost(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://localhost/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "relaxed" => ["example.com"],
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldAttachToken()
+    public function testShouldRelaxInsecureInExampleCom(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $acmeToken = $request->getAttribute("token");
-
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($acmeToken["iss"]);
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withRelaxed(['example.com']);
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldAttachCustomToken()
+    public function testShouldAttachToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $acmeToken = $request->getAttribute("nekot");
+        $default = static function (ServerRequestInterface $request) {
+            $decodedToken = $request->getAttribute('token');
 
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($acmeToken["iss"]);
+            assert($decodedToken instanceof JwtDecodedToken);
+
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write($decodedToken->getStringAttribute('iss'));
 
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "attribute" => "nekot"
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
+        $this->assertEquals('Acme Toothpics Ltd', $response->getBody());
     }
 
-    public function testShouldCallAfterWithProperArguments()
+    public function testShouldAttachCustomToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
+
+        $default = static function (ServerRequestInterface $request) {
+            $decodedToken = $request->getAttribute('nekot');
+
+            assert($decodedToken instanceof JwtDecodedToken);
+
+            $acmeToken = $decodedToken->payload;
+
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write($decodedToken->getStringAttribute('iss'));
+
+            return $response;
+        };
+
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAttribute('nekot');
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('Acme Toothpics Ltd', $response->getBody());
+    }
+
+    public function testShouldCallAfterWithProperArguments(): void
+    {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
+
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
+            return $response;
+        };
+
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAfter(new class implements JwtAuthentificationAfter {
+                public function __invoke(ResponseInterface $response, JwtDecodedToken $jwtDecodedToken): ResponseInterface
+                {
+                    return $response->withHeader('decoded', (string) json_encode($jwtDecodedToken->payload))->withHeader('token', $jwtDecodedToken->token);
+                }
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('Success', $response->getBody());
+        $this->assertJsonStringEqualsJsonString((string) json_encode(self::$acmeTokenArray), $response->getHeaderLine('decoded'));
+        $this->assertEquals(self::$acmeToken, $response->getHeaderLine('token'));
+    }
+
+    public function testShouldCallBeforeWithProperArguments(): void
+    {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $decoded = null;
-        $token = null;
+        $token   = null;
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success' . $request->getAttribute('decoded') . $request->getAttribute('token'));
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withBefore(new class implements JwtAuthentificationBefore {
+                public function __invoke(ServerRequestInterface $request, JwtDecodedToken $jwtDecodedToken): ServerRequestInterface
+                {
+                    return $request->withAttribute('decoded', json_encode($jwtDecodedToken->payload))
+                        ->withAttribute('token', $jwtDecodedToken->token);
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
-        $this->assertEquals(self::$acmeToken, $token);
+        $this->assertEquals('Success' . json_encode(self::$acmeTokenArray) . self::$acmeToken, $response->getBody());
     }
 
-    public function testShouldCallBeforeWithProperArguments()
+    public function testShouldCallAnonymousErrorFunction(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $decoded = null;
-        $token = null;
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
-                }
-            ])
-        ]);
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withError(new class implements JwtAuthentificationError {
+                public function __invoke(ServerRequestInterface $request, ResponseInterface $response, Throwable $exception): ResponseInterface
+                {
+                    $response->getBody()->write('error');
 
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
-        $this->assertEquals(self::$acmeToken, $token);
-    }
-
-    public function testShouldCallAnonymousErrorFunction()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $response->getBody()->write("error");
                     return $response
-                        ->withHeader("X-Electrolytes", "Plants");
+                        ->withHeader('X-Electrolytes', 'Plants');
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Plants", $response->getHeaderLine("X-Electrolytes"));
-        $this->assertEquals("error", $response->getBody());
+        $this->assertEquals('Plants', $response->getHeaderLine('X-Electrolytes'));
+        $this->assertEquals('error', $response->getBody());
     }
 
-    public function testShouldCallInvokableErrorClass()
+    public function testShouldCallInvokableErrorClass(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $dummy = null;
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withError(new TestErrorHandler());
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => new TestErrorHandler
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(402, $response->getStatusCode());
-        $this->assertEquals("Bar", $response->getHeaderLine("X-Foo"));
+        $this->assertEquals('Bar', $response->getHeaderLine('X-Foo'));
         $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
-    public function testShouldCallArrayNotationError()
+    public function testShouldCallErrorAndModifyBody(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $dummy = null;
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => [TestErrorHandler::class, "error"]
-            ])
-        ]);
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withError(new class implements JwtAuthentificationError {
+                public function __invoke(ServerRequestInterface $request, ResponseInterface $response, Throwable $exception): ResponseInterface
+                {
+                     $response->getBody()->write('Error');
 
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(418, $response->getStatusCode());
-        $this->assertEquals("Foo", $response->getHeaderLine("X-Bar"));
-        $this->assertEquals(TestErrorHandler::class, $response->getBody());
-    }
-
-    public function testShouldCallErrorAndModifyBody()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $dummy = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = true;
-                    $response->getBody()->write("Error");
                     return $response;
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Error", $response->getBody());
-        $this->assertTrue($dummy);
+        $this->assertEquals('Error', $response->getBody());
     }
 
-    public function testShouldAllowUnauthenticatedHttp()
+    public function testShouldAllowUnauthenticatedHttp(): void
     {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/public/foo');
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public/foo");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "path" => ["/api", "/bar"],
-            ])
-        ]);
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withPath(['/api', '/bar'])
+            ->addRule(new RequestPathRule(['/api', '/foo'], []));
 
-        $response = $collection->dispatch($request, $default);
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
+        ]);
+        $response   = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldReturn401FromAfter()
+    public function testShouldReturn401FromAfter(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAfter(new class implements JwtAuthentificationAfter {
+                public function __invoke(ResponseInterface $response, JwtDecodedToken $jwtDecodedToken): ResponseInterface
+                {
                     return $response
-                        ->withBody((new StreamFactory)->createStream())
+                        ->withBody((new StreamFactory())->createStream())
                         ->withStatus(401);
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingAnonymousBefore()
+    public function testShouldModifyRequestUsingAnonymousBefore(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $test     = $request->getAttribute('test');
+            $response->getBody()->write(is_string($test) ? $test : 'no');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    return $request->withAttribute("test", "test");
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withBefore(new class implements JwtAuthentificationBefore {
+                public function __invoke(ServerRequestInterface $request, JwtDecodedToken $jwtDecodedToken): ServerRequestInterface
+                {
+                    return $request->withAttribute('test', 'test');
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("test", (string) $response->getBody());
+        $this->assertEquals('test', (string) $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingInvokableBefore()
+    public function testShouldModifyRequestUsingInvokableBefore(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $test     = $request->getAttribute('test');
+            $response->getBody()->write(is_string($test) ? $test : 'no');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withBefore(new TestBeforeHandler());
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => new TestBeforeHandler
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("invoke", (string) $response->getBody());
+        $this->assertEquals('invoke', (string) $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingArrayNotationBefore()
+    public function testShouldHandleRulesArrayBug84(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => [TestBeforeHandler::class, "before"]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("function", (string) $response->getBody());
-    }
-
-    public function testShouldHandleRulesArrayBug84()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withRules(
+                new RequestPathRule(['/api'], ['/api/login']),
+                new RequestMethodRule(['OPTIONS']),
+            );
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "rules" => [
-                    new RequestPathRule([
-                        "path" => ["/api"],
-                        "ignore" => ["/api/login"],
-                    ]),
-                    new RequestMethodRule([
-                        "ignore" => ["OPTIONS"],
-                    ])
-                ],
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldHandleDefaultPathBug118()
+    public function testShouldHandleDefaultPathBug118(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withIgnore(['/api/login'])
+            ->addRule(new RequestPathRule(['/'], ['/api/login']));
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "ignore" => "/api/login",
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->assertEquals('', $response->getBody());
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldBindToMiddleware()
+    public function testShouldBindToMiddleware(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $before = $request->getAttribute("before");
-            $response->getBody()->write($before);
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $before   = $request->getAttribute('before');
+            $response->getBody()->write(is_string($before) ? $before : 'no');
+
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    $before = get_class($this);
-                    return $request->withAttribute("before", $before);
-                },
-                "after" => function ($response, $arguments) {
-                    $after = get_class($this);
-                    $response->getBody()->write($after);
+        $option =                 JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withAfter(new class implements JwtAuthentificationAfter {
+                public function __invoke(ResponseInterface $response, JwtDecodedToken $jwtDecodedToken): ResponseInterface
+                {
+                     $response->getBody()->write('im after');
+
                     return $response;
                 }
+            })
+            ->withBefore(new class implements JwtAuthentificationBefore {
+                public function __invoke(ServerRequestInterface $request, JwtDecodedToken $jwtDecodedToke): ServerRequestInterface
+                {
+                    return $request->withAttribute('before', 'im before');
+                }
+            });
 
-            ])
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
-        $expected = str_repeat("Tuupola\Middleware\JwtAuthentication", 2);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($expected, (string) $response->getBody());
+        $this->assertEquals('im beforeim after', (string) $response->getBody());
     }
 
-    public function testShouldHandlePsr7()
+    public function testShouldHandlePsr7(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('X-Token', 'Bearer ' . self::$acmeToken);
 
-        $response = (new ResponseFactory)->createResponse();
+        $response = (new ResponseFactory())->createResponse();
 
-        $auth = new JwtAuthentication([
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "header" => "X-Token"
-        ]);
+        $option =                 JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withHeader('X-Token');
 
-        $next = function (ServerRequestInterface $request, ResponseInterface $response) {
-            $response->getBody()->write("Success");
+        $auth = new JwtAuthentication($option);
+
+        $next = static function (ServerRequestInterface $request, ResponseInterface $response) {
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
         $response = $auth($request, $response, $next);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 
-    public function testShouldHaveUriInErrorHandlerIssue96()
+    public function testShouldHaveUriInErrorHandlerIssue96(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/foo?bar=pop");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/foo?bar=pop');
 
-        $dummy = null;
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = $arguments["uri"];
+        $option =                 JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withError(new class implements JwtAuthentificationError {
+                public function __invoke(ServerRequestInterface $request, ResponseInterface $response, Throwable $exception): ResponseInterface
+                {
+                    return $response->withHeader('X-Uri', (string) $request->getUri());
                 }
-            ])
+            });
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-        $this->assertEquals("https://example.com/api/foo?bar=pop", $dummy);
+        $this->assertEquals('', $response->getBody());
+        $this->assertEquals('https://example.com/api/foo?bar=pop', $response->getHeaderLine('X-Uri'));
     }
 
-    public function testShouldUseCookieIfHeaderMissingIssue156()
+    public function testShouldUseCookieIfHeaderMissingIssue156(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["token" => self::$acmeToken]);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['token' => self::$acmeToken]);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
             return $response;
         };
 
+        $option = JwtAuthenticationOption::create(new StringSecret('supersecretkeyyoushouldnotcommittogithub'))
+            ->withHeader('X-Token')
+            ->withRegexp('/(.*)/');
+
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token",
-                "regexp" => "/(.*)/",
-            ])
+            new JwtAuthentication($option),
+            new JwtAuthentificationAcl($option),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals('Success', $response->getBody());
     }
 }

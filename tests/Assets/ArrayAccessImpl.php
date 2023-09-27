@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -26,33 +28,36 @@ SOFTWARE.
 
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
+ * @see       https://appelsiini.net/projects/slim-jwt-auth
  */
 
-namespace Tuupola\Middleware;
+namespace Tuupola\Tests\Middleware\Assets;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use ArrayAccess;
 
-class TestErrorHandler
+/** @implements ArrayAccess<string, string> */
+class ArrayAccessImpl implements ArrayAccess
 {
-    public function __invoke(
-        ResponseInterface $response,
-        array $arguments
-    ) {
-        $response->getBody()->write(self::class);
-        return $response
-            ->withStatus(402)
-            ->withHeader("X-Foo", "Bar");
+    /** @var array<string, string> */
+    private array $array = [];
+
+    public function offsetExists($offset): bool
+    {
+        return isset($this->array[$offset]);
     }
 
-    public static function error(
-        ResponseInterface $response,
-        array $arguments
-    ) {
-        $response->getBody()->write(self::class);
-        return $response
-            ->withStatus(418)
-            ->withHeader("X-Bar", "Foo");
+    public function offsetGet($offset): mixed
+    {
+        return $this->array[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        $this->array[$offset] = $value;
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->array[$offset]);
     }
 }

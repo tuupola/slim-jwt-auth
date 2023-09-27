@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -24,35 +26,18 @@ SOFTWARE.
 
 */
 
-/**
- * @see       https://github.com/tuupola/slim-jwt-auth
- * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
- */
+/** @see       https://github.com/tuupola/slim-jwt-auth */
 
-namespace Tuupola\Middleware;
+namespace Tuupola\Tests\Middleware\Assets;
 
-class ArrayAccessImpl implements \ArrayAccess
+use Psr\Http\Message\ServerRequestInterface;
+use Tuupola\Middleware\JwtAuthentificationBefore;
+use Tuupola\Middleware\JwtDecodedToken;
+
+class TestBeforeHandler implements JwtAuthentificationBefore
 {
-    private $array = [];
-
-    public function offsetExists($offset)
+    public function __invoke(ServerRequestInterface $request, JwtDecodedToken $jwtDecodedToken): ServerRequestInterface
     {
-        return isset($this->array[$offset]);
-    }
-
-    public function offsetGet($offset)
-    {
-        return $this->array[$offset];
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        $this->array[$offset] = $value;
-    }
-
-    public function offsetUnset($offset)
-    {
-        unset($this->array[$offset]);
+        return $request->withAttribute('test', 'invoke');
     }
 }

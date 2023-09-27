@@ -13,17 +13,16 @@ help:
 	@echo ""
 
 vendor: $(wildcard composer.lock)
-	composer install --prefer-dist
+	composer install
 
 lint: vendor
-	vendor/bin/phplint . --exclude=vendor/
-	vendor/bin/phpcs -p --standard=PSR2 --extensions=php --encoding=utf-8 --ignore=*/vendor/*,*/benchmarks/* .
+	vendor/bin/phpcs
 
 unit: vendor
 	phpdbg -qrr vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml --coverage-html=./report/
 
 static: vendor
-	vendor/bin/phpstan analyse src --level max
+	vendor/bin/phpstan
 
 watch: vendor
 	find . -name "*.php" -not -path "./vendor/*" -o -name "*.json" -not -path "./vendor/*" | entr -c make test
@@ -32,6 +31,5 @@ test: lint unit static
 
 clean:
 	rm -rf vendor
-	rm composer.lock
 
 .PHONY: help lint unit watch test clean

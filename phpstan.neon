@@ -4,3 +4,7 @@ includes:
 parameters:
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
+    level: 9
+    paths:
+        - src/
+        - tests/

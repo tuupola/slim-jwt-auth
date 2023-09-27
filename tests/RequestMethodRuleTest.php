@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -27,63 +29,60 @@ SOFTWARE.
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
  * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
-namespace Tuupola\Middleware\JwtAuthentication;
+namespace Tuupola\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Tuupola\Http\Factory\ServerRequestFactory;
+use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 
-class RequestMethodTest extends TestCase
+class RequestMethodRuleTest extends TestCase
 {
-
-    public function testShouldNotAuthenticateOptions()
+    public function testShouldNotAuthenticateOptions(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "OPTIONS",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'OPTIONS',
+            'https://example.com/api',
         );
 
-        $rule = new RequestMethodRule;
+        $rule = new RequestMethodRule();
 
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticatePost()
+    public function testShouldAuthenticatePost(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "POST",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'POST',
+            'https://example.com/api',
         );
 
-        $rule = new RequestMethodRule;
+        $rule = new RequestMethodRule();
 
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateGet()
+    public function testShouldAuthenticateGet(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
-        $rule = new RequestMethodRule;
+        $rule = new RequestMethodRule();
 
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldConfigureIgnore()
+    public function testShouldConfigureIgnore(): void
     {
-        $request = (new ServerRequestFactory)->createServerRequest(
-            "GET",
-            "https://example.com/api"
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://example.com/api',
         );
 
-        $rule = new RequestMethodRule([
-            "ignore" => ["GET"]
-        ]);
+        $rule = new RequestMethodRule(['GET']);
 
         $this->assertFalse($rule($request));
     }

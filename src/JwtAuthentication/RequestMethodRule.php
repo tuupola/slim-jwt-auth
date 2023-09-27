@@ -29,42 +29,26 @@ SOFTWARE.
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
  * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
 use Psr\Http\Message\ServerRequestInterface;
 
+use function in_array;
+
 /**
  * Rule to decide by HTTP verb whether the request should be authenticated or not.
  */
 final class RequestMethodRule implements RuleInterface
 {
-
-    /**
-     * Stores all the options passed to the rule
-     *
-     * @var array{
-     *   ignore: array<string>,
-     * }
-     */
-    private $options = [
-        "ignore" => ["OPTIONS"]
-    ];
-
-    /**
-     * @param array{
-     *   ignore?: array<string>,
-     * } $options
-     */
-    public function __construct(array $options = [])
+    /** @param string[] $ignore */
+    public function __construct(private readonly array $ignore = ['OPTIONS'])
     {
-        $this->options = array_merge($this->options, $options);
     }
 
     public function __invoke(ServerRequestInterface $request): bool
     {
-        return !in_array($request->getMethod(), $this->options["ignore"]);
+        return ! in_array($request->getMethod(), $this->ignore);
     }
 }

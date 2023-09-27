@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -24,28 +26,20 @@ SOFTWARE.
 
 */
 
-/**
- * @see       https://github.com/tuupola/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
- */
+/** @see       https://github.com/tuupola/slim-jwt-auth */
 
-namespace Tuupola\Middleware;
+namespace Tuupola\Tests\Middleware\Assets;
 
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Tuupola\Middleware\JwtAuthentificationAfter;
+use Tuupola\Middleware\JwtDecodedToken;
 
-class TestBeforeHandler
+class TestAfterHandler implements JwtAuthentificationAfter
 {
-    public function __invoke(
-        ServerRequestInterface $request,
-        array $arguments
-    ) {
-        return $request->withAttribute("test", "invoke");
-    }
+    public function __invoke(ResponseInterface $response, JwtDecodedToken $jwtDecodedToken): ResponseInterface
+    {
+        $response->getBody()->write(self::class);
 
-    public static function before(
-        ServerRequestInterface $request,
-        array $arguments
-    ) {
-        return $request->withAttribute("test", "function");
+        return $response->withHeader('X-Brawndo', 'plants crave');
     }
 }

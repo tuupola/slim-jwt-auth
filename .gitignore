@@ -1,6 +1,10 @@
 /node_modules/
 /vendor/
 /report/
-composer.lock
 .phplint-cache
 coverage.xml
+.phpunit.cache/
+.phpunit.result.cache
+.idea/
+Makefile
+docker-compose.yml

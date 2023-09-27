@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 
 Copyright (c) 2015-2022 Mika Tuupola
@@ -24,30 +26,23 @@ SOFTWARE.
 
 */
 
-/**
- * @see       https://github.com/tuupola/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
- */
+/** @see       https://github.com/tuupola/slim-jwt-auth */
 
-namespace Tuupola\Middleware;
+namespace Tuupola\Tests\Middleware\Assets;
 
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
+use Tuupola\Middleware\JwtAuthentificationError;
 
-class TestAfterHandler
+class TestErrorHandler implements JwtAuthentificationError
 {
-    public function __invoke(
-        ResponseInterface $response,
-        array $arguments
-    ) {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, Throwable $exception): ResponseInterface
+    {
         $response->getBody()->write(self::class);
-        return $response->withHeader("X-Brawndo", "plants crave");
-    }
 
-    public static function after(
-        ResponseInterface $response,
-        array $arguments
-    ) {
-        $response->getBody()->write(self::class);
-        return $response->withHeader("X-Water", "like from toilet?");
+        return $response
+            ->withStatus(402)
+            ->withHeader('X-Foo', 'Bar');
     }
 }
