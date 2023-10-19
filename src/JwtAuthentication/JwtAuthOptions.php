@@ -44,28 +44,28 @@ use Tuupola\Middleware\JwtAuthentication;
  */
 class JwtAuthOptions
 {
-    public readonly string $secret;
+    public string $secret;
 
-    public readonly bool $secure;
+    public bool $secure;
 
     /** @var array<string> */
-    public readonly array $relaxed;
-    public readonly string $algorithm;
-    public readonly string $header;
-    public readonly string $regexp;
-    public readonly string $cookie;
-    public readonly string $attribute;
+    public array $relaxed;
+    public string $algorithm;
+    public string $header;
+    public string $regexp;
+    public string $cookie;
+    public string $attribute;
     /** @var array<string> */
-    public readonly array $path;
+    public array $path;
 
     /** @var RuleInterface[] $rules */
-    public readonly array $rules;
+    public array $rules;
 
     /** @var array<string> */
-    public readonly array $ignore;
-    public readonly ?\Closure $before;
-    public readonly ?\Closure $after;
-    public readonly ?\Closure $error;
+    public array $ignore;
+    public ?\Closure $before;
+    public ?\Closure $after;
+    public ?\Closure $error;
 
     private JwtAuthentication $jwtAuthentication;
 

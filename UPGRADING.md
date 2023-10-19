@@ -1,6 +1,7 @@
 # Updgrading from 2.x to 3.x
 
 ## New namespace
+
 For most cases it is enough just to update the classname. Instead of using the old `Slim\Middleware` namespace:
 
 ```php
