@@ -22,7 +22,7 @@
     "require": {
         "php": "^8.0",
         "psr/log": "^3.0",
-        "firebase/php-jwt": "^5.0",
+        "firebase/php-jwt": "^6.0",
         "psr/http-message": "^1.0",
         "tuupola/http-factory": "^1.4",
         "tuupola/callable-handler": "^1.0",
