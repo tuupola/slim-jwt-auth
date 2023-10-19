@@ -94,6 +94,8 @@ final class JwtAuthentication implements MiddlewareInterface
                 "path" => $this->options->path,
                 "ignore" => $this->options->ignore
             ]));
+        } else {
+            $this->rules($options->rules);
         }
     }
 
