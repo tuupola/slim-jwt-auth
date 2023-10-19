@@ -74,17 +74,19 @@ final class JwtAuthentication implements MiddlewareInterface
 
     private JwtAuthOptions $options;
 
-    public function __construct(JwtAuthOptions $options)
+    public function __construct(JwtAuthOptions $options, ?LoggerInterface $logger = null)
     {
         /* Setup stack for rules */
         $this->rules = new SplStack;
+
+        $this->logger = $logger;
 
         $this->options = $options->bindToAuthentication($this);
 
         /* If nothing was passed in options add default rules. */
         /* This also means $options->rules overrides $options->path */
         /* and $options->ignore */
-        if (!isset($options->rules)) {
+        if (!(isset($options->rules) && count($options->rules))) {
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));
@@ -104,7 +106,7 @@ final class JwtAuthentication implements MiddlewareInterface
         $host = $request->getUri()->getHost();
 
         /* If rules say we should not authenticate call next and return. */
-        if (!$this->shouldAuthenticate($request)) {
+        if (false === $this->shouldAuthenticate($request)) {
             return $handler->handle($request);
         }
 
@@ -144,7 +146,7 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $request before calling next middleware. */
         $beforeRequest = $this->options->onBeforeCallable($request, $params);
-        
+
         if ($beforeRequest instanceof ServerRequestInterface) {
             $request = $beforeRequest;
         }
@@ -154,7 +156,7 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* Modify $response before returning. */
         $afterResponse = $this->options->onAfterCallable($response, $params);
-        
+
         if ($afterResponse) {
             return $afterResponse;
         }
@@ -190,7 +192,7 @@ final class JwtAuthentication implements MiddlewareInterface
         $new = clone $this;
         $new->rules = clone $this->rules;
         $new->rules->push($callable);
-        
+
         return $new;
     }
 
@@ -248,21 +250,23 @@ final class JwtAuthentication implements MiddlewareInterface
 
         /* If everything fails log and throw. */
         $this->log(LogLevel::WARNING, "Token not found");
-        
+
         throw new RuntimeException("Token not found.");
     }
 
     private function decodeToken(string $token): array
     {
-        $algo = $this->options->algorithm;
-
         try {
+            $algo = $this->options->algorithm;
+
+            $key = new Key(
+                keyMaterial: $this->options->secret,
+                algorithm: $algo
+            );
+
             $decoded = JWT::decode(
                 $token,
-                new Key(
-                    $this->options->secret,
-                    $algo
-                )
+                $key
             );
 
             return (array) $decoded;

@@ -39,6 +39,7 @@ use Psr\Http\Message\ResponseInterface;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Http\Factory\StreamFactory;
+use Tuupola\Middleware\JwtAuthentication\JwtAuthOptions;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
@@ -56,7 +57,7 @@ class JwtAuthenticationTest extends TestCase
         "exp" => "1744352741",
         "aud" => "www.example.com",
         "sub" => "someone@example.com",
-        "scope" => ["read", "write", "delete"]
+        "scope" => ["read", "write", "delete"],
     ];
 
     public static $betaTokenArray = [
@@ -65,24 +66,27 @@ class JwtAuthenticationTest extends TestCase
         "exp" => "1744352741",
         "aud" => "www.example.com",
         "sub" => "someone@example.com",
-        "scope" => ["read"]
+        "scope" => ["read"],
     ];
 
     public function testShouldReturn401WithoutToken()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
-        $default = function (RequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+
             $response->getBody()->write("Success");
             return $response;
         };
-
+        $options = new JwtAuthOptions(
+            secret: "supersecretkeyyoushouldnotcommittogithub"
+        );
         $collection = new MiddlewareCollection([
-            $auth = new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication($options),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -93,21 +97,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithTokenFromHeader()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("X-Token", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
+        $options = new JwtAuthOptions(
+            ...[
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token"
-            ])
+                "header" => "X-Token",
+            ]
+        );
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -118,22 +126,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("X-Token", self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
+        $options = new JwtAuthOptions(
+            ...[
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "header" => "X-Token",
-                "regexp" => "/(.*)/"
-            ])
+                "regexp" => "/(.*)/",
+            ]
+        );
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -144,21 +156,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithTokenFromCookie()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withCookieParams(["nekot" => self::$acmeToken]);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
+        $options = new JwtAuthOptions(
+            ...[
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "cookie" => "nekot",
-            ])
+            ]
+        );
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -169,21 +185,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithTokenFromBearerCookie()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withCookieParams(["nekot" => "Bearer " . self::$acmeToken]);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
+        $options = new JwtAuthOptions(
+            ...[
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "cookie" => "nekot",
-            ])
+            ]
+        );
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -192,157 +212,66 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-
-    public function testShouldReturn200WithSecretArray()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "beta" =>"anothersecretkeyfornevertocommittogithub"
-                ]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldReturn401WithSecretArray()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "xxxx" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "yyyy" =>"anothersecretkeyfornevertocommittogithub"
-                ]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-    }
-
-    public function testShouldReturn200WithSecretArrayAccess()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $secret = new ArrayAccessImpl();
-        $secret["acme"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["beta"] ="anothersecretkeyfornevertocommittogithub";
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldReturn401WithSecretArrayAccess()
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $secret = new ArrayAccessImpl();
-        $secret["xxxx"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["yyyy"] = "anothersecretkeyfornevertocommittogithub";
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-    }
+    
 
     public function testShouldAlterResponseWithAnonymousAfter()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
-                    return $response->withHeader("X-Brawndo", "plants crave");
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "after" => function ($response, $arguments) {
+                            return $response->withHeader(
+                                "X-Brawndo",
+                                "plants crave"
+                            );
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
+        $this->assertEquals(
+            "plants crave",
+            (string) $response->getHeaderLine("X-Brawndo")
+        );
     }
 
     public function testShouldAlterResponseWithInvokableAfter()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => new TestAfterHandler
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "after" => new TestAfterHandler(),
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -356,21 +285,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldAlterResponseWithArrayNotationAfter()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => [TestAfterHandler::class, "after"]
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "after" => [TestAfterHandler::class, "after"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -384,21 +317,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn401WithInvalidAlgorithm()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => "nosuch",
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "algorithm" => "nosuch",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -409,20 +346,24 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithOptions()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withMethod("OPTIONS");
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -433,20 +374,24 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn400WithInvalidToken()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer invalid" . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -457,20 +402,24 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn400WithExpiredToken()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$expired);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -481,45 +430,57 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn200WithoutTokenWithPath()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/public"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "path" => ["/api", "/foo"],
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->assertEquals("Success", $response->getBody()->__toString());
     }
 
     public function testShouldReturn200WithoutTokenWithIgnore()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/ping");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api/ping"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "ignore" => ["/api/ping"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "path" => ["/api", "/foo"],
+                        "ignore" => ["/api/ping"],
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -532,20 +493,24 @@ class JwtAuthenticationTest extends TestCase
     {
         $this->expectException("RuntimeException");
 
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "http://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -553,21 +518,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldAllowInsecure()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "http://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "secure" => false
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "secure" => false,
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -578,20 +547,24 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldRelaxInsecureInLocalhost()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "http://localhost/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -602,21 +575,25 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldRelaxInsecureInExampleCom()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "http://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "relaxed" => ["example.com"],
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "relaxed" => ["example.com"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -627,23 +604,27 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldAttachToken()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $acmeToken = $request->getAttribute("token");
 
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write($acmeToken["iss"]);
 
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -654,24 +635,28 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldAttachCustomToken()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
             $acmeToken = $request->getAttribute("nekot");
 
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write($acmeToken["iss"]);
 
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "attribute" => "nekot"
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "attribute" => "nekot",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -682,7 +667,7 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldCallAfterWithProperArguments()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
@@ -690,19 +675,23 @@ class JwtAuthenticationTest extends TestCase
         $token = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "after" => function ($response, $arguments) use (&$decoded, &$token) {
+                            $decoded = $arguments["decoded"];
+                            $token = $arguments["token"];
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -715,7 +704,7 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldCallBeforeWithProperArguments()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
@@ -723,19 +712,23 @@ class JwtAuthenticationTest extends TestCase
         $token = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "before" => function ($response, $arguments) use (&$decoded, &$token) {
+                            $decoded = $arguments["decoded"];
+                            $token = $arguments["token"];
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -748,51 +741,68 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldCallAnonymousErrorFunction()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $response->getBody()->write("error");
-                    return $response
-                        ->withHeader("X-Electrolytes", "Plants");
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommit",
+                        "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                            $response->getBody()->write("error");
+                            return $response->withHeader(
+                                "X-Electrolytes",
+                                "Plants"
+                            );
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
         $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Plants", $response->getHeaderLine("X-Electrolytes"));
+        $this->assertEquals(
+            "Plants",
+            $response->getHeaderLine("X-Electrolytes")
+        );
         $this->assertEquals("error", $response->getBody());
     }
 
     public function testShouldCallInvokableErrorClass()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $dummy = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => new TestErrorHandler
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommit",
+                        "error" => new TestErrorHandler(),
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -804,22 +814,28 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldCallArrayNotationError()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $dummy = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => [TestErrorHandler::class, "error"]
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommit",
+                        "error" => [TestErrorHandler::class, "error"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -831,26 +847,32 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldCallErrorAndModifyBody()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $dummy = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = true;
-                    $response->getBody()->write("Error");
-                    return $response;
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                            $dummy = true;
+                            $response->getBody()->write("Error");
+                            return $response;
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -862,21 +884,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldAllowUnauthenticatedHttp()
     {
-
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public/foo");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/public/foo"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "path" => ["/api", "/bar"],
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "path" => ["/api", "/bar"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -887,25 +914,31 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldReturn401FromAfter()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
-                    return $response
-                        ->withBody((new StreamFactory)->createStream())
-                        ->withStatus(401);
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "after" => function ($response, $arguments) {
+                            return $response
+                                ->withBody(
+                                    (new StreamFactory())->createStream()
+                                )
+                                ->withStatus(401);
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -916,24 +949,28 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldModifyRequestUsingAnonymousBefore()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $test = $request->getAttribute("test");
             $response->getBody()->write($test);
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    return $request->withAttribute("test", "test");
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "before" => function ($request, $arguments) {
+                            return $request->withAttribute("test", "test");
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -944,22 +981,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldModifyRequestUsingInvokableBefore()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $test = $request->getAttribute("test");
             $response->getBody()->write($test);
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => new TestBeforeHandler
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "before" => new TestBeforeHandler(),
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -970,22 +1011,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldModifyRequestUsingArrayNotationBefore()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $test = $request->getAttribute("test");
             $response->getBody()->write($test);
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => [TestBeforeHandler::class, "before"]
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "before" => [TestBeforeHandler::class, "before"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -996,28 +1041,34 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldHandleRulesArrayBug84()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "rules" => [
-                    new RequestPathRule([
-                        "path" => ["/api"],
-                        "ignore" => ["/api/login"],
-                    ]),
-                    new RequestMethodRule([
-                        "ignore" => ["OPTIONS"],
-                    ])
-                ],
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "rules" => [
+                            new RequestPathRule([
+                                "path" => ["/api"],
+                                "ignore" => ["/api/login"],
+                            ]),
+                            new RequestMethodRule([
+                                "ignore" => ["OPTIONS"],
+                            ]),
+                        ],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1025,8 +1076,10 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api/login"
+        );
 
         $response = $collection->dispatch($request, $default);
 
@@ -1036,20 +1089,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldHandleDefaultPathBug118()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api"
+        );
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "ignore" => "/api/login",
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "ignore" => ["/api/login"],
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1057,8 +1116,10 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals("", $response->getBody());
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api/login"
+        );
 
         $response = $collection->dispatch($request, $default);
 
@@ -1068,31 +1129,35 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldBindToMiddleware()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/")
             ->withHeader("Authorization", "Bearer " . self::$acmeToken);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $before = $request->getAttribute("before");
             $response->getBody()->write($before);
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    $before = get_class($this);
-                    return $request->withAttribute("before", $before);
-                },
-                "after" => function ($response, $arguments) {
-                    $after = get_class($this);
-                    $response->getBody()->write($after);
-                    return $response;
-                }
-
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "before" => function (ServerRequestInterface $request, $arguments) {
+                            $before = get_class($this);
+                            var_dump($before);
+                            return $request->withAttribute("before", $before);
+                        },
+                        "after" => function ($response, $arguments) {
+                            $after = get_class($this);
+                            $response->getBody()->write($after);
+                            return $response;
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1103,16 +1168,20 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldHandlePsr7()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withHeader("X-Token", "Bearer " . self::$acmeToken);
 
-        $response = (new ResponseFactory)->createResponse();
+        $response = (new ResponseFactory())->createResponse();
 
-        $auth = new JwtAuthentication([
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "header" => "X-Token"
-        ]);
+        $auth = new JwtAuthentication(
+            new JwtAuthOptions(
+                ...[
+                    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                    "header" => "X-Token",
+                ]
+            )
+        );
 
         $next = function (ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Success");
@@ -1127,24 +1196,30 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldHaveUriInErrorHandlerIssue96()
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/foo?bar=pop");
+        $request = (new ServerRequestFactory())->createServerRequest(
+            "GET",
+            "https://example.com/api/foo?bar=pop"
+        );
 
         $dummy = null;
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = $arguments["uri"];
-                }
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
+                            $dummy = $arguments["uri"];
+                        },
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1156,22 +1231,26 @@ class JwtAuthenticationTest extends TestCase
 
     public function testShouldUseCookieIfHeaderMissingIssue156()
     {
-        $request = (new ServerRequestFactory)
+        $request = (new ServerRequestFactory())
             ->createServerRequest("GET", "https://example.com/api")
             ->withCookieParams(["token" => self::$acmeToken]);
 
         $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
+            $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token",
-                "regexp" => "/(.*)/",
-            ])
+            new JwtAuthentication(
+                new JwtAuthOptions(
+                    ...[
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "header" => "X-Token",
+                        "regexp" => "/(.*)/",
+                    ]
+                )
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);

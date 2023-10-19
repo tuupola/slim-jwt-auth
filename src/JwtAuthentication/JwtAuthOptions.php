@@ -37,6 +37,7 @@ namespace Tuupola\Middleware\JwtAuthentication;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Tuupola\Middleware\ArrayAccessImpl;
 use Tuupola\Middleware\JwtAuthentication;
 
 /**
@@ -63,14 +64,14 @@ class JwtAuthOptions
 
     /** @var array<string> */
     public array $ignore;
-    public ?\Closure $before;
-    public ?\Closure $after;
-    public ?\Closure $error;
+    public $before;
+    public $after;
+    public $error;
 
     private JwtAuthentication $jwtAuthentication;
 
     public function __construct(
-        string $secret,
+        string|array|ArrayAccessImpl $secret,
         bool $secure = true,
         array $relaxed = ["localhost", "127.0.0.1"],
         string $algorithm = "HS256",
@@ -101,9 +102,9 @@ class JwtAuthOptions
         $this->error = $error;
     }
 
-    private function checkSecret($secret): string
+    private function checkSecret($secret): string|array
     {
-        if (false === is_array($secret) && false === is_string($secret) && !$secret instanceof \ArrayAccess) {
+        if (!(is_array($secret) || is_string($secret) || $secret instanceof \ArrayAccess)) {
             throw new InvalidArgumentException(
                 'Secret must be either a string or an array of "kid" => "secret" pairs'
             );
@@ -111,9 +112,26 @@ class JwtAuthOptions
         return $secret;
     }
 
+    private function bindClosure(?callable $closure, JwtAuthentication $target): ?\Closure
+    {
+        if ($closure) {
+            if ($closure instanceof \Closure) {
+                return $closure->bindTo($target);
+            }
+
+            return \Closure::fromCallable($closure);
+        }
+
+        return null;
+    }
+
     public function bindToAuthentication(JwtAuthentication $target): self
     {
         $this->jwtAuthentication = $target;
+
+        $this->error = $this->bindClosure($this->error, $target);
+        $this->before = $this->bindClosure($this->before, $target);
+        $this->after = $this->bindClosure($this->after, $target);
 
         return $this;
     }
@@ -123,7 +141,9 @@ class JwtAuthOptions
      */
     public function onError(ResponseInterface $response, array $arguments): ?ResponseInterface
     {
-        return $this->error?->call($this->jwtAuthentication, $response, $arguments);
+        $func = $this->error;
+
+        return is_null($func) ? null : $func($response, $arguments);
     }
 
     /**
@@ -132,13 +152,17 @@ class JwtAuthOptions
 
     public function onBeforeCallable(ServerRequestInterface $request, array $params): ?ServerRequestInterface
     {
-        return $this->before?->call($this->jwtAuthentication, $request, $params);
+        $func = $this->before;
+
+        return is_null($func) ? null : $func($request, $params);
     }
     /**
      * Set the after handler.
      */
     public function onAfterCallable(ResponseInterface $response, array $params): ?ResponseInterface
     {
-        return $this->before?->call($this->jwtAuthentication, $response, $params);
+        $func = $this->after;
+
+        return is_null($func) ? null : $func($response, $params);
     }
 }

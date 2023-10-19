@@ -5,17 +5,22 @@
 For most cases it is enough just to update the classname. Instead of using the old `Slim\Middleware` namespace:
 
 ```php
-$app->add(new Slim\Middleware\JwtAuthentication([
-    "secret" => "supersecretkeyyoushouldnotcommittogithub"
-]));
+$app->add(new Slim\Middleware\JwtAuthentication(
+        new JwtAuthOptions(
+            secret: "supersecretkeyyoushouldnotcommittogithub"
+        )
+    )
+);
 ```
 
 You should now use `Tuupola\Middleware` instead:
 
 ```php
-$app->add(new Tuupola\Middleware\JwtAuthentication([
-    "secret" => "supersecretkeyyoushouldnotcommittogithub"
-]));
+$app->add(new Tuupola\Middleware\JwtAuthentication(
+    new JwtAuthOptions(
+        secret: "supersecretkeyyoushouldnotcommittogithub"
+    )
+);
 
 ```
 
@@ -35,12 +40,15 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 You should now do the following instead. Note also that `$response` object is not bassed to `before` anymore. The `before` handler should return ``Psr\Http\Message\ServerRequestInterface`. Anything else will be ignored.
 
 ```php
-$app->add(new Tuupola\Middleware\JwtAuthentication([
-    "ignore" => ["/token"],
-    "before" => function ($request, $arguments) {
+$options = new JwtAuthOptions(
+    secret: "supersecretkeyyoushouldnotcommittogithub", 
+    ignore: ["/token"],
+    before: => function (ServerRequestInterface $request, array $arguments) {
         return $request->withHeader("Foo", "bar");
     }
-]));
+);
+
+$app->add(new Tuupola\Middleware\JwtAuthentication($options));
 ```
 
 ## Changed error handler signature
@@ -58,11 +66,13 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 You should now do the following instead.
 
 ```php
-$app->add(new Tuupola\Middleware\JwtAuthentication([
-    "error" => function ($response, $arguments) {
+$options = new JwtAuthOptions(
+   error: function (ReponseInterface $response, array $arguments): ResponseInterface {
         return $response->witHeader("Foo", "bar");
     }
-]));
+);
+
+$app->add(new Tuupola\Middleware\JwtAuthentication($options);
 ```
 
 Note that `error` should now return an instance of `Psr\Http\Message\ResponseInterface`. Anything else will be ignored.
@@ -91,3 +101,7 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 ## Decoded token is now an array
 
 The decoded token attached to the `$request` object is now an array instead of an object. This might require changes to token handling code.
+
+## Algorithm is a string now
+
+Prefer using strings instead of array of strings, for compartibility with firebase/php-jwt.
