@@ -86,7 +86,7 @@ final class JwtAuthentication implements MiddlewareInterface
         /* If nothing was passed in options add default rules. */
         /* This also means $options->rules overrides $options->path */
         /* and $options->ignore */
-        if (!(isset($options->rules) && count($options->rules))) {
+        if (!count($options->rules)) {
             $this->rules->push(new RequestMethodRule([
                 "ignore" => ["OPTIONS"]
             ]));

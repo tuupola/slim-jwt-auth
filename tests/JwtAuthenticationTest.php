@@ -212,7 +212,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    
+
 
     public function testShouldAlterResponseWithAnonymousAfter()
     {
@@ -1055,18 +1055,16 @@ class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new JwtAuthOptions(
-                    ...[
-                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                        "rules" => [
-                            new RequestPathRule([
-                                "path" => ["/api"],
-                                "ignore" => ["/api/login"],
-                            ]),
-                            new RequestMethodRule([
-                                "ignore" => ["OPTIONS"],
-                            ]),
-                        ],
-                    ]
+                    secret: "supersecretkeyyoushouldnotcommittogithub",
+                    rules: [
+                        new RequestPathRule([
+                            "path" => ["/api"],
+                            "ignore" => ["/api/login"],
+                        ]),
+                        new RequestMethodRule([
+                            "ignore" => ["OPTIONS"],
+                        ]),
+                    ],
                 )
             ),
         ]);
