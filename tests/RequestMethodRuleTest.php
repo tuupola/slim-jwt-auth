@@ -38,7 +38,7 @@ use Tuupola\Http\Factory\ServerRequestFactory;
 class RequestMethodTest extends TestCase
 {
 
-    public function testShouldNotAuthenticateOptions()
+    public function testShouldNotAuthenticateOptions(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "OPTIONS",
@@ -50,7 +50,7 @@ class RequestMethodTest extends TestCase
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticatePost()
+    public function testShouldAuthenticatePost(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "POST",
@@ -62,7 +62,7 @@ class RequestMethodTest extends TestCase
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateGet()
+    public function testShouldAuthenticateGet(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -74,7 +74,7 @@ class RequestMethodTest extends TestCase
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldConfigureIgnore()
+    public function testShouldConfigureIgnore(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",

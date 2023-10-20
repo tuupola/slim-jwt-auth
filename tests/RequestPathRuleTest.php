@@ -37,7 +37,7 @@ use Tuupola\Http\Factory\ServerRequestFactory;
 
 class RequestPathTest extends TestCase
 {
-    public function testShouldAcceptArrayAndStringAsPath()
+    public function testShouldAcceptArrayAndStringAsPath(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -51,7 +51,7 @@ class RequestPathTest extends TestCase
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateEverything()
+    public function testShouldAuthenticateEverything(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -69,7 +69,7 @@ class RequestPathTest extends TestCase
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldAuthenticateOnlyApi()
+    public function testShouldAuthenticateOnlyApi(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -87,7 +87,7 @@ class RequestPathTest extends TestCase
         $this->assertTrue($rule($request));
     }
 
-    public function testShouldIgnoreLogin()
+    public function testShouldIgnoreLogin(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -108,7 +108,7 @@ class RequestPathTest extends TestCase
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticateCreateAndList()
+    public function testShouldAuthenticateCreateAndList(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -144,7 +144,7 @@ class RequestPathTest extends TestCase
         $this->assertFalse($rule($request));
     }
 
-    public function testShouldAuthenticateRegexp()
+    public function testShouldAuthenticateRegexp(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",
@@ -164,7 +164,7 @@ class RequestPathTest extends TestCase
         $this->assertFalse($rule($request));
     }
 
-    public function testBug50ShouldAuthenticateMultipleSlashes()
+    public function testBug50ShouldAuthenticateMultipleSlashes(): void
     {
         $request = (new ServerRequestFactory)->createServerRequest(
             "GET",

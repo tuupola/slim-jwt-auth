@@ -47,7 +47,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use RuntimeException;
 use SplStack;
-use Tuupola\Middleware\DoublePassTrait;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
@@ -61,19 +60,13 @@ final class JwtAuthentication implements MiddlewareInterface
      * PSR-3 compliant logger.
      * @var LoggerInterface|null
      */
-    private $logger;
-
-    /**
-     * Last error message.
-     * @var string
-     */
-    private $message;
+    private ?LoggerInterface $logger = null;
 
     /**
      * The rules stack.
      * @var SplStack<RuleInterface>
      */
-    private $rules;
+    private SplStack $rules;
 
     /**
      * Stores all the options passed to the middleware.
@@ -94,7 +87,7 @@ final class JwtAuthentication implements MiddlewareInterface
      *   error: null|callable,
      * }
      */
-    private $options = [
+    private array $options = [
         "secure" => true,
         "relaxed" => ["localhost", "127.0.0.1"],
         "algorithm" => ["HS256", "HS512", "HS384"],

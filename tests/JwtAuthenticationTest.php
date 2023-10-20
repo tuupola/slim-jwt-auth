@@ -45,12 +45,12 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 class JwtAuthenticationTest extends TestCase
 {
     /* @codingStandardsIgnoreStart */
-    public static $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
-    public static $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
-    public static $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
+    public static string $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
+    public static string $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
+    public static string $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
     /* @codingStandardsIgnoreEnd */
 
-    public static $acmeTokenArray = [
+    public static array $acmeTokenArray = [
         "iss" => "Acme Toothpics Ltd",
         "iat" => "1428819941",
         "exp" => "1744352741",
@@ -59,7 +59,7 @@ class JwtAuthenticationTest extends TestCase
         "scope" => ["read", "write", "delete"]
     ];
 
-    public static $betaTokenArray = [
+    public static array $betaTokenArray = [
         "iss" => "Beta Sponsorship Ltd",
         "iat" => "1428819941",
         "exp" => "1744352741",
@@ -68,7 +68,7 @@ class JwtAuthenticationTest extends TestCase
         "scope" => ["read"]
     ];
 
-    public function testShouldReturn401WithoutToken()
+    public function testShouldReturn401WithoutToken(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -91,7 +91,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromHeader()
+    public function testShouldReturn200WithTokenFromHeader(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -116,7 +116,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp()
+    public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -142,7 +142,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromCookie()
+    public function testShouldReturn200WithTokenFromCookie(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -167,7 +167,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn200WithTokenFromBearerCookie()
+    public function testShouldReturn200WithTokenFromBearerCookie(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -193,7 +193,7 @@ class JwtAuthenticationTest extends TestCase
     }
 
 
-    public function testShouldReturn200WithSecretArray()
+    public function testShouldReturn200WithSecretArray(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -219,7 +219,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn401WithSecretArray()
+    public function testShouldReturn401WithSecretArray(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -245,7 +245,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturn200WithSecretArrayAccess()
+    public function testShouldReturn200WithSecretArrayAccess(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -272,7 +272,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn401WithSecretArrayAccess()
+    public function testShouldReturn401WithSecretArrayAccess(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -299,7 +299,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldAlterResponseWithAnonymousAfter()
+    public function testShouldAlterResponseWithAnonymousAfter(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -326,7 +326,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
     }
 
-    public function testShouldAlterResponseWithInvokableAfter()
+    public function testShouldAlterResponseWithInvokableAfter(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -354,7 +354,7 @@ class JwtAuthenticationTest extends TestCase
         );
     }
 
-    public function testShouldAlterResponseWithArrayNotationAfter()
+    public function testShouldAlterResponseWithArrayNotationAfter(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -382,7 +382,7 @@ class JwtAuthenticationTest extends TestCase
         );
     }
 
-    public function testShouldReturn401WithInvalidAlgorithm()
+    public function testShouldReturn401WithInvalidAlgorithm(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -407,7 +407,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturn200WithOptions()
+    public function testShouldReturn200WithOptions(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -431,7 +431,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn400WithInvalidToken()
+    public function testShouldReturn400WithInvalidToken(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -455,7 +455,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturn400WithExpiredToken()
+    public function testShouldReturn400WithExpiredToken(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -479,7 +479,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldReturn200WithoutTokenWithPath()
+    public function testShouldReturn200WithoutTokenWithPath(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/public");
@@ -503,7 +503,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn200WithoutTokenWithIgnore()
+    public function testShouldReturn200WithoutTokenWithIgnore(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api/ping");
@@ -528,7 +528,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldNotAllowInsecure()
+    public function testShouldNotAllowInsecure(): void
     {
         $this->expectException("RuntimeException");
 
@@ -551,7 +551,7 @@ class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
     }
 
-    public function testShouldAllowInsecure()
+    public function testShouldAllowInsecure(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
@@ -576,7 +576,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldRelaxInsecureInLocalhost()
+    public function testShouldRelaxInsecureInLocalhost(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://localhost/api")
@@ -600,7 +600,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldRelaxInsecureInExampleCom()
+    public function testShouldRelaxInsecureInExampleCom(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "http://example.com/api")
@@ -625,7 +625,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldAttachToken()
+    public function testShouldAttachToken(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -652,7 +652,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
     }
 
-    public function testShouldAttachCustomToken()
+    public function testShouldAttachCustomToken(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -680,7 +680,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
     }
 
-    public function testShouldCallAfterWithProperArguments()
+    public function testShouldCallAfterWithProperArguments(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -713,7 +713,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(self::$acmeToken, $token);
     }
 
-    public function testShouldCallBeforeWithProperArguments()
+    public function testShouldCallBeforeWithProperArguments(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -746,7 +746,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(self::$acmeToken, $token);
     }
 
-    public function testShouldCallAnonymousErrorFunction()
+    public function testShouldCallAnonymousErrorFunction(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -775,7 +775,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("error", $response->getBody());
     }
 
-    public function testShouldCallInvokableErrorClass()
+    public function testShouldCallInvokableErrorClass(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -802,7 +802,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
-    public function testShouldCallArrayNotationError()
+    public function testShouldCallArrayNotationError(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -829,7 +829,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals(TestErrorHandler::class, $response->getBody());
     }
 
-    public function testShouldCallErrorAndModifyBody()
+    public function testShouldCallErrorAndModifyBody(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -860,7 +860,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertTrue($dummy);
     }
 
-    public function testShouldAllowUnauthenticatedHttp()
+    public function testShouldAllowUnauthenticatedHttp(): void
     {
 
         $request = (new ServerRequestFactory)
@@ -885,7 +885,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldReturn401FromAfter()
+    public function testShouldReturn401FromAfter(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -914,7 +914,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("", $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingAnonymousBefore()
+    public function testShouldModifyRequestUsingAnonymousBefore(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
@@ -942,7 +942,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("test", (string) $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingInvokableBefore()
+    public function testShouldModifyRequestUsingInvokableBefore(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
@@ -968,7 +968,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("invoke", (string) $response->getBody());
     }
 
-    public function testShouldModifyRequestUsingArrayNotationBefore()
+    public function testShouldModifyRequestUsingArrayNotationBefore(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
@@ -994,7 +994,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("function", (string) $response->getBody());
     }
 
-    public function testShouldHandleRulesArrayBug84()
+    public function testShouldHandleRulesArrayBug84(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -1034,7 +1034,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldHandleDefaultPathBug118()
+    public function testShouldHandleDefaultPathBug118(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api");
@@ -1066,7 +1066,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldBindToMiddleware()
+    public function testShouldBindToMiddleware(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/")
@@ -1101,7 +1101,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals($expected, (string) $response->getBody());
     }
 
-    public function testShouldHandlePsr7()
+    public function testShouldHandlePsr7(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
@@ -1125,7 +1125,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
-    public function testShouldHaveUriInErrorHandlerIssue96()
+    public function testShouldHaveUriInErrorHandlerIssue96(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api/foo?bar=pop");
@@ -1154,7 +1154,7 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("https://example.com/api/foo?bar=pop", $dummy);
     }
 
-    public function testShouldUseCookieIfHeaderMissingIssue156()
+    public function testShouldUseCookieIfHeaderMissingIssue156(): void
     {
         $request = (new ServerRequestFactory)
             ->createServerRequest("GET", "https://example.com/api")
