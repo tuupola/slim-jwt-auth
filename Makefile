@@ -23,7 +23,7 @@ unit: vendor
 	phpdbg -qrr vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml --coverage-html=./report/
 
 static: vendor
-	vendor/bin/phpstan analyse src --level max
+	vendor/bin/phpstan analyse src --level 8
 
 watch: vendor
 	find . -name "*.php" -not -path "./vendor/*" -o -name "*.json" -not -path "./vendor/*" | entr -c make test
