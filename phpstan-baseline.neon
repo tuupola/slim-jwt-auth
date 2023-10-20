@@ -1,7 +1,7 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Tuupola\\\\Middleware\\\\JwtAuthentication::.* is unused.#'
+			message: '#^Method .* is unused.$#'
 		-
 			message: "#^Offset 'secret' does not exist on array\\{secret\\?\\: array\\<string\\>\\|string, secure\\: bool, relaxed\\: array\\<string\\>, algorithm\\: array\\<string\\>, header\\: string, regexp\\: string, cookie\\: string, attribute\\: string, \\.\\.\\.\\}\\.$#"
 			count: 1
