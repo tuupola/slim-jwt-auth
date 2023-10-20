@@ -36,6 +36,7 @@ namespace Tuupola\Middleware;
 
 use Closure;
 use DomainException;
+use Firebase\JWT\Key;
 use InvalidArgumentException;
 use Exception;
 use Firebase\JWT\JWT;
@@ -303,15 +304,19 @@ final class JwtAuthentication implements MiddlewareInterface
      * Decode the token.
      *
      * @return mixed[]
+     * @throws Exception
      */
     private function decodeToken(string $token): array
     {
         try {
-            $decoded = JWT::decode(
-                $token,
-                $this->options["secret"],
-                (array) $this->options["algorithm"]
+            $secret = $this->options['secret'];
+            $keys = array_map(
+                function ($algorithm) use ($secret) {
+                    return new Key($secret, $algorithm);
+                },
+                $this->options['algorithm']
             );
+            $decoded = JWT::decode($token, $keys);
             return (array) $decoded;
         } catch (Exception $exception) {
             $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
