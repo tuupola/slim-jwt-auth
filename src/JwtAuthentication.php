@@ -155,7 +155,7 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         /* HTTP allowed only if secure is false or server is in relaxed array. */
-        if ("https" !== $scheme && true === $this->options["secure"]) {
+        if (false === $this->isHttps($request) && true === $this->options["secure"]) {
             if (!in_array($host, $this->options["relaxed"])) {
                 $message = sprintf(
                     "Insecure use of middleware over %s denied by configuration.",
@@ -317,6 +317,26 @@ final class JwtAuthentication implements MiddlewareInterface
             $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
             throw $exception;
         }
+    }
+
+    /**
+     * Checks if the request was sent over HTTPS.
+     *
+     * This is done by checking if either the URL scheme or a
+     * 'X-Forwarded-Proto' header is equal to 'https' (the latter is useful
+     * when running behind a load balancer).
+     */
+    private function isHttps(ServerRequestInterface $request): bool
+    {
+        $scheme = $request->getUri()->getScheme();
+        $x_fwd_proto_headers = $request->getHeader('X-Forwarded-Proto');
+
+        $sanitized = array_map('trim', array_map('strtolower', $x_fwd_proto_headers));
+
+        return (
+            'https' === $scheme
+            || in_array('https', $sanitized, true)
+        );
     }
 
     /**
