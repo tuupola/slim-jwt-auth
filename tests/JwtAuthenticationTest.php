@@ -212,7 +212,123 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+    public function testShouldReturn200WithSecretArray()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
 
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $options = JwtAuthOptions::fromArray(
+            [
+                "secret" => [
+                    "acme" => "supersecretkeyyoushouldnotcommittogithub",
+                    "beta" => "anothersecretkeyfornevertocommittogithub"
+                ]
+            ]
+        );
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options)
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
+    public function testShouldReturn401WithSecretArray()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication(
+                JwtAuthOptions::fromArray(
+                    [
+                        "secret" => [
+                            "xxxx" => "supersecretkeyyoushouldnotcommittogithub",
+                            "yyyy" => "anothersecretkeyfornevertocommittogithub"
+                        ]
+                    ]
+                )
+            )
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
+
+    public function testShouldReturn200WithSecretArrayAccess()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $secret = new \ArrayObject();
+        $secret["acme"] = "supersecretkeyyoushouldnotcommittogithub";
+        $secret["beta"] = "anothersecretkeyfornevertocommittogithub";
+
+        $options = JwtAuthOptions::fromArray([
+            "secret" => $secret
+        ]);
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options)
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
+    public function testShouldReturn401WithSecretArrayAccess()
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $secret = new \ArrayObject();
+        $secret["xxxx"] = "supersecretkeyyoushouldnotcommittogithub";
+        $secret["yyyy"] = "anothersecretkeyfornevertocommittogithub";
+
+        $options = JwtAuthOptions::fromArray([
+            "secret" => $secret
+        ]);
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication($options)
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals("", $response->getBody());
+    }
 
     public function testShouldAlterResponseWithAnonymousAfter()
     {

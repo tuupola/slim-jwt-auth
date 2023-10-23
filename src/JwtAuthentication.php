@@ -258,7 +258,7 @@ final class JwtAuthentication implements MiddlewareInterface
     private function decodeToken(string $token): array
     {
         $keys = $this->createKeysFromAlgorithms();
-        
+
         if (count($keys) === 1) {
             $keys = current($keys);
         }
@@ -285,7 +285,7 @@ final class JwtAuthentication implements MiddlewareInterface
         $keyObjects = [];
 
         foreach ($this->options->algorithm as $kid => $algorithm) {
-            $keyId = !is_numeric($kid) ? $kid : $algorithm;
+            $keyId = is_numeric($kid) ? $algorithm : $kid;
 
             $secret = $this->options->secret[$kid];
 

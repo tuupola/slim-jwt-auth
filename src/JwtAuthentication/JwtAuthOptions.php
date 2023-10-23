@@ -128,7 +128,7 @@ class JwtAuthOptions
         $inArray = [];
 
         foreach ($values as $key => $value) {
-            $inArray = $data[$key] ?? $value;
+            $inArray[$key] = $data[$key] ?? $value;
         }
 
         return new self(...$inArray);
@@ -174,7 +174,7 @@ class JwtAuthOptions
         return is_null($func) ? null : $func($response, $params);
     }
 
-    private function checkSecret($secret): array|\ArrayAccess
+    private function checkSecret($secret): array
     {
         if (!(is_array($secret) || is_string($secret) || $secret instanceof \ArrayAccess)) {
             throw new InvalidArgumentException(
@@ -185,18 +185,18 @@ class JwtAuthOptions
         return (array) $secret;
     }
 
-    private function applyAlgorithm($secret, $algorithm)
+    private function applyAlgorithm(array $secret, $algorithm)
     {
         if (is_string($algorithm)) {
-            $secretIndex = array_keys((array) $secret);
+            $secretIndex = array_keys($secret);
 
             return array_fill_keys($secretIndex, $algorithm);
         }
 
         foreach ($secret as $key => $value) {
-            if (in_array($key, $algorithm)) {
+            if (!in_array($key, $algorithm)) {
                 throw new InvalidArgumentException(
-                    "Al secrets must have a corresponding algorithm"
+                    "All secrets must have a corresponding algorithm"
                 );
             }
         }
