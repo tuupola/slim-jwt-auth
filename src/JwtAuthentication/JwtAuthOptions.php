@@ -45,14 +45,16 @@ use Tuupola\Middleware\JwtAuthentication;
  */
 class JwtAuthOptions
 {
-    /** @var string|array|ArrayAccessImpl */
+    /** @var array|ArrayAccessImpl */
     public $secret;
+    /** @var array|ArrayAccessImpl */
+    public $algorithm;
 
     public bool $secure;
 
     /** @var array<string> */
     public array $relaxed;
-    public string $algorithm;
+
     public string $header;
     public string $regexp;
     public string $cookie;
@@ -74,9 +76,10 @@ class JwtAuthOptions
     public function __construct(
         /** @var string|array|ArrayAccessImpl */
         $secret,
+        /** @var string|array|ArrayAccessImpl */
+        $algorithm = "HS256",
         bool $secure = true,
         array $relaxed = ["localhost", "127.0.0.1"],
-        string $algorithm = "HS256",
         string $header = "Authorization",
         string $regexp = "/Bearer\s+(.*)$/i",
         string $cookie = "token",
@@ -89,9 +92,9 @@ class JwtAuthOptions
         ?callable $error = null
     ) {
         $this->secret = $this->checkSecret($secret);
+        $this->algorithm = $this->applyAlgorithm($this->secret, $algorithm);
         $this->secure = $secure;
         $this->relaxed = $relaxed;
-        $this->algorithm = $algorithm;
         $this->header = $header;
         $this->regexp = $regexp;
         $this->cookie = $cookie;
@@ -104,7 +107,7 @@ class JwtAuthOptions
         $this->error = $error;
     }
 
-    private function checkSecret($secret): string|array|\ArrayAccess
+    private function checkSecret($secret): array|\ArrayAccess
     {
         if (!(is_array($secret) || is_string($secret) || $secret instanceof \ArrayAccess)) {
             throw new InvalidArgumentException(
@@ -112,7 +115,26 @@ class JwtAuthOptions
             );
         }
 
-        return $secret;
+        return (array) $secret;
+    }
+
+    private function applyAlgorithm($secret, $algorithm)
+    {
+        if (is_string($algorithm)) {
+            $secretIndex = array_keys((array) $secret);
+
+            return array_fill_keys($secretIndex, $algorithm);
+        }
+
+        foreach ($secret as $key => $value) {
+            if (in_array($key, $algorithm)) {
+                throw new InvalidArgumentException(
+                    "Al secrets must have a corresponding algorithm"
+                );
+            }
+        }
+
+        return $algorithm;
     }
 
     private function bindClosure(?callable $closure, JwtAuthentication $target): ?\Closure
