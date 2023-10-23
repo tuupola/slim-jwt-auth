@@ -4,3 +4,4 @@
 composer.lock
 .phplint-cache
 coverage.xml
+*.cache

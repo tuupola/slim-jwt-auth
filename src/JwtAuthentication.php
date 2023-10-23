@@ -261,8 +261,8 @@ final class JwtAuthentication implements MiddlewareInterface
             $algo = $this->options->algorithm;
 
             $key = new Key(
-                keyMaterial: $this->options->secret,
-                algorithm: $algo
+                $this->options->secret,
+                $algo
             );
 
             $decoded = JWT::decode(

@@ -45,7 +45,8 @@ use Tuupola\Middleware\JwtAuthentication;
  */
 class JwtAuthOptions
 {
-    public string $secret;
+    /** @var string|array|ArrayAccessImpl */
+    public $secret;
 
     public bool $secure;
 
@@ -71,7 +72,8 @@ class JwtAuthOptions
     private JwtAuthentication $jwtAuthentication;
 
     public function __construct(
-        string|array|ArrayAccessImpl $secret,
+        /** @var string|array|ArrayAccessImpl */
+        $secret,
         bool $secure = true,
         array $relaxed = ["localhost", "127.0.0.1"],
         string $algorithm = "HS256",
@@ -102,13 +104,14 @@ class JwtAuthOptions
         $this->error = $error;
     }
 
-    private function checkSecret($secret): string|array
+    private function checkSecret($secret): string|array|\ArrayAccess
     {
         if (!(is_array($secret) || is_string($secret) || $secret instanceof \ArrayAccess)) {
             throw new InvalidArgumentException(
                 'Secret must be either a string or an array of "kid" => "secret" pairs'
             );
         }
+
         return $secret;
     }
 
