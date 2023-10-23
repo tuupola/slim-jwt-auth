@@ -61,10 +61,8 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private ?LoggerInterface $logger;
 
-    /**
-     * Last error message.
-     */
     private string $message;
+
 
     /**
      * The rules stack.
