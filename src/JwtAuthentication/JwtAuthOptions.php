@@ -107,6 +107,73 @@ class JwtAuthOptions
         $this->error = $error;
     }
 
+    public static function fromArray(array $data): self
+    {
+        $values = [
+            "secret" => "",
+            "algorithm" => "HS256",
+            "secure" => true,
+            "relaxed" => ["localhost", "127.0.0.1"],
+            "header" => "Authorization",
+            "regexp" => "/Bearer\s+(.*)$/i",
+            "cookie" => "token",
+            "attribute" => "token",
+            "path" => ["/"],
+            "ignore" => [],
+            "rules" => [],
+            "before" => null,
+            "after" => null,
+            "error" => null
+        ];
+        $inArray = [];
+
+        foreach ($values as $key => $value) {
+            $inArray = $data[$key] ?? $value;
+        }
+
+        return new self(...$inArray);
+    }
+
+    public function bindToAuthentication(JwtAuthentication $target): self
+    {
+        $this->jwtAuthentication = $target;
+
+        $this->error = $this->bindClosure($this->error, $target);
+        $this->before = $this->bindClosure($this->before, $target);
+        $this->after = $this->bindClosure($this->after, $target);
+
+        return $this;
+    }
+
+    /**
+     * Set the error handler.
+     */
+    public function onError(ResponseInterface $response, array $arguments): ?ResponseInterface
+    {
+        $func = $this->error;
+
+        return is_null($func) ? null : $func($response, $arguments);
+    }
+
+    /**
+     * Set the before handler.
+     */
+    public function onBeforeCallable(ServerRequestInterface $request, array $params): ?ServerRequestInterface
+    {
+        $func = $this->before;
+
+        return is_null($func) ? null : $func($request, $params);
+    }
+    /**
+     * Set the after handler.
+     */
+    public function onAfterCallable(ResponseInterface $response, array $params): ?ResponseInterface
+    {
+        $func = $this->after;
+
+        return is_null($func) ? null : $func($response, $params);
+    }
+
     private function checkSecret($secret): array|\ArrayAccess
     {
         if (!(is_array($secret) || is_string($secret) || $secret instanceof \ArrayAccess)) {
@@ -148,46 +215,5 @@ class JwtAuthOptions
         }
 
         return null;
-    }
-
-    public function bindToAuthentication(JwtAuthentication $target): self
-    {
-        $this->jwtAuthentication = $target;
-
-        $this->error = $this->bindClosure($this->error, $target);
-        $this->before = $this->bindClosure($this->before, $target);
-        $this->after = $this->bindClosure($this->after, $target);
-
-        return $this;
-    }
-
-    /**
-     * Set the error handler.
-     */
-    public function onError(ResponseInterface $response, array $arguments): ?ResponseInterface
-    {
-        $func = $this->error;
-
-        return is_null($func) ? null : $func($response, $arguments);
-    }
-
-    /**
-     * Set the before handler.
-     */
-
-    public function onBeforeCallable(ServerRequestInterface $request, array $params): ?ServerRequestInterface
-    {
-        $func = $this->before;
-
-        return is_null($func) ? null : $func($request, $params);
-    }
-    /**
-     * Set the after handler.
-     */
-    public function onAfterCallable(ResponseInterface $response, array $params): ?ResponseInterface
-    {
-        $func = $this->after;
-
-        return is_null($func) ? null : $func($response, $params);
     }
 }

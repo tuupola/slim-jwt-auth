@@ -83,7 +83,7 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
         $options = new JwtAuthOptions(
-            secret: "supersecretkeyyoushouldnotcommittogithub"
+            "supersecretkeyyoushouldnotcommittogithub"
         );
         $collection = new MiddlewareCollection([
             new JwtAuthentication($options),
@@ -107,8 +107,8 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $options = new JwtAuthOptions(
-            ...[
+        $options = JwtAuthOptions::fromArray(
+            [
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "header" => "X-Token",
             ]
@@ -136,8 +136,8 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $options = new JwtAuthOptions(
-            ...[
+        $options = JwtAuthOptions::fromArray(
+            [
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "header" => "X-Token",
                 "regexp" => "/(.*)/",
@@ -166,8 +166,8 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $options = new JwtAuthOptions(
-            ...[
+        $options = JwtAuthOptions::fromArray(
+            [
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "cookie" => "nekot",
             ]
@@ -195,8 +195,8 @@ class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $options = new JwtAuthOptions(
-            ...[
+        $options = JwtAuthOptions::fromArray(
+            [
                 "secret" => "supersecretkeyyoushouldnotcommittogithub",
                 "cookie" => "nekot",
             ]
@@ -228,8 +228,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "after" => function ($response, $arguments) {
                             return $response->withHeader(
@@ -265,8 +265,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "after" => new TestAfterHandler(),
                     ]
@@ -297,8 +297,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "after" => [TestAfterHandler::class, "after"],
                     ]
@@ -329,8 +329,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "algorithm" => "nosuch",
                     ]
@@ -358,8 +358,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -386,8 +386,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -414,8 +414,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -443,8 +443,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "path" => ["/api", "/foo"],
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
@@ -473,8 +473,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "path" => ["/api", "/foo"],
                         "ignore" => ["/api/ping"],
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
@@ -505,8 +505,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -530,8 +530,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "secure" => false,
                     ]
@@ -559,8 +559,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -587,8 +587,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "relaxed" => ["example.com"],
                     ]
@@ -619,8 +619,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     ]
                 )
@@ -650,8 +650,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "attribute" => "nekot",
                     ]
@@ -682,8 +682,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "after" => function ($response, $arguments) use (&$decoded, &$token) {
                             $decoded = $arguments["decoded"];
@@ -719,8 +719,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "before" => function ($response, $arguments) use (&$decoded, &$token) {
                             $decoded = $arguments["decoded"];
@@ -754,8 +754,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommit",
                         "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
                             $response->getBody()->write("error");
@@ -796,8 +796,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommit",
                         "error" => new TestErrorHandler(),
                     ]
@@ -829,8 +829,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommit",
                         "error" => [TestErrorHandler::class, "error"],
                     ]
@@ -862,8 +862,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
                             $dummy = true;
@@ -897,8 +897,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "path" => ["/api", "/bar"],
                     ]
@@ -926,8 +926,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "after" => function ($response, $arguments) {
                             return $response
@@ -962,8 +962,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "before" => function ($request, $arguments) {
                             return $request->withAttribute("test", "test");
@@ -994,8 +994,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "before" => new TestBeforeHandler(),
                     ]
@@ -1024,8 +1024,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "before" => [TestBeforeHandler::class, "before"],
                     ]
@@ -1054,17 +1054,19 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    secret: "supersecretkeyyoushouldnotcommittogithub",
-                    rules: [
-                        new RequestPathRule([
-                            "path" => ["/api"],
-                            "ignore" => ["/api/login"],
-                        ]),
-                        new RequestMethodRule([
-                            "ignore" => ["OPTIONS"],
-                        ]),
-                    ],
+                JwtAuthOptions::fromArray(
+                    [
+                        "secret" => "supersecretkeyyoushouldnotcommittogithub",
+                        "rules" => [
+                            new RequestPathRule([
+                                "path" => ["/api"],
+                                "ignore" => ["/api/login"],
+                            ]),
+                            new RequestMethodRule([
+                                "ignore" => ["OPTIONS"],
+                            ]),
+                        ],
+                    ]
                 )
             ),
         ]);
@@ -1100,8 +1102,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "ignore" => ["/api/login"],
                     ]
@@ -1140,8 +1142,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "before" => function (ServerRequestInterface $request, $arguments) {
                             $before = get_class($this);
@@ -1173,8 +1175,8 @@ class JwtAuthenticationTest extends TestCase
         $response = (new ResponseFactory())->createResponse();
 
         $auth = new JwtAuthentication(
-            new JwtAuthOptions(
-                ...[
+            JwtAuthOptions::fromArray(
+                [
                     "secret" => "supersecretkeyyoushouldnotcommittogithub",
                     "header" => "X-Token",
                 ]
@@ -1209,8 +1211,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
                             $dummy = $arguments["uri"];
@@ -1241,8 +1243,8 @@ class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
-                new JwtAuthOptions(
-                    ...[
+                JwtAuthOptions::fromArray(
+                    [
                         "secret" => "supersecretkeyyoushouldnotcommittogithub",
                         "header" => "X-Token",
                         "regexp" => "/(.*)/",
