@@ -79,7 +79,7 @@ final class JwtAuthentication implements MiddlewareInterface
      * Stores all the options passed to the middleware.
      *
      * @var array{
-     *   secret?: string|array<string>,
+     *   secret?: string|array<string>|array<string,string>,
      *   secure: bool,
      *   relaxed: array<string>,
      *   algorithm: array<string>,
@@ -321,7 +321,8 @@ final class JwtAuthentication implements MiddlewareInterface
         try {
             $decoded = JWT::decode(
                 $token,
-                $keys
+                $keys,
+                $this->options['algorithm']
             );
             return (array) $decoded;
         } catch (Exception $exception) {

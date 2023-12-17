@@ -127,16 +127,25 @@ $app->add(new Tuupola\Middleware\JwtAuthentication([
 
 ### Algorithm
 
-You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256", "HS512", "HS384"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
+You can set supported algorithms via `algorithm` parameter. This can be either string or array of strings. Default value is `["HS256"]`. Supported algorithms are `HS256`, `HS384`, `HS512` and `RS256`. Note that enabling both `HS256` and `RS256` is a [security risk](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/).
+
+When passing multiple algorithm it be a key value array, with the key being the `KID` of the jwt.
 
 ``` php
 $app = new Slim\App;
 
 $app->add(new Tuupola\Middleware\JwtAuthentication([
     "secret" => "supersecretkeyyoushouldnotcommittogithub",
-    "algorithm" => ["HS256", "HS384"]
+    "algorithm" => [
+        "amce" => "HS256",
+        "beta" => "HS384"
+    ]
 ]));
 ```
+
+> :warning: **Warning**: <br>
+Because of changes in `firebase/php-jwt` the `kid` is now checked when multiple algorithm are passed, failing to provide a key the algorithm will be used for the kid.
+this also means the `kid` will now need to be present in the JWT header as well.
 
 ### Attribute
 

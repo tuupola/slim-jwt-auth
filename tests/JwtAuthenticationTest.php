@@ -220,6 +220,33 @@ class JwtAuthenticationTest extends TestCase
         $this->assertEquals("Success", $response->getBody());
     }
 
+    public function testShouldReturn200WithSecretArrayCheckKid(): void
+    {
+        $request = (new ServerRequestFactory)
+            ->createServerRequest("GET", "https://example.com/api")
+            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+
+        $default = function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory)->createResponse();
+            $response->getBody()->write("Success");
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication([
+                "algorithm" => ["acme" => "HS256", "beta" => "HS256"],
+                "secret" => [
+                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
+                    "beta" =>"anothersecretkeyfornevertocommittogithub"
+                ],
+            ])
+        ]);
+
+        $response = $collection->dispatch($request, $default);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Success", $response->getBody());
+    }
+
     public function testShouldReturn401WithSecretArray(): void
     {
         $request = (new ServerRequestFactory)
