@@ -82,7 +82,7 @@ final class JwtAuthentication implements MiddlewareInterface
      *   secret?: string|array<string>|array<string,string>,
      *   secure: bool,
      *   relaxed: array<string>,
-     *   algorithm: array<string>,
+     *   algorithm: array<string>|array<string,string>,
      *   header: string,
      *   regexp: string,
      *   cookie: string,
@@ -322,7 +322,6 @@ final class JwtAuthentication implements MiddlewareInterface
             $decoded = JWT::decode(
                 $token,
                 $keys,
-                $this->options['algorithm']
             );
             return (array) $decoded;
         } catch (Exception $exception) {
@@ -342,7 +341,7 @@ final class JwtAuthentication implements MiddlewareInterface
         if ((is_array($data['secret']) || $data['secret'] instanceof ArrayAccess)
             && is_array($data['algorithm'])
             && count($data['algorithm']) === 1
-            && count($data['secret']) > count($data['algorithm'])
+            && count((array) $data['secret']) > count($data['algorithm'])
         ) {
             $secretIndex = array_keys((array) $data['secret']);
             $data['algorithm'] = array_fill_keys($secretIndex, $data['algorithm'][0]);
@@ -528,17 +527,23 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * @return array<int|string,Key>
+     * @return array<string,Key>
      */
     private function createKeysFromAlgorithms(): array
     {
+        if (!isset($this->options["secret"])) {
+            throw new InvalidArgumentException(
+                'Secret must be either a string or an array of "kid" => "secret" pairs'
+            );
+        }
+
         $keyObjects = [];
         foreach ($this->options["algorithm"] as $kid => $algorithm) {
             $keyId = !is_numeric($kid) ? $kid : $algorithm;
 
             $secret = $this->options["secret"];
 
-            if (is_array($this->options["secret"]) || $secret instanceof ArrayAccess) {
+            if (is_array($secret) || $secret instanceof ArrayAccess) {
                 $secret = $this->options["secret"][$kid];
             }
 
