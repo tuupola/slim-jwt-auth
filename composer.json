@@ -1,6 +1,6 @@
 {
-    "name": "tuupola/slim-jwt-auth",
-    "description": "PSR-7 and PSR-15 JWT Authentication Middleware",
+    "name": "jimtools/slim-jwt-auth",
+    "description": "Drop in replacement for tuupola/slim-jwt-auth",
     "keywords": [
         "psr-7",
         "psr-15",
@@ -13,9 +13,9 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Mika Tuupola",
-            "email": "tuupola@appelsiini.net",
-            "homepage": "https://appelsiini.net/",
+            "name": "James Read",
+            "email": "james.read.18@gmail.com",
+            "homepage": "https://github.com/jimtools",
             "role": "Developer"
         }
     ],
@@ -50,5 +50,8 @@
         "branch-alias": {
             "dev-3.x": "3.0.x-dev"
         }
+    },
+    "conflict": {
+        "tuupola/slim-jwt-auth": "*"
     }
 }
