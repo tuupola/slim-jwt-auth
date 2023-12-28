@@ -1,14 +1,20 @@
 # PSR-7 and PSR-15 JWT Authentication Middleware
+> [!IMPORTANT]
+> This is a drop in replacement for `tuupola/slim-jwt-auth` with the updated version of `firebase/php-jwt` to resolve
+> [CVE-2021-46743](https://nvd.nist.gov/vuln/detail/CVE-2021-46743) for the meantime I plan to maintiane conpatability in v1
+> V2 I plan to deverge
+
 
 This middleware implements JSON Web Token Authentication. It was originally developed for Slim but can be used with any framework using PSR-7 and PSR-15 style middlewares. It has been tested with [Slim Framework](http://www.slimframework.com/) and [Zend Expressive](https://zendframework.github.io/zend-expressive/).
 
-[![Latest Version](https://img.shields.io/packagist/v/tuupola/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/tuupola/slim-jwt-auth)
-[![Packagist](https://img.shields.io/packagist/dm/tuupola/slim-jwt-auth.svg)](https://packagist.org/packages/tuupola/slim-jwt-auth)
+[![Latest Version](https://img.shields.io/packagist/v/jimtools/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/jimtools/slim-jwt-auth)
+[![Packagist](https://img.shields.io/packagist/dm/jimtools/slim-jwt-auth.svg?style=flat-square)](https://packagist.org/packages/jimtools/slim-jwt-auth)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/tuupola/slim-jwt-auth/tests.yml?branch=3.x&style=flat-square)](https://github.com/tuupola/slim-jwt-auth/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/tuupola/slim-jwt-auth/3.x.svg?style=flat-square)](https://codecov.io/github/tuupola/slim-jwt-auth/branch/3.x)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/jimtools/slim-jwt-auth/tests.yml?branch=main&style=flat-square)](https://github.com/jimtools/slim-jwt-auth/actions)
+[![Coverage](https://img.shields.io/codecov/c/gh/jimtools/slim-jwt-auth/main.svg?style=flat-square)](https://codecov.io/github/jimtools/slim-jwt-auth/branch/main)
 
-Heads up! You are reading documentation for [3.x branch](https://github.com/tuupola/slim-jwt-auth/tree/3.x) which is PHP 7.1 and up only. If you are using older version of PHP see the [2.x branch](https://github.com/tuupola/slim-jwt-auth/tree/2.x). These two branches are not backwards compatible, see [UPGRADING](https://github.com/tuupola/slim-jwt-auth/blob/3.x/UPGRADING.md) for instructions how to upgrade.
+
+Heads up! You are reading documentation for [3.x branch](https://github.com/tuupola/slim-jwt-auth/tree/3.x) which is PHP 7.4 and up only. If you are using older version of PHP see the [2.x branch](https://github.com/tuupola/slim-jwt-auth/tree/2.x). These two branches are not backwards compatible, see [UPGRADING](https://github.com/tuupola/slim-jwt-auth/blob/main/UPGRADING.md) for instructions how to upgrade.
 
 Middleware does **not** implement OAuth 2.0 authorization server nor does it provide ways to generate, issue or store authentication tokens. It only parses and authenticates a token when passed via header or cookie. This is useful for example when you want to use [JSON Web Tokens as API keys](https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/).
 
@@ -19,7 +25,7 @@ For example implementation see [Slim API Skeleton](https://github.com/tuupola/sl
 Install latest version using [composer](https://getcomposer.org/).
 
 ``` bash
-$ composer require tuupola/slim-jwt-auth
+$ composer require jimtools/slim-jwt-auth
 ```
 
 If using Apache add the following to the `.htaccess` file. Otherwise PHP wont have access to `Authorization: Bearer` header.
