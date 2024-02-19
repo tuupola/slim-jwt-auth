@@ -1,5 +1,5 @@
 {
-    "name": "jimtools/slim-jwt-auth",
+    "name": "jimtools/jwt-auth",
     "description": "Drop in replacement for tuupola/slim-jwt-auth",
     "keywords": [
         "psr-7",
@@ -9,7 +9,7 @@
         "json",
         "auth"
     ],
-    "homepage": "https://github.com/tuupola/slim-jwt-auth",
+    "homepage": "https://github.com/jimtools/jwt-auth",
     "license": "MIT",
     "authors": [
         {
