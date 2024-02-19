@@ -1,8 +1,8 @@
 # PSR-7 and PSR-15 JWT Authentication Middleware
 > [!IMPORTANT]
-> This is a drop in replacement for `tuupola/slim-jwt-auth` with the updated version of `firebase/php-jwt` to resolve
-> [CVE-2021-46743](https://nvd.nist.gov/vuln/detail/CVE-2021-46743) for the meantime I plan to maintiane conpatability in v1,
-> v2 I plan to deverge
+> This is a replacement for `tuupola/slim-jwt-auth` with the updated version of `firebase/php-jwt` to resolve
+> [CVE-2021-46743](https://nvd.nist.gov/vuln/detail/CVE-2021-46743) for the meantime I plan to maintiane conpatability in v1 some,
+> there is v2 I plan to deverge
 
 This middleware implements JSON Web Token Authentication. It was originally developed for Slim but can be used with any framework using PSR-7 and PSR-15 style middlewares. It has been tested with [Slim Framework](http://www.slimframework.com/) and [Zend Expressive](https://zendframework.github.io/zend-expressive/).
 
@@ -19,9 +19,22 @@ Middleware does **not** implement OAuth 2.0 authorization server nor does it pro
 
 For example implementation see [Slim API Skeleton](https://github.com/tuupola/slim-api-skeleton).
 
-## Breaking Channges
-Because of the way firebase/php-jwt:v6 now works, the way `secrets` and `algorithm` are pass needs
- to change
+## Breaking Changes
+Because of the way firebase/php-jwt:v6 now works, the way `secrets` and `algorithm` are pass needs to change so the following change will need to be made.
+
+```php
+$app = new Slim\App;
+
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "secret" => [
+        "acme" => "supersecretkeyyoushouldnotcommittogithub",
+        "beta" => "supersecretkeyyoushouldnotcommittogithub",
+    "algorithm" => [
+        "amce" => "HS256",
+        "beta" => "HS384"
+    ]
+]));
+```
 
 ## Install
 

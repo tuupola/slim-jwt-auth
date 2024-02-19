@@ -1,24 +1,82 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method .* is unused.$#'
-		-
-			message: "#^Offset 'secret' does not exist on array\\{secret\\?\\: array\\<string\\>\\|string, secure\\: bool, relaxed\\: array\\<string\\>, algorithm\\: array\\<string\\>, header\\: string, regexp\\: string, cookie\\: string, attribute\\: string, \\.\\.\\.\\}\\.$#"
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:after\\(\\) is unused\\.$#"
 			count: 1
 			path: src/JwtAuthentication.php
 
 		-
-			message: "#^Parameter \\#1 \\$callback of function call_user_func expects callable\\(\\)\\: mixed, array\\{\\$this\\(Tuupola\\\\Middleware\\\\JwtAuthentication\\), string\\} given\\.$#"
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:algorithm\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:attribute\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:before\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:cookie\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:error\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:header\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:ignore\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:logger\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:path\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:regexp\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:relaxed\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:rules\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:secret\\(\\) is unused\\.$#"
+			count: 1
+			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:secure\\(\\) is unused\\.$#"
 			count: 1
 			path: src/JwtAuthentication.php
 
 		-
 			message: "#^Parameter \\#1 \\$value of method SplDoublyLinkedList\\<Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface\\>\\:\\:push\\(\\) expects Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface, callable\\(\\)\\: mixed given\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Property Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:\\$message is unused\\.$#"
 			count: 1
 			path: src/JwtAuthentication.php
 
