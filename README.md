@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This package is abandoned. See [jimtools/jwt-auth](https://packagist.org/packages/jimtools/jwt-auth) for replacement.
+> This package is abandoned. See [jimtools/jwt-auth](https://github.com/JimTools/jwt-auth) for replacement.
 
 # PSR-7 and PSR-15 JWT Authentication Middleware
 
