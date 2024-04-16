@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This package is abandoned. See [jimtools/jwt-auth](https://packagist.org/packages/jimtools/jwt-auth) for replacement.
+
 # PSR-7 and PSR-15 JWT Authentication Middleware
 
 This middleware implements JSON Web Token Authentication. It was originally developed for Slim but can be used with any framework using PSR-7 and PSR-15 style middlewares. It has been tested with [Slim Framework](http://www.slimframework.com/) and [Zend Expressive](https://zendframework.github.io/zend-expressive/).
